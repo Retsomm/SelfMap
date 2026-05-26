@@ -31,16 +31,7 @@ export default function IncarnationCrossCard({ cross }: Props) {
           {cross.crossType}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-3 text-sm mt-3">
-        <div>
-          <p className="text-gray-400 mb-0.5">意識軸（黑）</p>
-          <p className="text-white font-mono">{cross.conscious}</p>
-        </div>
-        <div>
-          <p className="text-gray-400 mb-0.5">潛意識軸（紅）</p>
-          <p className="text-red-400 font-mono">{cross.unconscious}</p>
-        </div>
-      </div>
+      
     </div>
   )
 }

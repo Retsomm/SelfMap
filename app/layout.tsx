@@ -1,11 +1,26 @@
 import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
+import { Cormorant_Garamond, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
+import { clerkAppearance } from '@/lib/clerkAppearance'
 import './globals.css'
 
-const geist = Geist({
-  variable: '--font-geist',
+const cormorant = Cormorant_Garamond({
+  variable: '--font-serif',
   subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+})
+
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-sans',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-mono',
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
 })
 
 export const metadata: Metadata = {
@@ -19,9 +34,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="zh-TW" className={`${geist.variable} h-full antialiased`} suppressHydrationWarning>
-        <body className="min-h-full bg-white text-zinc-900">{children}</body>
+    <ClerkProvider appearance={clerkAppearance}>
+      <html lang="zh-TW" className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
+        <body className="min-h-full">{children}</body>
       </html>
     </ClerkProvider>
   )
