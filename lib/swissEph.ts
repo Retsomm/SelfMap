@@ -17,11 +17,17 @@ export const initSwissEph = async (): Promise<SweInstance> => {
   if (initPromise) return initPromise
 
   initPromise = (async () => {
-    const { default: SwissEphemeris } = await import('@swisseph/browser')
-    const swe = new SwissEphemeris()
-    await swe.init('/swisseph.wasm')
-    sweInstance = swe
-    return swe
+    try {
+      const { default: SwissEphemeris } = await import('@swisseph/browser')
+      const swe = new SwissEphemeris()
+      await swe.init('/swisseph.wasm')
+      sweInstance = swe
+      return swe
+    } catch (err) {
+      initPromise = null
+      sweInstance = null
+      throw err
+    }
   })()
 
   return initPromise
