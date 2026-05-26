@@ -2,6 +2,9 @@ import { HD_WHEEL_OFFSET, GATE_SEQUENCE } from './constants'
 import type { GateAndLine, PlanetGateResult, ProfileResult } from './types'
 
 export const degreeToGateAndLine = (degree: number): GateAndLine => {
+  if (!Number.isFinite(degree)) {
+    throw new Error(`Invalid longitude: expected finite degree in [0,360), got ${degree}`)
+  }
   const normalized = ((degree - HD_WHEEL_OFFSET) % 360 + 360) % 360
   const slot = Math.floor(normalized / 5.625)
   const gate = GATE_SEQUENCE[slot]

@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="zh-TW" className={`${geist.variable} h-full antialiased`}>
+      <html lang="zh-TW" className={`${geist.variable} h-full antialiased`} suppressHydrationWarning>
         <body className="min-h-full bg-white text-zinc-900">{children}</body>
       </html>
     </ClerkProvider>

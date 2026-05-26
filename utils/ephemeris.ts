@@ -2,7 +2,13 @@ import { initSwissEph } from '@/lib/swissEph'
 
 // 加 Z 強制當作 UTC 解析，避免瀏覽器套用本地時區導致偏移算兩次
 export const toUtcDate = (date: string, time: string, offsetHours: number): Date => {
+  if (!Number.isFinite(offsetHours) || offsetHours < -24 || offsetHours > 24) {
+    throw new Error('Invalid date, time, or offset provided for Human Design calculation')
+  }
   const asUtcMs = new Date(`${date}T${time}:00Z`).getTime()
+  if (!Number.isFinite(asUtcMs)) {
+    throw new Error('Invalid date, time, or offset provided for Human Design calculation')
+  }
   return new Date(asUtcMs - offsetHours * 3600 * 1000)
 }
 

@@ -141,13 +141,13 @@ export const calculateType = (
   definedChannels: ChannelDef[]
 ): HumanDesignType => deriveType(definedCenterIds, definedChannels)
 
-export const calculateAuthority = (definedCenters: Set<CenterName>): AuthorityInfo => {
+export const calculateAuthority = (definedCenters: Set<CenterName>, type?: HumanDesignType): AuthorityInfo => {
+  if (type === 'Reflector' || definedCenters.size === 0) return AUTHORITY_INFO['Lunar']
   if (definedCenters.has('solarPlexus')) return AUTHORITY_INFO['Emotional']
   if (definedCenters.has('sacral'))      return AUTHORITY_INFO['Sacral']
   if (definedCenters.has('spleen'))      return AUTHORITY_INFO['Splenic']
   if (definedCenters.has('ego'))         return AUTHORITY_INFO['Ego']
   if (definedCenters.has('g'))           return AUTHORITY_INFO['Self-Projected']
-  if (definedCenters.size === 0)         return AUTHORITY_INFO['Lunar']
   return AUTHORITY_INFO['Mental']
 }
 
@@ -210,14 +210,12 @@ interface AnalysisInput {
 }
 
 export const buildChartFromAnalysis = (analysis: AnalysisInput): HumanDesignChart => {
-  const definedCenterIds = new Set<CenterName>(
-    analysis.definedCenters.filter((id): id is CenterName =>
-      ['head','ajna','throat','g','ego','sacral','solarPlexus','spleen','root'].includes(id)
-    )
-  )
-
   const activeGates = new Set<number>(analysis.activeGates)
-  const { definedChannels } = resolveGraph(activeGates)
+  const { definedChannels, definedCenterIds } = resolveGraph(activeGates)
+
+  const derivedType      = deriveType(definedCenterIds, definedChannels)
+  const derivedAuthority = deriveAuthority(derivedType, definedCenterIds)
+  const definition       = deriveDefinition(definedCenterIds, definedChannels)
 
   const centers: Center[] = (Object.keys(CENTER_INFO) as CenterName[]).map(id => ({
     id,
@@ -233,28 +231,11 @@ export const buildChartFromAnalysis = (analysis: AnalysisInput): HumanDesignChar
     gates: [ch.gateA, ch.gateB],
   }))
 
-  const typeMap: Record<string, HumanDesignType> = {
-    'Generator': 'Generator',
-    'Manifesting Generator': 'Manifesting Generator',
-    'Manifestor': 'Manifestor',
-    'Projector': 'Projector',
-    'Reflector': 'Reflector',
-  }
-  const authorityMap: Record<string, Authority> = {
-    'Emotional': 'Emotional',
-    'Sacral': 'Sacral',
-    'Splenic': 'Splenic',
-    'Ego': 'Ego',
-    'Self-Projected': 'Self-Projected',
-    'Mental': 'Mental',
-    'Lunar': 'Lunar',
-  }
-
   return {
-    type: typeMap[analysis.type] ?? 'Generator',
-    authority: authorityMap[analysis.authority] ?? 'Sacral',
+    type: derivedType,
+    authority: derivedAuthority,
     profile: analysis.profile || '?/?',
-    definition: analysis.definition || 'Single',
+    definition,
     centers,
     channels,
     gates: analysis.activeGates,

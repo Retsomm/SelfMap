@@ -99,7 +99,7 @@ export default function TestSwePage() {
       }
       const { definedCenterIds, definedChannels } = calculateCentersAndChannels(allGates)
       const type      = calculateType(definedCenterIds, definedChannels)
-      const authority = calculateAuthority(definedCenterIds)
+      const authority = calculateAuthority(definedCenterIds, type)
 
       setResult({ jd, designJd, utcTime: birthUtc.toISOString(), designUtcTime: designUtc.toISOString(), planets, profile, type, authority, definedCenterIds, definedChannels, allGates })
     } catch (err) {
