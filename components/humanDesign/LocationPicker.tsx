@@ -34,16 +34,39 @@ export function getOffsetFromTimezone(tz: string, at: Date): number {
   }
 }
 
+// Format numeric offset (hours) to ±HH:MM string
+function formatOffset(offset: number): string {
+  const totalMinutes = Math.round(offset * 60)
+  const sign = totalMinutes >= 0 ? '+' : '-'
+  const abs = Math.abs(totalMinutes)
+  const hh = String(Math.floor(abs / 60)).padStart(2, '0')
+  const mm = String(abs % 60).padStart(2, '0')
+  return `UTC${sign}${hh}:${mm}`
+}
+
 export default function LocationPicker({ value, onSelect }: Props) {
   const [query, setQuery] = useState(value)
   const [results, setResults] = useState<GeoResult[]>([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Sync external value changes (e.g. initial value)
   useEffect(() => { setQuery(value) }, [value])
+
+  // Cleanup pending debounce timer and in-flight fetch on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+      abortRef.current?.abort()
+    }
+  }, [])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -58,18 +81,33 @@ export default function LocationPicker({ value, onSelect }: Props) {
 
   const search = useCallback(async (q: string) => {
     if (q.trim().length < 2) { setResults([]); return }
+
+    // Cancel any in-flight request
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setLoading(true)
+    setFetchError(null)
     try {
       const res = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=zh&format=json`
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=zh&format=json`,
+        { signal: controller.signal }
       )
+      if (controller.signal.aborted) return
+      if (!res.ok) {
+        setFetchError(`搜尋失敗（${res.status}）`)
+        return
+      }
       const json = await res.json()
+      if (controller.signal.aborted) return
       setResults(json.results ?? [])
       setOpen(true)
-    } catch {
-      setResults([])
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return
+      setFetchError('網路錯誤，請稍後再試')
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) setLoading(false)
     }
   }, [])
 
@@ -103,6 +141,7 @@ export default function LocationPicker({ value, onSelect }: Props) {
           autoComplete="off"
           data-lpignore="true"
           data-1p-ignore="true"
+          data-testid="location-input"
         />
         {loading && (
           <span style={{
@@ -112,6 +151,12 @@ export default function LocationPicker({ value, onSelect }: Props) {
           }}>…</span>
         )}
       </div>
+
+      {fetchError && (
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#d04830', marginTop: 4 }}>
+          {fetchError}
+        </div>
+      )}
 
       {open && results.length > 0 && (
         <div style={{
@@ -127,9 +172,7 @@ export default function LocationPicker({ value, onSelect }: Props) {
           boxShadow: '0 8px 24px rgba(43,31,20,0.14)',
         }}>
           {results.map(r => {
-            const label = [r.name, r.admin1, r.country].filter(Boolean).join(', ')
             const offset = getOffsetFromTimezone(r.timezone, new Date())
-            const sign = offset >= 0 ? '+' : ''
             return (
               <div
                 key={r.id}
@@ -157,7 +200,7 @@ export default function LocationPicker({ value, onSelect }: Props) {
                   )}
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-soft)', whiteSpace: 'nowrap' }}>
-                  UTC{sign}{offset % 1 === 0 ? offset : offset.toFixed(1)}
+                  {formatOffset(offset)}
                 </div>
               </div>
             )

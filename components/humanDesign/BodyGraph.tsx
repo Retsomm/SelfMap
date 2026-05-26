@@ -1,5 +1,6 @@
 'use client'
 
+import type { CenterName } from '@/lib/humanDesign/types'
 import {
   CENTERS_GEOM,
   CENTER_ORDER,
@@ -14,8 +15,8 @@ import {
 } from './hd-chart-data'
 
 export interface GateActivation {
-  c: boolean  // conscious / personality (black → 紅色顯示)
-  u: boolean  // unconscious / design (red → 黑色顯示)
+  c: boolean  // conscious / personality → 黑色
+  u: boolean  // unconscious / design → 紅色
 }
 
 export type Activations = Record<number, GateActivation>
@@ -37,7 +38,7 @@ interface BodyGraphProps {
   showSilhouette?: boolean
   activations?: Activations
   // lib CenterName keys differ: ego → heart, solarPlexus → solar
-  definedCenterIds?: Set<string>
+  definedCenterIds?: Set<CenterName>
 }
 
 // Lookup gate anchor position across all centers
@@ -84,7 +85,7 @@ export default function BodyGraph({
   const isDefined = (chartKey: string): boolean => {
     if (!definedCenterIds) return true  // no data = show all colored
     const libKey = Object.entries(LIB_TO_CHART).find(([, v]) => v === chartKey)?.[0] ?? chartKey
-    return definedCenterIds.has(libKey) || definedCenterIds.has(chartKey)
+    return definedCenterIds.has(libKey as CenterName) || definedCenterIds.has(chartKey as CenterName)
   }
   // De-duplicate channel pairs
   const seenPairs = new Set<string>()

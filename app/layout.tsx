@@ -34,10 +34,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider appearance={clerkAppearance}>
-      <html lang="zh-TW" className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
-        <body className="min-h-full">{children}</body>
-      </html>
-    </ClerkProvider>
+    <html lang="zh-TW" className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full">
+        <ClerkProvider appearance={clerkAppearance}>{children}</ClerkProvider>
+      </body>
+    </html>
   )
 }

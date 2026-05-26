@@ -10,8 +10,8 @@ export const HD_PALETTE = {
 }
 
 // Activation colours
-export const ACT_CONSCIOUS   = '#d04830'  // 意識 = 紅
-export const ACT_UNCONSCIOUS = '#000000'  // 非意識 = 黑
+export const ACT_CONSCIOUS   = '#000000'  // Personality / 意識 = 黑
+export const ACT_UNCONSCIOUS = '#d04830'  // Design / 非意識 = 紅
 
 // Center geometry — viewBox 700 × 920
 // gateAnchors: gate number → [x, y] on the center's perimeter

@@ -296,7 +296,7 @@ export default function HomePage() {
                 showFace={showFace}
                 showSilhouette={showSilhouette}
                 activations={activations}
-                definedCenterIds={result?.definedCenterIds as Set<string> | undefined}
+                definedCenterIds={result?.definedCenterIds}
               />
             </div>
           </main>
