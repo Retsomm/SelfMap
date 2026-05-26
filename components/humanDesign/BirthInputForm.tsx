@@ -13,7 +13,7 @@ const BirthInputForm = ({
   date, time, offset, loading,
   onDateChange, onTimeChange, onOffsetChange, onCalculate,
 }: Props) => {
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     onCalculate()
   }
@@ -34,9 +34,12 @@ const BirthInputForm = ({
             <input
               type="date"
               value={date}
+              min="1900-01-01"
+              max="2040-12-31"
               onChange={e => onDateChange(e.target.value)}
               className="bg-gray-800 rounded px-3 py-2 text-white"
             />
+            <span className="text-gray-500 text-xs">支援範圍：1900 – 2040</span>
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-gray-400 text-sm">出生時間（本地）</span>

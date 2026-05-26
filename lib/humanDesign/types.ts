@@ -28,7 +28,17 @@ export type Authority =
 export interface GateAndLine {
   gate: number
   line: number
+  color: number
+  tone: number
+  base: number
   full: string
+}
+
+export interface VariablesResult {
+  digestion: { label: string; description: string }
+  environment: { label: string; description: string }
+  perspective: { label: string; description: string }
+  motivation: { label: string; description: string }
 }
 
 export interface PlanetGateResult {
@@ -87,4 +97,18 @@ export interface HumanDesignChart {
   centers: Center[]
   channels: Channel[]
   gates: number[]
+}
+
+export type CrossType = 'RAC' | 'JC' | 'LAC'
+
+export interface IncarnationCross {
+  crossType: CrossType
+  crossBaseName: string
+  crossName: string       // e.g. "個人主題之伊甸園4"
+  variant: number         // 1–4，personality sun 在十字群組中的第幾個位置
+  conscious: string       // e.g. "11.3 / 12.6"（含 line）
+  unconscious: string     // e.g. "6.2 / 36.5"（含 line）
+  gatesLabel: string      // e.g. "11/12 | 6/36"（僅閘門號）
+  persSunGate: number
+  persSunLine: number
 }
