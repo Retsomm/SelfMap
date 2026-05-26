@@ -156,12 +156,23 @@ export const calculateVariables = (
   designSun: GateAndLine,
   personalityNorthNode: GateAndLine,
   designNorthNode: GateAndLine,
-): VariablesResult => ({
-  digestion:   DIGESTION_MAP[designSun.color],
-  environment: ENVIRONMENT_MAP[designNorthNode.color],
-  perspective: PERSPECTIVE_MAP[personalityNorthNode.color],
-  motivation:  MOTIVATION_MAP[personalitySun.color],
-})
+): VariablesResult => {
+  const validateColor = (color: number, field: string) => {
+    if (!Number.isInteger(color) || color < 1 || color > 6) {
+      throw new Error(`Invalid Human Design color: ${color} for ${field}`)
+    }
+  }
+  validateColor(designSun.color,            'designSun')
+  validateColor(designNorthNode.color,      'designNorthNode')
+  validateColor(personalityNorthNode.color, 'personalityNorthNode')
+  validateColor(personalitySun.color,       'personalitySun')
+  return {
+    digestion:   DIGESTION_MAP[designSun.color],
+    environment: ENVIRONMENT_MAP[designNorthNode.color],
+    perspective: PERSPECTIVE_MAP[personalityNorthNode.color],
+    motivation:  MOTIVATION_MAP[personalitySun.color],
+  }
+}
 
 export const calculateDefinedCenters = (allGates: Set<number>): Set<CenterName> =>
   resolveGraph(allGates).definedCenterIds

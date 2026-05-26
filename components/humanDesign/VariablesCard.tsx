@@ -22,9 +22,9 @@ const Row = ({ category, label, description, accentClass }: RowProps) => (
 )
 
 const VariablesCard = ({ type, variables }: Props) => {
-  const signature = SIGNATURE_MAP[type]
-  const strategy  = STRATEGY_MAP[type]
-  const typeLabel = TYPE_LABELS[type]
+  const signature = SIGNATURE_MAP[type] ?? { positive: '—', negative: '—' }
+  const strategy  = STRATEGY_MAP[type]  ?? type
+  const typeLabel = TYPE_LABELS[type]   ?? type
 
   return (
     <div className="mb-6 bg-gray-900 rounded-xl p-5">

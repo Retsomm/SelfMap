@@ -77,9 +77,19 @@ export const calculateIncarnationCross = (
   // 官方 HD：LAC 以 design sun 家族命名（命運由潛意識軸定義），RAC/JC 以 pers sun 家族命名
   const namingGate = type === 'LAC' ? desSun : persSun
   const groupId    = GATE_TO_CROSS_GROUP[namingGate.gate] ?? -1
-  const baseName   = groupId >= 0 ? CROSS_BASE_NAMES[groupId] : `閘門${namingGate.gate}`
 
-  const groupGates = groupId >= 0 ? CROSS_GROUPS[groupId] : null
+  if (groupId < 0) {
+    throw new Error(`輪迴交叉閘門無效：閘門 ${namingGate.gate} 不屬於任何已知交叉群組`)
+  }
+  for (const g of [persSun, persEarth, desSun, desEarth]) {
+    const gid = GATE_TO_CROSS_GROUP[g.gate] ?? -1
+    if (gid !== groupId) {
+      throw new Error(`輪迴交叉閘門組合不一致：閘門 ${g.gate} 屬於群組 ${gid}，預期群組 ${groupId}`)
+    }
+  }
+
+  const baseName   = CROSS_BASE_NAMES[groupId]
+  const groupGates = CROSS_GROUPS[groupId]
   const variant    = groupGates ? groupGates.indexOf(namingGate.gate) + 1 : 0
 
   const crossName  = `${baseName}${variant}`

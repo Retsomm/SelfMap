@@ -23,7 +23,7 @@ export default function IncarnationCrossCard({ cross }: Props) {
       <div className="mb-1">
         <div className="flex items-baseline gap-1 flex-wrap">
           <span className="text-xl font-bold text-yellow-300">
-            {TYPE_LABEL[cross.crossType]}之{cross.crossName}
+            {(TYPE_LABEL[cross.crossType] ?? cross.crossType)}之{cross.crossName}
           </span>
           <span className="text-gray-400 font-mono text-sm">({cross.gatesLabel})</span>
         </div>
