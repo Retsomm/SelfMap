@@ -1,5 +1,4 @@
-先仔細閱讀AGENTS.md檔案
-
+Read AGENTS.md first and follow it strictly.
 # 01 Swiss Ephemeris 前端設定
 
 ## 目的

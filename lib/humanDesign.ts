@@ -1,3 +1,48 @@
+// ─── 黃道經度 → 閘門 + 線 ──────────────────────────────────────────────────
+
+// 人類圖閘門輪從水瓶座 2°（黃道 302°）開始，Gate 41 為起點，每個閘門佔 5.625°
+// 此偏移值由官方人類圖系統規範，與春分點（0° Aries）不同
+const HD_WHEEL_OFFSET = 302
+
+const GATE_SEQUENCE = [
+  41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42,  3,
+  27, 24,  2, 23,  8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56,
+  31, 33,  7,  4, 29, 59, 40, 64, 47,  6, 46, 18, 48, 57, 32, 50,
+  28, 44,  1, 43, 14, 34,  9,  5, 26, 11, 10, 58, 38, 54, 61, 60,
+]
+
+export interface GateAndLine {
+  gate: number
+  line: number
+  full: string
+}
+
+export const degreeToGateAndLine = (degree: number): GateAndLine => {
+  const normalized = ((degree - HD_WHEEL_OFFSET) % 360 + 360) % 360
+  const slot = Math.floor(normalized / 5.625)       // 0~63，對應閘門序列位置
+  const gate = GATE_SEQUENCE[slot]
+  const lineFraction = (normalized % 5.625) / 5.625
+  const line = Math.floor(lineFraction * 6) + 1     // 1~6
+  return { gate, line, full: `${gate}.${line}` }
+}
+
+export interface PlanetGateResult {
+  planetName: string
+  black: GateAndLine   // Personality 意識層
+  red: GateAndLine     // Design 潛意識層
+  display: string      // 例如 "23.4 / 45.6"
+}
+
+export const calculatePlanetGates = (
+  personalityLongitude: number,
+  designLongitude: number,
+  planetName = '未知行星'
+): PlanetGateResult => {
+  const black = degreeToGateAndLine(personalityLongitude)
+  const red   = degreeToGateAndLine(designLongitude)
+  return { planetName, black, red, display: `${black.full} / ${red.full}` }
+}
+
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 export type CenterName =

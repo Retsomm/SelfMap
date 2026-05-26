@@ -643,6 +643,18 @@
   dependencies:
     tslib "^2.8.0"
 
+"@swisseph/browser@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.npmmirror.com/@swisseph/browser/-/browser-1.1.1.tgz#4d268fd9a3560fb7470a9bfb15b3e833a4b7c3c4"
+  integrity sha512-2w0e5Gkl4/L6Pqh8jHB+ql2YwwxKABreLYKSK1l2M/Xxok+txB/+/SY1dzVful1LkE7BL0FG1RbBDBuH4Xwd1w==
+  dependencies:
+    "@swisseph/core" "1.1.2"
+
+"@swisseph/core@1.1.2":
+  version "1.1.2"
+  resolved "https://registry.npmmirror.com/@swisseph/core/-/core-1.1.2.tgz#0a8b88ef59cc5aef13b96d2a3bc9c5f0a0c5889e"
+  integrity sha512-9rVlQfd0FtTAFNml1RyJLlYE7AoFyoO/6dH5mVwf9VjxE/5GPHkN+RznOyZP2VouPsY1Hmy5OR6WQ6LhvUHL+w==
+
 "@tailwindcss/node@4.3.0":
   version "4.3.0"
   resolved "https://registry.npmmirror.com/@tailwindcss/node/-/node-4.3.0.tgz#9dc5312bf41c48658529f36021e0b466c4eb7860"
