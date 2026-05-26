@@ -1,5 +1,4 @@
-先仔細閱讀AGENTS.md檔案
-
+Read AGENTS.md first and follow it strictly.
 # 07 計算入世十字
 
 ## 目的

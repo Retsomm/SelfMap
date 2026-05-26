@@ -1,5 +1,4 @@
-先仔細閱讀AGENTS.md檔案
-
+Read AGENTS.md first and follow it strictly.
 # 08 計算上升點與下降點
 
 ## 目的

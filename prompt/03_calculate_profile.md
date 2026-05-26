@@ -1,5 +1,4 @@
-先仔細閱讀AGENTS.md檔案
-
+Read AGENTS.md first and follow it strictly.
 # 03 計算人生角色 Profile
 
 ## 目的

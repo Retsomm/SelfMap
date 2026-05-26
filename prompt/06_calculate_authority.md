@@ -1,5 +1,4 @@
-先仔細閱讀AGENTS.md檔案
-
+Read AGENTS.md first and follow it strictly.
 # 06 計算權威 Authority
 
 ## 目的

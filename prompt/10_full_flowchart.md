@@ -1,5 +1,4 @@
-先仔細閱讀AGENTS.md檔案
-
+Read AGENTS.md first and follow it strictly.
 # 10 人類圖計算完整流程圖
 
 ```mermaid
