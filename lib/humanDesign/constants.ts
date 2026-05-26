@@ -1,4 +1,4 @@
-import type { Authority, AuthorityInfo, CenterName, ChannelDef, HumanDesignType } from './types'
+import type { Authority, AuthorityInfo, CenterName, ChannelDef, HumanDesignType, CrossType } from './types'
 import type { Center } from './types'
 
 // 人類圖閘門輪從水瓶座 2°（黃道 302°）開始，Gate 41 為起點，每個閘門佔 5.625°
@@ -166,3 +166,108 @@ export const CENTER_INFO: Record<CenterName, Omit<Center, 'id' | 'defined'>> = {
     suggestion: '壓力是推進力，不是緊急信號。學會享受過程而非只看結果',
   },
 }
+
+// 入世十字：16 個基本十字群組
+// 每組 4 個閘門，對應黃道輪上相隔 16 個位置（即 90°）的閘門
+// 群組 ID 對應 GATE_SEQUENCE 中 pos % 16 的餘數
+export const CROSS_GROUPS: readonly [number, number, number, number][] = [
+  [41, 27, 31, 28],  // 0: 張力
+  [19, 24, 33, 44],  // 1: 二元性
+  [ 1,  2,  7, 13],  // 2: 人面獅身（Sphinx）
+  [49, 23,  4, 43],  // 3: 革命
+  [30,  8, 29, 14],  // 4: 四種方式
+  [55, 20, 59, 34],  // 5: 沉睡鳳凰
+  [37, 16, 40,  9],  // 6: 社群
+  [63, 35, 64,  5],  // 7: 意識
+  [22, 45, 47, 26],  // 8: 統治
+  [36, 12,  6, 11],  // 9: 無邊界
+  [25, 15, 46, 10],  // 10: 愛的容器（Vessel of Love）
+  [17, 52, 18, 58],  // 11: 法則
+  [21, 39, 48, 38],  // 12: 對立
+  [51, 53, 57, 54],  // 13: 穿透
+  [42, 62, 32, 61],  // 14: 持久
+  [ 3, 56, 50, 60],  // 15: 限制
+]
+
+export const CROSS_BASE_NAMES: readonly string[] = [
+  '張力',
+  '二元性',
+  '人面獅身',
+  '革命',
+  '四種方式',
+  '沉睡鳳凰',
+  '社群',
+  '意識',
+  '支配',
+  '伊甸園',
+  '愛的容器',
+  '法則',
+  '對立',
+  '穿透',
+  '持久',
+  '限制',
+]
+
+export const CROSS_TYPE_LABELS: Record<CrossType, string> = {
+  RAC: '右角度交叉',
+  JC:  '並列交叉',
+  LAC: '左角度交叉',
+}
+
+export const STRATEGY_MAP: Record<string, string> = {
+  'Manifestor':           '告知後行動',
+  'Generator':            '等待回應',
+  'Manifesting Generator':'等待回應後告知',
+  'Projector':            '等待邀請',
+  'Reflector':            '等待月亮週期（28天）',
+}
+
+export const SIGNATURE_MAP: Record<string, { positive: string; negative: string }> = {
+  'Manifestor':           { positive: '平靜', negative: '憤怒' },
+  'Generator':            { positive: '滿足', negative: '挫折' },
+  'Manifesting Generator':{ positive: '滿足', negative: '挫折與憤怒' },
+  'Projector':            { positive: '成功', negative: '苦澀' },
+  'Reflector':            { positive: '驚喜', negative: '失望' },
+}
+
+export const DIGESTION_MAP: Record<number, { label: string; description: string }> = {
+  1: { label: 'Appetite（食慾型）',  description: '跟隨本能食慾，想吃什麼就吃什麼，不需遵循固定飲食規律' },
+  2: { label: 'Taste（味覺型）',     description: '重視口感與風味，細細品嚐，讓味覺引導飲食選擇' },
+  3: { label: 'Thirst（口渴型）',    description: '以補充水分為首要，口渴信號先於食慾信號' },
+  4: { label: 'Touch（接觸型）',     description: '以當季新鮮蔬果為主，食材固定，不需要強迫有變化' },
+  5: { label: 'Sound（聲音型）',     description: '在安靜環境中進食，讓身體聆聽消化的節奏' },
+  6: { label: 'Light（光線型）',     description: '在自然採光充足的環境用餐，光線影響消化能量' },
+}
+
+export const ENVIRONMENT_MAP: Record<number, { label: string; description: string }> = {
+  1: { label: 'Caves（洞穴）',    description: '需要私密、封閉的個人空間，如山洞般能完全退縮的場域' },
+  2: { label: 'Markets（市集）',  description: '充滿活力的開放場所，多元刺激的市集般環境' },
+  3: { label: 'Kitchens（廚房）', description: '工具一應俱全，轉換物質的地方，像是廚房一樣的濕熱環境' },
+  4: { label: 'Mountains（山）',  description: '高處、開闊視野的環境，能俯瞰全局的高度' },
+  5: { label: 'Valleys（山谷）',  description: '被山環繞、受到保護的低谷，溫暖而安全的包覆感' },
+  6: { label: 'Shores（海岸）',   description: '海岸邊界，流動的過渡地帶，介於兩種世界之間' },
+}
+
+export const PERSPECTIVE_MAP: Record<number, { label: string; description: string }> = {
+  1: { label: 'Survival（生存）',     description: '以生存視角觀察世界，關注資源與安全的基本需求' },
+  2: { label: 'Possibility（可能性）', description: '著眼於未來潛力，能看見他人看不到的可能性' },
+  3: { label: 'Power（力量）',        description: '觀察權力結構與動態，理解誰在影響誰' },
+  4: { label: 'Personal（個人）',     description: '與週遭人相較之下，自己可以有所貢獻之處' },
+  5: { label: 'Probability（機率）',  description: '以統計與規律評估事物，看見最可能發生的結果' },
+  6: { label: 'Desire（欲望）',       description: '以欲望作為視角，洞察人們真正渴望的是什麼' },
+}
+
+export const MOTIVATION_MAP: Record<number, { label: string; description: string }> = {
+  1: { label: 'Fear（恐懼）',      description: '追求個體知識與資源的安全感' },
+  2: { label: 'Hope（希望）',      description: '對美好未來懷抱希望，相信事情終將變好' },
+  3: { label: 'Desire（渴望）',    description: '被真實的熱情與渴望驅動，追求最深的心之所向' },
+  4: { label: 'Need（需求）',      description: '回應真實需求，只做真正必要且有意義的事' },
+  5: { label: 'Guilt（罪惡感）',   description: '以責任感為動力，透過省思自己對他人的影響來行動' },
+  6: { label: 'Innocence（天真）', description: '以純粹天真的眼光看待世界，保持孩子般的開放' },
+}
+
+export const GATE_TO_CROSS_GROUP: Readonly<Record<number, number>> =
+  CROSS_GROUPS.reduce<Record<number, number>>((acc, gates, groupId) => {
+    gates.forEach(gate => { acc[gate] = groupId })
+    return acc
+  }, {})

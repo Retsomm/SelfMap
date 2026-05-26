@@ -1,4 +1,7 @@
-import { CHANNEL_DEFS, CENTER_INFO, AUTHORITY_INFO } from './constants'
+import {
+  CHANNEL_DEFS, CENTER_INFO, AUTHORITY_INFO,
+  DIGESTION_MAP, ENVIRONMENT_MAP, PERSPECTIVE_MAP, MOTIVATION_MAP,
+} from './constants'
 import type {
   CenterName,
   HumanDesignType,
@@ -8,6 +11,8 @@ import type {
   Center,
   Channel,
   HumanDesignChart,
+  GateAndLine,
+  VariablesResult,
 } from './types'
 
 const hashStr = (s: string): number => {
@@ -129,6 +134,34 @@ const deriveDefinition = (definedCenterIds: Set<CenterName>, definedChannels: Ch
 
   return ['Single', 'Split', 'Triple Split', 'Quadruple Split'][Math.min(groups - 1, 3)]
 }
+
+const DEFINITION_LABEL: Record<string, string> = {
+  'Single':          '單一定義人',
+  'Split':           '二分定義人',
+  'Triple Split':    '三分定義人',
+  'Quadruple Split': '四分定義人',
+  'None':            '無定義（反映者）',
+}
+
+export const calculateDefinition = (
+  definedCenterIds: Set<CenterName>,
+  definedChannels: ChannelDef[]
+): { raw: string; label: string } => {
+  const raw = deriveDefinition(definedCenterIds, definedChannels)
+  return { raw, label: DEFINITION_LABEL[raw] ?? raw }
+}
+
+export const calculateVariables = (
+  personalitySun: GateAndLine,
+  designSun: GateAndLine,
+  personalityNorthNode: GateAndLine,
+  designNorthNode: GateAndLine,
+): VariablesResult => ({
+  digestion:   DIGESTION_MAP[designSun.color],
+  environment: ENVIRONMENT_MAP[designNorthNode.color],
+  perspective: PERSPECTIVE_MAP[personalityNorthNode.color],
+  motivation:  MOTIVATION_MAP[personalitySun.color],
+})
 
 export const calculateDefinedCenters = (allGates: Set<number>): Set<CenterName> =>
   resolveGraph(allGates).definedCenterIds
