@@ -238,6 +238,6 @@ export const buildChartFromAnalysis = (analysis: AnalysisInput): HumanDesignChar
     definition,
     centers,
     channels,
-    gates: analysis.activeGates,
+    gates: Array.from(activeGates),
   }
 }

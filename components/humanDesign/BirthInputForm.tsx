@@ -19,11 +19,8 @@ const BirthInputForm = ({
   }
 
   const handleOffsetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    const parsed = Number(value)
-    if (value === '' || !Number.isFinite(parsed)) {
-      onOffsetChange(0)
-    } else {
+    const parsed = Number(e.target.value)
+    if (Number.isFinite(parsed)) {
       onOffsetChange(parsed)
     }
   }

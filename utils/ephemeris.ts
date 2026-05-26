@@ -18,13 +18,23 @@ export const getDesignJd = (
   swe: { calculatePosition: (jd: number, body: number) => { longitude: number } },
   birthJd: number
 ): number => {
+  if (!Number.isFinite(birthJd)) {
+    throw new Error('Invalid ephemeris data: non-finite longitude/JD')
+  }
+
   const birthSun = swe.calculatePosition(birthJd, 0).longitude
+  if (!Number.isFinite(birthSun)) {
+    throw new Error('Invalid ephemeris data: non-finite longitude/JD')
+  }
   const targetSun = ((birthSun - 88) + 360) % 360
 
   let jd = birthJd - 88
 
   for (let i = 0; i < 10; i++) {
     const currentSun = swe.calculatePosition(jd, 0).longitude
+    if (!Number.isFinite(currentSun) || !Number.isFinite(jd)) {
+      throw new Error('Invalid ephemeris data: non-finite longitude/JD')
+    }
     let diff = ((currentSun - targetSun) + 360) % 360
     if (diff > 180) diff -= 360
     if (Math.abs(diff) < 0.00001) break
