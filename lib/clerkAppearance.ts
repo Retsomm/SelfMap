@@ -198,11 +198,8 @@ export const clerkAppearance = {
     },
     avatarImage: { borderRadius: 0 },
 
-    // ── Footer ──
-    footer: {
-      background: paperDeep,
-      borderTop: `1px dotted rgba(43,31,20,0.3)`,
-    },
+    // ── Footer ── 隱藏 Clerk 品牌浮水印與開發模式提示列
+    footer: { display: 'none' },
     footerAction: { display: 'none' },
   },
 }
