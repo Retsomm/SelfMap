@@ -66,14 +66,6 @@
     json2mq "^0.2.0"
     throttle-debounce "^5.0.0"
 
-"@anthropic-ai/sdk@^0.98.0":
-  version "0.98.0"
-  resolved "https://registry.npmmirror.com/@anthropic-ai/sdk/-/sdk-0.98.0.tgz#6d82abfdcbf62528302cc0034c1740fc6fb3bb98"
-  integrity sha512-N7aXtCvC5g6T1Y4V29lJjceu/zTkVkIZF0jdBvagr0TRFHuKeImffalGWEfqZKrvjH+IQbzJWw6TmSmUzrlMgg==
-  dependencies:
-    json-schema-to-ts "^3.1.1"
-    standardwebhooks "^1.0.0"
-
 "@babel/code-frame@^7.29.7":
   version "7.29.7"
   resolved "https://registry.npmmirror.com/@babel/code-frame/-/code-frame-7.29.7.tgz#f2fbbfea87c44a21590ec515b778b2c26d8866e7"
@@ -183,7 +175,7 @@
   dependencies:
     "@babel/types" "^7.29.7"
 
-"@babel/runtime@^7.10.1", "@babel/runtime@^7.11.1", "@babel/runtime@^7.18.0", "@babel/runtime@^7.18.3", "@babel/runtime@^7.20.0", "@babel/runtime@^7.23.2", "@babel/runtime@^7.24.4", "@babel/runtime@^7.24.7", "@babel/runtime@^7.28.4", "@babel/runtime@^7.29.2":
+"@babel/runtime@^7.10.1", "@babel/runtime@^7.11.1", "@babel/runtime@^7.18.0", "@babel/runtime@^7.20.0", "@babel/runtime@^7.23.2", "@babel/runtime@^7.24.4", "@babel/runtime@^7.24.7", "@babel/runtime@^7.28.4", "@babel/runtime@^7.29.2":
   version "7.29.7"
   resolved "https://registry.npmmirror.com/@babel/runtime/-/runtime-7.29.7.tgz#12022450c45a4da6d8d8287b18a4ff2ddb23f768"
   integrity sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==
@@ -1693,11 +1685,6 @@ baseline-browser-mapping@^2.10.12, baseline-browser-mapping@^2.9.19:
   resolved "https://registry.npmmirror.com/baseline-browser-mapping/-/baseline-browser-mapping-2.10.32.tgz#b6b553a4285fdd606327a617de36a5351e3aaa64"
   integrity sha512-wbPvpyjJPC0zdfdKXxqEL3Ea+bOMD/87X4lftiJkkaBiuG6ALQy1SLmEd7BSmVCuwCQsBrCamgBoLyfFDD1EPg==
 
-bmp-js@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.npmmirror.com/bmp-js/-/bmp-js-0.1.0.tgz#e05a63f796a6c1ff25f4771ec7adadc148c07233"
-  integrity sha512-vHdS19CnY3hwiNdkaqk93DvjVLfbEcI8mys4UjuWrlX1haDmroo8o4xCzh4wD6DGV6HxRCyauwhHRqMTfERtjw==
-
 brace-expansion@^1.1.7:
   version "1.1.14"
   resolved "https://registry.npmmirror.com/brace-expansion/-/brace-expansion-1.1.14.tgz#d9de602370d91347cd9ddad1224d4fd701eb348b"
@@ -2573,11 +2560,6 @@ hermes-parser@^0.25.1:
   dependencies:
     hermes-estree "0.25.1"
 
-idb-keyval@^6.2.0:
-  version "6.2.4"
-  resolved "https://registry.npmmirror.com/idb-keyval/-/idb-keyval-6.2.4.tgz#9f6c374b9570264fea9005a554adc81eba723cad"
-  integrity sha512-D/NzHWUmYJGXi++z67aMSrnisb9A3621CyRK5G89JyTlN13C8xf0g04DLxUKMufPem3e3L2JAXR6Z00OWy183Q==
-
 ignore@^5.2.0:
   version "5.3.2"
   resolved "https://registry.npmmirror.com/ignore/-/ignore-5.3.2.tgz#3cd40e729f3643fd87cb04e50bf0eb722bc596f5"
@@ -2785,11 +2767,6 @@ is-typed-array@^1.1.13, is-typed-array@^1.1.14, is-typed-array@^1.1.15:
   dependencies:
     which-typed-array "^1.1.16"
 
-is-url@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.npmmirror.com/is-url/-/is-url-1.2.4.tgz#04a4df46d28c4cff3d73d01ff06abeb318a1aa52"
-  integrity sha512-ITvGim8FhRiYe4IQ5uHSkj7pVaPDrCTkNd3yq3cV7iZAcJdHTUMPMEHcqSOy9xZ9qFenQCvi+2wjH9a1nXqHww==
-
 is-weakmap@^2.0.2:
   version "2.0.2"
   resolved "https://registry.npmmirror.com/is-weakmap/-/is-weakmap-2.0.2.tgz#bf72615d649dfe5f699079c54b83e47d1ae19cfd"
@@ -2863,14 +2840,6 @@ json-buffer@3.0.1:
   version "3.0.1"
   resolved "https://registry.npmmirror.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
-
-json-schema-to-ts@^3.1.1:
-  version "3.1.1"
-  resolved "https://registry.npmmirror.com/json-schema-to-ts/-/json-schema-to-ts-3.1.1.tgz#81f3acaf5a34736492f6f5f51870ef9ece1ca853"
-  integrity sha512-+DWg8jCJG2TEnpy7kOm/7/AxaYoaRbjVB4LFZLySZlWn8exGs3A4OLJR966cVvU26N7X9TWxl+Jsw7dzAqKT6g==
-  dependencies:
-    "@babel/runtime" "^7.18.3"
-    ts-algebra "^2.0.0"
 
 json-schema-traverse@^0.4.1:
   version "0.4.1"
@@ -3146,13 +3115,6 @@ node-exports-info@^1.6.0:
     object.entries "^1.1.9"
     semver "^6.3.1"
 
-node-fetch@^2.6.9:
-  version "2.7.0"
-  resolved "https://registry.npmmirror.com/node-fetch/-/node-fetch-2.7.0.tgz#d0f0fa6e3e2dc1d27efcd8ad99d550bda94d187d"
-  integrity sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==
-  dependencies:
-    whatwg-url "^5.0.0"
-
 node-releases@^2.0.36:
   version "2.0.46"
   resolved "https://registry.npmmirror.com/node-releases/-/node-releases-2.0.46.tgz#d188a129a83f5e03a101aacb58f260f2ee8faaa1"
@@ -3223,11 +3185,6 @@ object.values@^1.1.6, object.values@^1.2.1:
     call-bound "^1.0.3"
     define-properties "^1.2.1"
     es-object-atoms "^1.0.0"
-
-opencollective-postinstall@^2.0.3:
-  version "2.0.3"
-  resolved "https://registry.npmmirror.com/opencollective-postinstall/-/opencollective-postinstall-2.0.3.tgz#7a0fff978f6dbfa4d006238fbac98ed4198c3259"
-  integrity sha512-8AV/sCtuzUeTo8gQK5qDZzARrulB3egtLzFgteqB2tcT4Mw7B8Kt7JcDHmltjz6FOAHsvTevk70gZEbhM4ZS9Q==
 
 optionator@^0.9.3:
   version "0.9.4"
@@ -3392,11 +3349,6 @@ reflect.getprototypeof@^1.0.6, reflect.getprototypeof@^1.0.9:
     get-intrinsic "^1.2.7"
     get-proto "^1.0.1"
     which-builtin-type "^1.2.1"
-
-regenerator-runtime@^0.13.3:
-  version "0.13.11"
-  resolved "https://registry.npmmirror.com/regenerator-runtime/-/regenerator-runtime-0.13.11.tgz#f6dca3e7ceec20590d07ada785636a90cdca17f9"
-  integrity sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==
 
 regexp.prototype.flags@^1.5.3, regexp.prototype.flags@^1.5.4:
   version "1.5.4"
@@ -3764,26 +3716,6 @@ tapable@^2.3.3:
   resolved "https://registry.npmmirror.com/tapable/-/tapable-2.3.3.tgz#5da7c9992c46038221267985ab28421a8879f160"
   integrity sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==
 
-tesseract.js-core@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.npmmirror.com/tesseract.js-core/-/tesseract.js-core-7.0.0.tgz#596aa1ab5c130adab12f21059e6aa1a1cecc0bab"
-  integrity sha512-WnNH518NzmbSq9zgTPeoF8c+xmilS8rFIl1YKbk/ptuuc7p6cLNELNuPAzcmsYw450ca6bLa8j3t0VAtq435Vw==
-
-tesseract.js@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.npmmirror.com/tesseract.js/-/tesseract.js-7.0.0.tgz#4106fb6245efab40c57b94bc1798368807526be8"
-  integrity sha512-exPBkd+z+wM1BuMkx/Bjv43OeLBxhL5kKWsz/9JY+DXcXdiBjiAch0V49QR3oAJqCaL5qURE0vx9Eo+G5YE7mA==
-  dependencies:
-    bmp-js "^0.1.0"
-    idb-keyval "^6.2.0"
-    is-url "^1.2.4"
-    node-fetch "^2.6.9"
-    opencollective-postinstall "^2.0.3"
-    regenerator-runtime "^0.13.3"
-    tesseract.js-core "^7.0.0"
-    wasm-feature-detect "^1.8.0"
-    zlibjs "^0.3.1"
-
 throttle-debounce@^5.0.0, throttle-debounce@^5.0.2:
   version "5.0.2"
   resolved "https://registry.npmmirror.com/throttle-debounce/-/throttle-debounce-5.0.2.tgz#ec5549d84e053f043c9fd0f2a6dd892ff84456b1"
@@ -3803,16 +3735,6 @@ to-regex-range@^5.0.1:
   integrity sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==
   dependencies:
     is-number "^7.0.0"
-
-tr46@~0.0.3:
-  version "0.0.3"
-  resolved "https://registry.npmmirror.com/tr46/-/tr46-0.0.3.tgz#8184fd347dac9cdc185992f3a6622e14b9d9ab6a"
-  integrity sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==
-
-ts-algebra@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.npmmirror.com/ts-algebra/-/ts-algebra-2.0.0.tgz#4e3e0953878f26518fce7f6bb115064a65388b7a"
-  integrity sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw==
 
 ts-api-utils@^2.5.0:
   version "2.5.0"
@@ -3961,24 +3883,6 @@ uri-js@^4.2.2:
   dependencies:
     punycode "^2.1.0"
 
-wasm-feature-detect@^1.8.0:
-  version "1.8.0"
-  resolved "https://registry.npmmirror.com/wasm-feature-detect/-/wasm-feature-detect-1.8.0.tgz#4e9f55b0a64d801f372fbb0324ed11ad3abd0c78"
-  integrity sha512-zksaLKM2fVlnB5jQQDqKXXwYHLQUVH9es+5TOOHwGOVJOCeRBCiPjwSg+3tN2AdTCzjgli4jijCH290kXb/zWQ==
-
-webidl-conversions@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.npmmirror.com/webidl-conversions/-/webidl-conversions-3.0.1.tgz#24534275e2a7bc6be7bc86611cc16ae0a5654871"
-  integrity sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==
-
-whatwg-url@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.npmmirror.com/whatwg-url/-/whatwg-url-5.0.0.tgz#966454e8765462e37644d3626f6742ce8b70965d"
-  integrity sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==
-  dependencies:
-    tr46 "~0.0.3"
-    webidl-conversions "^3.0.0"
-
 which-boxed-primitive@^1.1.0, which-boxed-primitive@^1.1.1:
   version "1.1.1"
   resolved "https://registry.npmmirror.com/which-boxed-primitive/-/which-boxed-primitive-1.1.1.tgz#d76ec27df7fa165f18d5808374a5fe23c29b176e"
@@ -4053,11 +3957,6 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.npmmirror.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
-
-zlibjs@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.npmmirror.com/zlibjs/-/zlibjs-0.3.1.tgz#50197edb28a1c42ca659cc8b4e6a9ddd6d444554"
-  integrity sha512-+J9RrgTKOmlxFSDHo0pI1xM6BLVUv+o0ZT9ANtCxGkjIVCCUdx9alUF8Gm+dGLKbkkkidWIHFDZHDMpfITt4+w==
 
 "zod-validation-error@^3.5.0 || ^4.0.0":
   version "4.0.2"

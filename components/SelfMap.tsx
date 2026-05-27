@@ -195,7 +195,7 @@ export default function SelfMap({ chart, onCenterClick }: SelfMapProps) {
                 fontSize={11}
                 fontWeight={600}
                 fill={isDefined ? '#4338ca' : '#a1a1aa'}
-                fontFamily="var(--font-geist)"
+                fontFamily="var(--font-mono)"
               >
                 {CENTER_LABELS[cfg.id]}
               </text>
@@ -205,7 +205,7 @@ export default function SelfMap({ chart, onCenterClick }: SelfMapProps) {
                 textAnchor="middle"
                 fontSize={9}
                 fill={isDefined ? '#6366f1' : '#d4d4d8'}
-                fontFamily="var(--font-geist)"
+                fontFamily="var(--font-mono)"
               >
                 {isDefined ? '已定義' : '未定義'}
               </text>

@@ -1,20 +1,9 @@
 import type { NextConfig } from "next";
 import path from "path";
 
-const isTurbopackAuto = process.env.TURBOPACK === 'auto'
-
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['tesseract.js', 'sharp', '@swisseph/browser'],
-  turbopack: {
-    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json'],
-    rules: {
-      '**/swisseph-browser.js': {
-        loaders: [path.resolve('./loaders/exports-shim.js')],
-        as: '*.js',
-      },
-    },
-  },
-  webpack: isTurbopackAuto ? undefined : (config, { isServer }) => {
+  serverExternalPackages: ['@swisseph/browser'],
+  webpack: (config, { isServer }) => {
     config.cache = { type: 'memory' }
 
     config.experiments = {

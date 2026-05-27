@@ -48,6 +48,11 @@ export interface PlanetGateResult {
   display: string
 }
 
+export interface PlanetRow extends PlanetGateResult {
+  persLon: number
+  desLon: number
+}
+
 export interface ProfileResult {
   profile: string
   personalitySunLine: number

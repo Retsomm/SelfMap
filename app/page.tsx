@@ -20,9 +20,9 @@ import {
   type ChannelDef,
   type IncarnationCross,
   type VariablesResult,
+  type PlanetRow,
 } from '@/lib/humanDesign'
 import { toUtcDate, getDesignJd } from '@/utils/ephemeris'
-import type { PlanetRow } from '@/components/humanDesign/PlanetsTable'
 import Navbar from '@/components/Navbar'
 import BodyGraph, { type Activations, type SelectionPayload } from '@/components/humanDesign/BodyGraph'
 import DetailDrawer from '@/components/humanDesign/DetailDrawer'
