@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
+import { Toaster } from 'react-hot-toast'
 import { clerkAppearance } from '@/lib/clerkAppearance'
 import Navbar from '@/components/Navbar'
 import './globals.css'
@@ -40,6 +41,7 @@ export default function RootLayout({
         <ClerkProvider appearance={clerkAppearance}>
           <Navbar />
           {children}
+          <Toaster position="bottom-center" toastOptions={{ duration: 3500 }} />
         </ClerkProvider>
       </body>
     </html>

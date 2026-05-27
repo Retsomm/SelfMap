@@ -4,6 +4,7 @@ import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, startTransition, useRef } from 'react'
 import Image from 'next/image'
+import toast from 'react-hot-toast'
 import ChartView from '@/components/humanDesign/ChartView'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
@@ -45,7 +46,6 @@ export default function AccountPage() {
   // computed HdResult for the active chart
   const [chartResult, setChartResult] = useState<HdResult | null>(null)
   const [chartComputing, setChartComputing] = useState(false)
-  const [chartError, setChartError] = useState('')
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace('/')
@@ -70,22 +70,18 @@ export default function AccountPage() {
   const [editingName, setEditingName] = useState(false)
   const [displayName, setDisplayName] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
-  const [nameError, setNameError] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
-  const [avatarError, setAvatarError] = useState('')
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const handleStartEditName = () => {
     if (!user) return
     setDisplayName(user.fullName?.trim() || user.username || '')
-    setNameError('')
     setEditingName(true)
   }
 
   const handleSaveName = async () => {
     if (nameSaving || !user) return
     setNameSaving(true)
-    setNameError('')
     try {
       const trimmed = displayName.trim()
       const spaceIdx = trimmed.indexOf(' ')
@@ -93,8 +89,9 @@ export default function AccountPage() {
       const lastName = spaceIdx === -1 ? '' : trimmed.slice(spaceIdx + 1)
       await user.update({ firstName, lastName })
       setEditingName(false)
+      toast.success('名稱已更新')
     } catch {
-      setNameError('儲存失敗，請稍後再試')
+      toast.error('儲存失敗，請稍後再試')
     } finally {
       setNameSaving(false)
     }
@@ -104,17 +101,17 @@ export default function AccountPage() {
     const file = e.target.files?.[0]
     if (!file || !user) return
     if (file.size > 10 * 1024 * 1024) {
-      setAvatarError('圖片不能超過 10MB')
+      toast.error('圖片不能超過 10MB')
       if (avatarInputRef.current) avatarInputRef.current.value = ''
       return
     }
     setAvatarUploading(true)
-    setAvatarError('')
     try {
       await user.setProfileImage({ file })
+      toast.success('大頭貼已更新')
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
-      setAvatarError(msg || '上傳失敗，請確認 Clerk 已開啟大頭貼上傳功能')
+      toast.error(msg || '上傳失敗，請確認 Clerk 已開啟大頭貼上傳功能')
     } finally {
       setAvatarUploading(false)
       if (avatarInputRef.current) avatarInputRef.current.value = ''
@@ -183,13 +180,12 @@ export default function AccountPage() {
     const tz = chart.timezone ?? 'UTC'
     startTransition(() => {
       setChartResult(null)
-      setChartError('')
       setChartComputing(true)
     })
 
     computeHdResult(chart.birthDate, chart.birthTime, tz)
       .then(r => setChartResult(r))
-      .catch(err => setChartError(err instanceof Error ? err.message : '計算失敗'))
+      .catch(err => toast.error(err instanceof Error ? err.message : '計算失敗'))
       .finally(() => setChartComputing(false))
   }, [activeChartId, charts])
 
@@ -378,9 +374,6 @@ export default function AccountPage() {
                       </span>
                     </div>
                   </button>
-                  {avatarError && (
-                    <p className="font-mono text-[12px] md:text-base text-(--crimson) mt-1 w-20 wrap-break-word">{avatarError}</p>
-                  )}
                 </div>
 
                 {/* Name & email */}
@@ -408,9 +401,6 @@ export default function AccountPage() {
                           className="font-mono text-[12px] md:text-base tracking-[0.04em] border border-(--ink) bg-(--paper) text-(--ink) px-3 py-1.5 w-52 outline-none placeholder:text-(--ink-soft)"
                         />
                       </div>
-                      {nameError && (
-                        <span className="font-mono text-[12px] md:text-base text-(--crimson)">{nameError}</span>
-                      )}
                       <div className="flex gap-2">
                         <button
                           onClick={handleSaveName}
@@ -519,9 +509,6 @@ export default function AccountPage() {
                 <>
                   {chartComputing && (
                     <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) mb-6">計算中…</div>
-                  )}
-                  {chartError && (
-                    <div className="font-mono text-[12px] md:text-base text-(--crimson) mb-6">{chartError}</div>
                   )}
                   {chartResult && (
                     <ChartView

@@ -6,7 +6,7 @@ import DashboardClient from './DashboardClient'
 
 export default async function DashboardPage() {
   const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
+  if (!userId) redirect('/')
 
   const user = await prisma.user.findUnique({
     where: { clerkId: userId },
