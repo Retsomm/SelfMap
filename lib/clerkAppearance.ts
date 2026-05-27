@@ -199,10 +199,7 @@ export const clerkAppearance = {
     avatarImage: { borderRadius: 0 },
 
     // ── Footer ──
-    footer: {
-      background: paperDeep,
-      borderTop: `1px dotted rgba(43,31,20,0.3)`,
-    },
+    footer: { display: 'none' },
     footerAction: { display: 'none' },
   },
 }
