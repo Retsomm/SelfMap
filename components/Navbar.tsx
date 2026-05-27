@@ -1,71 +1,45 @@
 'use client'
 
 import Link from 'next/link'
-import { useAuth, UserButton } from '@clerk/nextjs'
-
+import { useUser, useClerk } from '@clerk/nextjs'
+import Image from 'next/image'
 
 export default function Navbar() {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn, user } = useUser()
+  const { openSignIn } = useClerk()
 
   return (
-    <header style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 50,
-      background: 'var(--paper)',
-      borderBottom: '1px solid var(--ink)',
-    }}>
-      <div style={{
-        maxWidth: 1440,
-        margin: '0 auto',
-        padding: '0 56px',
-        height: 52,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <Link href="/" style={{
-          fontFamily: 'var(--font-serif)',
-          fontStyle: 'italic',
-          fontWeight: 500,
-          fontSize: 22,
-          color: 'var(--ink)',
-          textDecoration: 'none',
-          letterSpacing: '-0.01em',
-        }}>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-(--paper) border-b border-(--ink)">
+      <div className="max-w-360 mx-auto px-14 h-13 flex items-center justify-between">
+        <Link
+          href="/"
+          className="font-serif italic font-medium text-[22px] text-(--ink) no-underline tracking-[-0.01em]"
+        >
           SelfMap
         </Link>
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 10,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            color: 'var(--ink-soft)',
-          }}>
-          </span>
+        <nav className="flex items-center gap-4">
           {isSignedIn ? (
-            <UserButton />
+            <Link href="/account" className="flex items-center gap-2 no-underline group">
+              {user?.imageUrl && (
+                <Image
+                  src={user.imageUrl}
+                  alt={user.username ?? ''}
+                  width={28}
+                  height={28}
+                  className="border border-(--ink) object-cover"
+                />
+              )}
+              <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-(--ink-soft) group-hover:text-(--ink) transition-colors duration-120">
+                {user?.username ?? user?.firstName ?? '帳號'}
+              </span>
+            </Link>
           ) : (
-            <Link
-              href="/sign-in"
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: 'var(--paper)',
-                background: 'var(--ink)',
-                border: '1px solid var(--ink)',
-                padding: '5px 14px',
-                textDecoration: 'none',
-                transition: 'background 120ms ease',
-              }}
+            <button
+              onClick={() => openSignIn()}
+              className="font-mono text-[10px] tracking-[0.14em] uppercase text-(--paper) bg-(--ink) border border-(--ink) px-3.5 py-1.25 cursor-pointer transition-colors duration-120 hover:bg-(--crimson) hover:border-(--crimson)"
             >
               登入
-            </Link>
+            </button>
           )}
         </nav>
       </div>

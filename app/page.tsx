@@ -63,7 +63,7 @@ interface Result {
   definition: { raw: string; label: string }
 }
 
-function toActivations(planets: PlanetRow[]): Activations {
+const toActivations = (planets: PlanetRow[]): Activations => {
   const out: Activations = {}
   for (const p of planets) {
     const cGate = p.black.gate
@@ -97,11 +97,6 @@ export default function HomePage() {
     result ? toActivations(result.planets) : {},
     [result],
   )
-
-  const today = useMemo(() => {
-    const d = new Date()
-    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-  }, [])
 
   const calculate = async () => {
     setError('')
@@ -189,30 +184,24 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      <div className="hd-app" style={{ paddingTop: 72 }}>
+      <div className="max-w-[1440px] mx-auto px-14 pb-20 pt-[72px] relative">
 
         {/* Masthead */}
-        <header className="hd-masthead">
-          <div className="hd-mast-left">
-            <span className="hd-mast-mark" />SPECIMEN №.001 / FOLIO XIV
-            <br />THE BODYGRAPH — A FIELD STUDY
-          </div>
-          <h1 className="hd-mast-title">
+        <header className="flex justify-center mb-6 gap-6">
+          <h1 className="font-serif font-medium italic text-[clamp(36px,4vw,56px)] leading-[0.95] tracking-[-0.01em] text-center m-0">
             Human Design
           </h1>
-          <div className="hd-mast-right">
-            ISSUE 2026 · 春<br />
-            DATE {today}
-          </div>
         </header>
 
         {/* Main layout */}
-        <div className="hd-work">
+        <div className="flex flex-col gap-5">
 
           {/* Input row — full width horizontal */}
-          <div className="hd-input-section">
-            <h4>輸入出生資料</h4>
-            <div className="hd-input-row">
+          <div className="py-3.5 px-5 border border-[var(--ink)] bg-[var(--paper-deep)] flex items-end gap-5 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch">
+            <h4 className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ink)] m-0 p-0 border-none whitespace-nowrap self-end pb-1.5">
+              輸入出生資料
+            </h4>
+            <div className="flex gap-2 flex-wrap items-end flex-1">
               <ConfigProvider
                 theme={{
                   token: {
@@ -227,8 +216,8 @@ export default function HomePage() {
                   },
                 }}
               >
-                <div className="hd-input-group">
-                  <label className="hd-input-label">生日</label>
+                <div className="flex flex-col gap-1">
+                  <label className="font-mono text-[10.5px] tracking-[0.1em] uppercase text-[var(--ink-soft)]">生日</label>
                   <DatePicker
                     value={birthDate}
                     onChange={(d) => { if (d) setBirthDate(d) }}
@@ -239,8 +228,8 @@ export default function HomePage() {
                     style={{ width: 130 }}
                   />
                 </div>
-                <div className="hd-input-group">
-                  <label className="hd-input-label">時間</label>
+                <div className="flex flex-col gap-1">
+                  <label className="font-mono text-[10.5px] tracking-[0.1em] uppercase text-[var(--ink-soft)]">時間</label>
                   <TimePicker
                     value={birthTime}
                     onChange={(t) => { if (t) setBirthTime(t) }}
@@ -258,10 +247,18 @@ export default function HomePage() {
                   setLocationLabel(label)
                 }}
               />
-              <button className="hd-btn" onClick={calculate} disabled={loading}>
+              <button
+                className="font-mono text-[11.5px] tracking-[0.12em] uppercase text-[var(--paper)] bg-[var(--ink)] border border-[var(--ink)] px-4 py-1.5 cursor-pointer whitespace-nowrap transition-colors duration-[120ms] hover:bg-[var(--crimson)] hover:border-[var(--crimson)] disabled:opacity-45 disabled:cursor-not-allowed"
+                onClick={calculate}
+                disabled={loading}
+              >
                 {loading ? '計算中…' : '生成人類圖'}
               </button>
-              {error && <div className="hd-error">{error}</div>}
+              {error && (
+                <div className="font-mono text-[11px] text-[var(--crimson)] mt-2 py-1.5 px-2 border border-[var(--crimson)] tracking-[0.02em]">
+                  {error}
+                </div>
+              )}
             </div>
           </div>
 
@@ -320,7 +317,7 @@ export default function HomePage() {
           <div className="hd-index-strip">
             <div>
               <h5>閘門索引</h5>
-              <div style={{ marginTop: 4, fontSize: 9, lineHeight: 1.4, color: '#6b5a44' }}>
+              <div className="mt-1 text-[9px] leading-[1.4] text-[var(--ink-soft)]">
                 INDEX OF<br />SIXTY-FOUR<br />GATES
               </div>
             </div>
@@ -369,10 +366,10 @@ export default function HomePage() {
             </div>
           )}
 
-        </div>{/* end hd-work */}
+        </div>{/* end flex col */}
 
         {/* Footer */}
-        <footer className="hd-foot">
+        <footer className="mt-[60px] border-t border-[var(--ink)] pt-3.5 flex justify-between font-mono text-[11px] tracking-[0.12em] uppercase text-[var(--ink-soft)]">
           <span>FIELD STUDY · BODYGRAPH</span>
           <span>PRESS · ESC · TO · CLOSE</span>
           <span>FIN.</span>
@@ -386,122 +383,125 @@ export default function HomePage() {
 
         {/* ── Full calculation results ── */}
         {result && (
-          <section className="hd-results">
-            <div className="hd-results-header">
-              <h2 className="hd-results-title">計算結果</h2>
-              <span className="hd-results-sub">Bodygraph Analysis</span>
+          <section className="mt-14 border-t border-[var(--ink)] pt-10">
+            <div className="flex items-baseline gap-5 mb-8">
+              <h2 className="font-serif italic font-medium text-[clamp(28px,3vw,42px)] leading-none m-0 text-[var(--ink)]">計算結果</h2>
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[var(--ink-soft)]">Bodygraph Analysis</span>
             </div>
 
             {/* Overview cards row */}
-            <div className="hd-cards-row">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 mb-6">
               {/* Type */}
-              <div className="hd-card">
-                <div className="hd-card-label">類型 · Type</div>
-                <div className="hd-card-value">{result.type}</div>
-                <div className="hd-card-sub">{TYPE_LABELS[result.type]}</div>
-                <div className="hd-card-meta">策略 · {STRATEGY_MAP[result.type] ?? '—'}</div>
-                <div className="hd-card-meta">
+              <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)]">
+                <div className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">類型 · Type</div>
+                <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{result.type}</div>
+                <div className="font-sans text-[13px] text-[var(--ink-soft)] leading-[1.5]">{TYPE_LABELS[result.type]}</div>
+                <div className="font-mono text-[11px] text-[var(--ink-soft)] mt-1.5 tracking-[0.04em]">策略 · {STRATEGY_MAP[result.type] ?? '—'}</div>
+                <div className="font-mono text-[11px] text-[var(--ink-soft)] mt-1.5 tracking-[0.04em]">
                   正向 {SIGNATURE_MAP[result.type]?.positive ?? '—'} ／
                   負向 {SIGNATURE_MAP[result.type]?.negative ?? '—'}
                 </div>
               </div>
 
               {/* Profile */}
-              <div className="hd-card">
-                <div className="hd-card-label">人生角色 · Profile</div>
-                <div className="hd-card-value" style={{ fontSize: 40, letterSpacing: '0.06em' }}>{result.profile.profile}</div>
-                <div className="hd-card-sub">{PROFILE_LABELS[result.profile.profile] ?? '—'}</div>
-                <div className="hd-card-meta" style={{ color: '#d04830', marginTop: 8 }}>
-                  意識太陽 {result.profile.personalitySun.full}
-                </div>
-                <div className="hd-card-meta">
-                  潛意識太陽 {result.profile.designSun.full}
-                </div>
+              <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)]">
+                <div className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">人生角色 · Profile</div>
+                <div className="font-serif italic font-medium text-[40px] leading-[1.1] text-[var(--ink)] mb-1 tracking-[0.06em]">{result.profile.profile}</div>
+                <div className="font-sans text-[13px] text-[var(--ink-soft)] leading-[1.5]">{PROFILE_LABELS[result.profile.profile] ?? '—'}</div>
               </div>
 
               {/* Authority */}
-              <div className="hd-card">
-                <div className="hd-card-label">決策權威 · Authority</div>
-                <div className="hd-card-value">{result.authority.name}</div>
-                <div className="hd-card-sub">{result.authority.tip}</div>
+              <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)]">
+                <div className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">決策權威 · Authority</div>
+                <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{result.authority.name}</div>
+                <div className="font-sans text-[13px] text-[var(--ink-soft)] leading-[1.5]">{result.authority.tip}</div>
               </div>
 
               {/* Definition */}
-              <div className="hd-card">
-                <div className="hd-card-label">定義 · Definition</div>
-                <div className="hd-card-value">{result.definition.label}</div>
-                <div className="hd-card-meta" style={{ marginTop: 4 }}>{result.definition.raw}</div>
-                <div className="hd-card-sub" style={{ marginTop: 6 }}>
+              <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)]">
+                <div className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">定義 · Definition</div>
+                <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{result.definition.label}</div>
+                <div className="font-mono text-[11px] text-[var(--ink-soft)] mt-1 tracking-[0.04em]">{result.definition.raw}</div>
+                <div className="font-sans text-[13px] text-[var(--ink-soft)] leading-[1.5] mt-1.5">
                   已定義 {result.definedCenterIds.size} / 9 中心 · 激活 {result.allGates.size} 閘門
                 </div>
               </div>
 
               {/* Incarnation Cross */}
-              <div className="hd-card" style={{ gridColumn: 'span 2' }}>
-                <div className="hd-card-label">輪迴交叉 · Incarnation Cross</div>
-                <div className="hd-card-value" style={{ fontSize: 22 }}>
+              <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] col-span-2">
+                <div className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">輪迴交叉 · Incarnation Cross</div>
+                <div className="font-serif italic font-medium text-[22px] leading-[1.1] text-[var(--ink)] mb-1">
                   {(CROSS_TYPE_LABELS[result.incarnationCross.crossType] ?? result.incarnationCross.crossType)}之{result.incarnationCross.crossName}
                 </div>
-                <div className="hd-card-meta">{result.incarnationCross.crossType} · {result.incarnationCross.gatesLabel}</div>
-                
+                <div className="font-mono text-[11px] text-[var(--ink-soft)] mt-1.5 tracking-[0.04em]">
+                  {result.incarnationCross.crossType} · {result.incarnationCross.gatesLabel}
+                </div>
               </div>
             </div>
 
-            <hr className="hd-section-divider" />
+            <div className="border-t border-[var(--ink)] my-8" />
 
             {/* Variables */}
-            <div className="hd-variables">
-              <div className="hd-variables-title">四箭頭 · Variables &amp; Life Design</div>
+            <div className="border border-[var(--ink)] mb-6">
+              <div className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-[var(--ink-soft)] py-2.5 px-4 border-b border-[var(--ink)] bg-[var(--paper-deep)]">
+                四箭頭 · Variables &amp; Life Design
+              </div>
               {[
                 { category: '飲食方式 · Digestion', val: result.variables.digestion },
                 { category: '適合環境 · Environment', val: result.variables.environment },
                 { category: '觀點 · Perspective', val: result.variables.perspective },
                 { category: '思考動機 · Motivation', val: result.variables.motivation },
               ].map(r => (
-                <div className="hd-var-row" key={r.category}>
-                  <div className="hd-var-category">{r.category}</div>
-                  <div className="hd-var-label">{r.val.label}</div>
-                  <div className="hd-var-desc">{r.val.description}</div>
+                <div
+                  className="grid grid-cols-[200px_140px_1fr] gap-4 py-2.5 px-4 border-b border-dotted border-[rgba(43,31,20,0.2)] items-start last:border-b-0 max-[600px]:grid-cols-1 max-[600px]:gap-1"
+                  key={r.category}
+                >
+                  <div className="font-mono text-[11px] tracking-[0.04em] text-[var(--ink-soft)] leading-[1.5]">{r.category}</div>
+                  <div className="font-sans text-[13px] font-semibold text-[var(--ink)]">{r.val.label}</div>
+                  <div className="font-sans text-[13px] text-[var(--ink-soft)] leading-[1.55]">{r.val.description}</div>
                 </div>
               ))}
             </div>
 
-            <hr className="hd-section-divider" />
+            <div className="border-t border-[var(--ink)] my-8" />
 
             {/* Centers grid */}
-            <div style={{ marginBottom: 8, fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ink-soft)' }}>
+            <div className="mb-2 font-mono text-[9px] tracking-[0.2em] uppercase text-[var(--ink-soft)]">
               九大能量中心 · Nine Centers
             </div>
-            <div className="hd-centers-grid">
+            <div className="grid grid-cols-3 gap-2 mb-6">
               {(Object.keys(CENTER_INFO) as CenterName[]).map(id => {
                 const defined = result.definedCenterIds.has(id)
                 return (
-                  <div key={id} className={`hd-center-cell ${defined ? 'defined' : 'undefined'}`}>
-                    <div className={`hd-center-dot${defined ? ' filled' : ''}`} />
+                  <div
+                    key={id}
+                    className={`border border-[var(--ink)] py-2.5 px-3 flex items-center gap-2 ${defined ? 'bg-[var(--paper-deep)]' : 'bg-[var(--paper)] opacity-55'}`}
+                  >
+                    <div className={`w-2.5 h-2.5 border-[1.5px] border-[var(--ink)] shrink-0${defined ? ' bg-[var(--ink)]' : ''}`} />
                     <div>
-                      <div className="hd-center-cell-name">{CENTER_INFO[id].name}</div>
-                      <div className="hd-center-cell-en">{defined ? 'DEFINED' : 'OPEN'}</div>
+                      <div className="font-sans text-[12px] font-semibold text-[var(--ink)]">{CENTER_INFO[id].name}</div>
+                      <div className="font-mono text-[10.5px] text-[var(--ink-soft)] tracking-[0.05em]">{defined ? 'DEFINED' : 'OPEN'}</div>
                     </div>
                   </div>
                 )
               })}
             </div>
 
-            <hr className="hd-section-divider" />
+            <div className="border-t border-[var(--ink)] my-8" />
 
             {/* Channels */}
-            <div className="hd-channels-block">
-              <div className="hd-channels-block-title">
+            <div className="border border-[var(--ink)] p-4 mb-6">
+              <div className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-3 pb-2 border-b border-[var(--ink)]">
                 已定義通道 · Defined Channels（{result.definedChannels.length} / {CHANNEL_DEFS.length}）
               </div>
               {result.definedChannels.length === 0 ? (
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-soft)' }}>無已定義通道</div>
+                <div className="font-mono text-[12px] text-[var(--ink-soft)]">無已定義通道</div>
               ) : (
-                <div className="hd-channels-tags">
+                <div className="flex flex-wrap gap-1.5">
                   {result.definedChannels.map(ch => (
-                    <span key={ch.id} className="hd-channel-tag">
+                    <span key={ch.id} className="font-mono text-[11px] tracking-[0.04em] border border-[var(--ink)] py-[3px] px-2 text-[var(--ink)] bg-[var(--paper-deep)]">
                       {ch.id}
-                      <span style={{ color: 'var(--ink-soft)', marginLeft: 6, fontSize: 11 }}>
+                      <span className="text-[var(--ink-soft)] ml-1.5 text-[11px]">
                         {CENTER_INFO[ch.centerA].name.replace('中心', '')}—{CENTER_INFO[ch.centerB].name.replace('中心', '')}
                       </span>
                     </span>
