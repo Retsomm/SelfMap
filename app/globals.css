@@ -32,13 +32,17 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 12px;
   line-height: 1.45;
   min-height: 100vh;
   background-image:
     radial-gradient(circle at 30% 20%, rgba(43, 31, 20, 0.025) 0, transparent 50%),
     radial-gradient(circle at 70% 80%, rgba(43, 31, 20, 0.022) 0, transparent 50%),
     repeating-linear-gradient(0deg, rgba(43, 31, 20, 0.012) 0 1px, transparent 1px 3px);
+}
+
+@media (min-width: 768px) {
+  body { font-size: 16px; }
 }
 
 /* ───────── Main content grid ───────── */
@@ -60,7 +64,7 @@ body {
 .hd-note { margin-bottom: 24px; }
 .hd-note h4 {
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.18em;
@@ -74,7 +78,7 @@ body {
   text-transform: none;
   letter-spacing: 0.01em;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.55;
   color: var(--ink-soft);
 }
@@ -86,7 +90,7 @@ body {
   gap: 8px;
   padding: 4px 0;
   border-bottom: 1px dotted rgba(43, 31, 20, 0.25);
-  font-size: 12px;
+  font-size: 16px;
 }
 .hd-legend-row:last-child { border-bottom: 0; }
 .hd-legend-swatch {
@@ -102,9 +106,9 @@ body {
   text-transform: none;
   font-family: var(--font-sans);
   color: var(--ink);
-  font-size: 13px;
+  font-size: 16px;
 }
-.hd-legend-code { color: var(--ink-soft); font-size: 11px; }
+.hd-legend-code { color: var(--ink-soft); font-size: 16px; }
 
 /* ───────── Chart ───────── */
 
@@ -232,7 +236,7 @@ body {
 
 .hd-input-field {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 16px;
   line-height: 1.4;
   color: var(--ink);
   background: var(--paper);
@@ -266,13 +270,13 @@ body {
   grid-template-columns: 120px 1fr;
   gap: 24px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 16px;
   color: var(--ink-soft);
   letter-spacing: 0.04em;
 }
 .hd-index-strip h5 {
   margin: 0;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.2em;
@@ -333,7 +337,7 @@ body {
 }
 .hd-drawer-kicker {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 16px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ink-soft);
@@ -350,7 +354,7 @@ body {
 }
 .hd-drawer-sub {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 16px;
   color: var(--ink-soft);
   margin-top: 8px;
   letter-spacing: 0.02em;
@@ -361,7 +365,7 @@ body {
   border: 1px solid var(--ink);
   width: 32px; height: 32px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 16px;
   cursor: pointer;
   color: var(--ink);
   display: flex; align-items: center; justify-content: center;
@@ -375,7 +379,7 @@ body {
 }
 .hd-drawer-body h4 {
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.2em;
@@ -387,7 +391,7 @@ body {
 .hd-drawer-body h4:first-child { margin-top: 0; }
 .hd-drawer-body p {
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.65;
   color: var(--ink);
   margin: 0 0 12px;
@@ -403,7 +407,7 @@ body {
 .hd-tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .hd-tag {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 16px;
   letter-spacing: 0.05em;
   border: 1px solid var(--ink);
   padding: 3px 8px;
@@ -416,7 +420,7 @@ body {
   border: 1px solid var(--ink);
   text-align: center;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 16px;
   padding: 6px 0;
   cursor: pointer;
   background: var(--paper);
@@ -445,13 +449,13 @@ body {
 }
 .hd-ch-card-ref {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 16px;
   letter-spacing: 0.1em;
   color: var(--ink-soft);
 }
 .hd-ch-card-en {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 16px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-soft);
@@ -508,7 +512,14 @@ body {
   .hd-planets-side { display: none; }
 }
 @media (max-width: 640px) {
-  .hd-index-grid { grid-template-columns: repeat(8, 1fr); }
+  .hd-index-strip {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .hd-index-grid {
+    grid-template-columns: repeat(8, 1fr);
+    justify-items: center;
+  }
 
   /* Show mobile planet list */
   .hd-planets-mobile {
@@ -523,7 +534,7 @@ body {
   .hd-planets-mobile-design     { color: #c8553d; }
   .hd-planets-mobile-personality { color: var(--ink); }
   .hd-planets-mobile-header {
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     border-bottom: 1px solid currentcolor;
@@ -537,4 +548,25 @@ body {
     padding: 1px 0;
     font-weight: 600;
   }
+}
+
+/* ───────── Mobile font-size floor (12px) ───────── */
+@media (max-width: 767px) {
+  .hd-note h4,
+  .hd-note p,
+  .hd-legend-row,
+  .hd-legend-name,
+  .hd-legend-code,
+  .hd-input-field,
+  .hd-index-strip,
+  .hd-index-strip h5,
+  .hd-drawer-kicker,
+  .hd-drawer-sub,
+  .hd-drawer-close,
+  .hd-drawer-body h4,
+  .hd-drawer-body p,
+  .hd-tag,
+  .hd-gate-chip,
+  .hd-ch-card-ref,
+  .hd-ch-card-en { font-size: 12px; }
 }

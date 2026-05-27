@@ -1,0 +1,89 @@
+import { initSwissEph, Planet, LunarPoint } from '@/lib/swissEph'
+import {
+  calculatePlanetGates,
+  calculateProfile,
+  calculateCentersAndChannels,
+  calculateType,
+  calculateAuthority,
+  calculateIncarnationCross,
+  calculateVariables,
+  calculateDefinition,
+  type PlanetRow,
+} from '@/lib/humanDesign'
+import { toUtcDate, getDesignJd } from '@/utils/ephemeris'
+import { getOffsetFromTimezone } from '@/components/humanDesign/LocationPicker'
+import type { HdResult } from '@/lib/buildAiPrompt'
+
+let sweCache: Awaited<ReturnType<typeof initSwissEph>> | null = null
+
+export const computeHdResult = async (
+  date: string,
+  time: string,
+  timezone: string,
+): Promise<HdResult> => {
+  const year = new Date(date).getUTCFullYear()
+  if (year < 1900 || year > 2040) {
+    throw new Error(`出生年份 ${year} 超出支援範圍（1900–2040）`)
+  }
+
+  if (!sweCache) sweCache = await initSwissEph()
+  const swe = sweCache
+
+  const offset = getOffsetFromTimezone(timezone, new Date(`${date}T${time}:00`))
+  const birthUtc = toUtcDate(date, time, offset)
+  const jd = swe.dateToJulianDay(birthUtc)
+  const designJd = getDesignJd(swe, jd)
+  const designUtc = new Date((designJd - 2440587.5) * 86400 * 1000)
+
+  const lon = (body: Parameters<typeof swe.calculatePosition>[1], jdVal: number) =>
+    swe.calculatePosition(jdVal, body).longitude
+
+  const sunP = lon(Planet.Sun, jd)
+  const sunD = lon(Planet.Sun, designJd)
+  const nnP = lon(LunarPoint.TrueNode, jd)
+  const nnD = lon(LunarPoint.TrueNode, designJd)
+
+  const rows: [string, number, number][] = [
+    ['太陽',   sunP,                         sunD],
+    ['地球',   (sunP + 180) % 360,           (sunD + 180) % 360],
+    ['月亮',   lon(Planet.Moon,    jd),      lon(Planet.Moon,    designJd)],
+    ['北交點', nnP,                           nnD],
+    ['南交點', (nnP + 180) % 360,            (nnD + 180) % 360],
+    ['水星',   lon(Planet.Mercury, jd),      lon(Planet.Mercury, designJd)],
+    ['金星',   lon(Planet.Venus,   jd),      lon(Planet.Venus,   designJd)],
+    ['火星',   lon(Planet.Mars,    jd),      lon(Planet.Mars,    designJd)],
+    ['木星',   lon(Planet.Jupiter, jd),      lon(Planet.Jupiter, designJd)],
+    ['土星',   lon(Planet.Saturn,  jd),      lon(Planet.Saturn,  designJd)],
+    ['天王星', lon(Planet.Uranus,  jd),      lon(Planet.Uranus,  designJd)],
+    ['海王星', lon(Planet.Neptune, jd),      lon(Planet.Neptune, designJd)],
+    ['冥王星', lon(Planet.Pluto,   jd),      lon(Planet.Pluto,   designJd)],
+  ]
+
+  const planets: PlanetRow[] = rows.map(([name, pLon, dLon]) => ({
+    ...calculatePlanetGates(pLon, dLon, name),
+    persLon: pLon,
+    desLon: dLon,
+  }))
+
+  const profile = calculateProfile(sunP, sunD)
+  const allGates = new Set<number>()
+  for (const p of planets) { allGates.add(p.black.gate); allGates.add(p.red.gate) }
+  const { definedCenterIds, definedChannels } = calculateCentersAndChannels(allGates)
+  const type = calculateType(definedCenterIds, definedChannels)
+  const authority = calculateAuthority(definedCenterIds, type)
+  const incarnationCross = calculateIncarnationCross(
+    planets[0].black, planets[1].black, planets[0].red, planets[1].red,
+  )
+  const variables = calculateVariables(
+    planets[0].black, planets[0].red, planets[3].black, planets[3].red,
+  )
+  const definition = calculateDefinition(definedCenterIds, definedChannels)
+
+  return {
+    jd, designJd,
+    utcTime: birthUtc.toISOString(),
+    designUtcTime: designUtc.toISOString(),
+    planets, profile, type, authority, definedCenterIds, definedChannels,
+    allGates, incarnationCross, variables, definition,
+  }
+}

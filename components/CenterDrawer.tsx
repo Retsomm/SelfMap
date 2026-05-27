@@ -36,7 +36,7 @@ export default function CenterDrawer({ center, onClose }: CenterDrawerProps) {
                       center.defined ? 'bg-indigo-400' : 'bg-zinc-300'
                     }`}
                   />
-                  <span className="text-xs text-zinc-400">
+                  <span className="text-[12px] md:text-base text-zinc-400">
                     {center.defined ? '已定義' : '未定義'}
                   </span>
                 </div>
@@ -56,23 +56,23 @@ export default function CenterDrawer({ center, onClose }: CenterDrawerProps) {
               </div>
 
               <section>
-                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3">
+                <h3 className="text-[12px] md:text-base font-semibold text-zinc-400 uppercase tracking-widest mb-3">
                   行為影響
                 </h3>
-                <p className="text-sm text-zinc-700 leading-relaxed">
+                <p className="text-[12px] md:text-base text-zinc-700 leading-relaxed">
                   {center.behavior}
                 </p>
               </section>
 
               <section>
-                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3">
+                <h3 className="text-[12px] md:text-base font-semibold text-zinc-400 uppercase tracking-widest mb-3">
                   正向特質
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {center.positive.map((item) => (
                     <span
                       key={item}
-                      className="bg-indigo-50 text-indigo-700 text-xs font-medium px-3 py-1.5 rounded-full"
+                      className="bg-indigo-50 text-indigo-700 text-[12px] md:text-base font-medium px-3 py-1.5 rounded-full"
                     >
                       {item}
                     </span>
@@ -81,14 +81,14 @@ export default function CenterDrawer({ center, onClose }: CenterDrawerProps) {
               </section>
 
               <section>
-                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3">
+                <h3 className="text-[12px] md:text-base font-semibold text-zinc-400 uppercase tracking-widest mb-3">
                   盲點
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {center.blind.map((item) => (
                     <span
                       key={item}
-                      className="bg-amber-50 text-amber-700 text-xs font-medium px-3 py-1.5 rounded-full"
+                      className="bg-amber-50 text-amber-700 text-[12px] md:text-base font-medium px-3 py-1.5 rounded-full"
                     >
                       {item}
                     </span>
@@ -97,20 +97,20 @@ export default function CenterDrawer({ center, onClose }: CenterDrawerProps) {
               </section>
 
               <section className="bg-indigo-50 rounded-2xl p-5">
-                <h3 className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-2">
+                <h3 className="text-[12px] md:text-base font-semibold text-indigo-400 uppercase tracking-widest mb-2">
                   行動建議
                 </h3>
-                <p className="text-sm text-indigo-800 leading-relaxed">
+                <p className="text-[12px] md:text-base text-indigo-800 leading-relaxed">
                   {center.suggestion}
                 </p>
               </section>
 
               {!center.defined && (
                 <div className="border border-zinc-100 rounded-2xl p-5">
-                  <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
+                  <h3 className="text-[12px] md:text-base font-semibold text-zinc-400 uppercase tracking-widest mb-2">
                     關於未定義中心
                   </h3>
-                  <p className="text-sm text-zinc-500 leading-relaxed">
+                  <p className="text-[12px] md:text-base text-zinc-500 leading-relaxed">
                     未定義中心像一面鏡子，能接收並放大周遭人的能量。這不是弱點，而是你在這個主題上具有彈性與開放性。
                   </p>
                 </div>

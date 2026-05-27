@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Cormorant_Garamond, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { clerkAppearance } from '@/lib/clerkAppearance'
+import Navbar from '@/components/Navbar'
 import './globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -36,7 +37,10 @@ export default function RootLayout({
   return (
     <html lang="zh-TW" className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full">
-        <ClerkProvider appearance={clerkAppearance}>{children}</ClerkProvider>
+        <ClerkProvider appearance={clerkAppearance}>
+          <Navbar />
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   )

@@ -6,26 +6,26 @@ export const downloadChart = async (el: HTMLElement): Promise<void> => {
     ])
     const { jsPDF } = jspdfMod
 
-    const prevScrollY = window.scrollY
-    window.scrollTo(0, 0)
-    await new Promise<void>(r => requestAnimationFrame(() => { requestAnimationFrame(() => r()) }))
-
-    let dataUrl: string
-    try {
-      dataUrl = await toPng(el, {
-        pixelRatio: 3,
-        backgroundColor: '#efe5d0',
-        filter: (node) => {
-          const el = node as Element
-          if (!el.classList) return true
-          if (el.classList.contains('hd-print-hide')) return false
-          if (el.tagName?.toLowerCase() === 'nav') return false
-          return true
-        },
-      })
-    } finally {
-      window.scrollTo(0, prevScrollY)
-    }
+    const pad = 24
+    const dataUrl = await toPng(el, {
+      pixelRatio: 3,
+      backgroundColor: '#efe5d0',
+      width: el.offsetWidth + pad * 2,
+      height: el.offsetHeight + pad * 2,
+      style: {
+        overflow: 'visible',
+        maxWidth: 'none',
+        padding: `${pad}px`,
+        boxSizing: 'border-box',
+      },
+      filter: (node) => {
+        const el = node as Element
+        if (!el.classList) return true
+        if (el.classList.contains('hd-print-hide')) return false
+        if (el.tagName?.toLowerCase() === 'nav') return false
+        return true
+      },
+    })
 
     const img = new Image()
     await new Promise<void>((resolve) => { img.onload = () => resolve(); img.src = dataUrl })

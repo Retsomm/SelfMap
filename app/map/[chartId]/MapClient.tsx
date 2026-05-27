@@ -47,7 +47,7 @@ export default function MapClient({ chart }: { chart: ChartRecord }) {
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
+              className="text-[12px] md:text-base text-zinc-500 hover:text-zinc-900 transition-colors"
             >
               我的圖表
             </Link>
@@ -62,7 +62,7 @@ export default function MapClient({ chart }: { chart: ChartRecord }) {
             <h1 className="text-2xl font-bold text-zinc-900 mb-1">
               {chart.name || '我的地圖'}
             </h1>
-            <p className="text-sm text-zinc-400">
+            <p className="text-[12px] md:text-base text-zinc-400">
               {chart.birthDate} · {chart.birthTime} · {chart.birthCity}
             </p>
           </div>
@@ -82,15 +82,15 @@ export default function MapClient({ chart }: { chart: ChartRecord }) {
                 key={label}
                 className="flex items-center justify-between py-2.5 border-b border-zinc-50"
               >
-                <span className="text-xs text-zinc-400">{label}</span>
-                <span className="text-sm font-medium text-zinc-800">{value}</span>
+                <span className="text-[12px] md:text-base text-zinc-400">{label}</span>
+                <span className="text-[12px] md:text-base font-medium text-zinc-800">{value}</span>
               </div>
             ))}
           </div>
 
           <div className="mt-6 bg-indigo-50 rounded-2xl p-4">
-            <p className="text-xs text-indigo-600 font-medium mb-1">探索提示</p>
-            <p className="text-xs text-indigo-700 leading-relaxed">
+            <p className="text-[12px] md:text-base text-indigo-600 font-medium mb-1">探索提示</p>
+            <p className="text-[12px] md:text-base text-indigo-700 leading-relaxed">
               點擊地圖上任意中心，即可查看該中心對你行為模式的深度解讀
             </p>
           </div>
