@@ -198,7 +198,7 @@ export const clerkAppearance = {
     },
     avatarImage: { borderRadius: 0 },
 
-    // ── Footer ──
+    // ── Footer ── 隱藏 Clerk 品牌浮水印與開發模式提示列
     footer: { display: 'none' },
     footerAction: { display: 'none' },
   },
