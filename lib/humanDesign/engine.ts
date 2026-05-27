@@ -13,6 +13,8 @@ import type {
   HumanDesignChart,
   GateAndLine,
   VariablesResult,
+  PlanetRow,
+  Activations,
 } from './types'
 
 const hashStr = (s: string): number => {
@@ -242,4 +244,23 @@ export const generateChart = (
   }))
 
   return { type, authority, profile, definition, centers, channels, gates: Array.from(activeGates) }
+}
+
+/**
+ * 將行星列表轉換為閘門激活映射。
+ *
+ * 合併規則（冪等，與順序無關）：
+ * - 閘門出現於 black（Personality/意識）→ 標記 c = true，保留既有 u 旗標
+ * - 閘門出現於 red（Design/潛意識）→ 標記 u = true，保留既有 c 旗標
+ * - 同一閘門同時出現於 black 與 red → 結果為 { c: true, u: true }
+ */
+export const toActivations = (planets: PlanetRow[]): Activations => {
+  const out: Activations = {}
+  for (const p of planets) {
+    const cGate = p.black.gate
+    const uGate = p.red.gate
+    out[cGate] = { c: true, u: out[cGate]?.u ?? false }
+    out[uGate] = { c: out[uGate]?.c ?? false, u: true }
+  }
+  return out
 }

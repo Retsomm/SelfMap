@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { fmtGate } from '@/utils/format'
 import { HD_GATES, HD_CENTERS_INFO, type ChartChannel } from './hd-chart-data'
 import type { SelectionPayload } from './BodyGraph'
 
@@ -53,7 +54,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
     } else if (kind === 'gate') {
       const d = data as { name: string; en: string; center: string; desc: string; number: number }
       const centerInfo = HD_CENTERS_INFO[d.center]
-      kicker = `GATE № ${String(d.number).padStart(2, '0')}`
+      kicker = `GATE № ${fmtGate(d.number)}`
       title = d.name
       sub = `${d.en} · 屬於 ${centerInfo ? centerInfo.name : d.center}`
       body = (
@@ -68,7 +69,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
           </p>
           <h4>編號 / Reference</h4>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-            GATE.{String(d.number).padStart(2, '0')} · {d.en}
+            GATE.{fmtGate(d.number)} · {d.en}
           </p>
         </>
       )
@@ -100,7 +101,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
           </p>
           <h4>編號 / Reference</h4>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-            CHANNEL.{String(d.from).padStart(2, '0')}–{String(d.to).padStart(2, '0')} · {d.en.toUpperCase()}
+            CHANNEL.{fmtGate(d.from)}–{fmtGate(d.to)} · {d.en.toUpperCase()}
           </p>
         </>
       )

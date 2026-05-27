@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import path from "path";
+import CopyPlugin from "copy-webpack-plugin";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['@swisseph/browser'],
@@ -20,6 +21,9 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     config.cache = { type: 'memory' }
 
+    // asyncWebAssembly 讓 webpack 識別 .wasm 格式；
+    // 客戶端的 asset/resource 規則（下方）會覆蓋 webassembly/async，
+    // 將 WASM 複製至 /_next/static/chunks/<hash>.wasm 並回傳 URL
     config.experiments = {
       ...config.experiments,
       asyncWebAssembly: true,
@@ -29,6 +33,19 @@ const nextConfig: NextConfig = {
       const existing = Array.isArray(config.externals) ? config.externals : [config.externals].filter(Boolean)
       config.externals = [...existing, '@swisseph/browser']
     } else {
+      // build 時將 WASM 複製至 /_next/static/chunks/swisseph.wasm
+      // 確保 Vercel 部署包含此檔案，路徑固定可靠
+      config.plugins.push(
+        new CopyPlugin({
+          patterns: [
+            {
+              from: require.resolve('@swisseph/browser/dist/swisseph.wasm'),
+              to: 'static/chunks/swisseph.wasm',
+            },
+          ],
+        })
+      )
+
       config.module.rules.push({
         test: /swisseph-browser\.js$/,
         enforce: 'pre',

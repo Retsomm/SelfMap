@@ -104,6 +104,13 @@ export interface HumanDesignChart {
   gates: number[]
 }
 
+export interface GateActivation {
+  c: boolean  // conscious / personality
+  u: boolean  // unconscious / design
+}
+
+export type Activations = Record<number, GateActivation>
+
 export type CrossType = 'RAC' | 'JC' | 'LAC'
 
 export interface IncarnationCross {
