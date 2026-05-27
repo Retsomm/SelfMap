@@ -1,26 +1,499 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────
+   HUMAN DESIGN · 編輯誌風格
+   Editorial-archive aesthetic — warm cream paper, serif display,
+   monospace annotation, earthen palette.
+   ───────────────────────────────────────────────────────────── */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #efe5d0;
+  --paper-deep: #e7d9bd;
+  --ink: #2b1f14;
+  --ink-soft: #6b5a44;
+  --rule: #2b1f14;
+
+  --mustard: #d9c25e;
+  --olive:   #a8c065;
+  --tan:     #b89968;
+  --tan-2:   #c9aa78;
+  --crimson: #c8553d;
+  --crimson-2: #d96a52;
+
+  --font-serif: var(--font-serif, "Georgia", serif);
+  --font-sans:  var(--font-sans, system-ui, sans-serif);
+  --font-mono:  var(--font-mono, ui-monospace, monospace);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.45;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 30% 20%, rgba(43, 31, 20, 0.025) 0, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(43, 31, 20, 0.022) 0, transparent 50%),
+    repeating-linear-gradient(0deg, rgba(43, 31, 20, 0.012) 0 1px, transparent 1px 3px);
+}
+
+/* ───────── Main content grid ───────── */
+
+.hd-chart-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 5fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.hd-col-mid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.hd-note { margin-bottom: 24px; }
+.hd-note h4 {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--ink);
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--ink);
+}
+.hd-note p {
+  margin: 0 0 8px;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.hd-legend-row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px dotted rgba(43, 31, 20, 0.25);
+  font-size: 12px;
+}
+.hd-legend-row:last-child { border-bottom: 0; }
+.hd-legend-swatch {
+  width: 16px; height: 16px;
+  border: 1px solid var(--ink);
+}
+.hd-legend-swatch.tri-up    { clip-path: polygon(50% 0, 100% 100%, 0 100%); border: none; }
+.hd-legend-swatch.tri-down  { clip-path: polygon(0 0, 100% 0, 50% 100%); border: none; }
+.hd-legend-swatch.tri-left  { clip-path: polygon(100% 0, 100% 100%, 0 50%); border: none; }
+.hd-legend-swatch.tri-right { clip-path: polygon(0 0, 100% 50%, 0 100%); border: none; }
+.hd-legend-swatch.diamond   { transform: rotate(45deg) scale(0.78); }
+.hd-legend-name {
+  text-transform: none;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  font-size: 13px;
+}
+.hd-legend-code { color: var(--ink-soft); font-size: 11px; }
+
+/* ───────── Chart ───────── */
+
+.hd-planets-side {
+  font-family: var(--font-mono);
+  font-size: 33px;
+  line-height: 1.3;
+  display: flex;
+  flex-direction: column;
+  padding-top: 2px;
+  height: 100%;
+}
+
+.hd-planet-rows {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.hd-planets-side--design    { color: #c8553d; }
+.hd-planets-side--personality { color: var(--ink); }
+
+.hd-planets-side-header {
+  font-size: 18px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  padding-bottom: 5px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid currentcolor;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.hd-planets-side-empty { flex: 1; }
+
+.hd-planet-row {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 1px 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.hd-planet-row--left  { flex-direction: row; justify-content: space-between; }
+.hd-planet-row--right { flex-direction: row; justify-content: space-between; }
+
+.hd-planet-symbol {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.hd-planet-gate {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.hd-chart-frame {
+  position: relative;
+  width: 100%;
+}
+
+.hd-chart-corner {
+  position: absolute;
+  width: 14px; height: 14px;
+  border-color: var(--ink);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+.hd-chart-corner.tl { top: -2px; left: -2px; border-top-width: 1px; border-left-width: 1px; }
+.hd-chart-corner.tr { top: -2px; right: -2px; border-top-width: 1px; border-right-width: 1px; }
+.hd-chart-corner.bl { bottom: -2px; left: -2px; border-bottom-width: 1px; border-left-width: 1px; }
+.hd-chart-corner.br { bottom: -2px; right: -2px; border-bottom-width: 1px; border-right-width: 1px; }
+
+.hd-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Chart elements */
+.hd-center-shape {
+  cursor: pointer;
+  transition: filter 180ms ease, transform 180ms ease;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.hd-center-shape:hover { filter: brightness(1.06) drop-shadow(0 4px 12px rgba(43,31,20,0.18)); }
+.hd-center-shape.active { filter: brightness(1.08) drop-shadow(0 0 0 2px var(--ink)); }
+
+.hd-channel { cursor: pointer; transition: stroke 180ms ease, opacity 180ms ease; }
+.hd-channel:hover { opacity: 1; }
+.hd-channel-hit { fill: none; stroke: transparent; stroke-width: 18; cursor: pointer; }
+
+.hd-gate { cursor: pointer; }
+.hd-gate-circle {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.2;
+  transition: fill 180ms ease, transform 180ms ease;
+}
+.hd-gate:hover .hd-gate-circle { fill: var(--mustard); }
+.hd-gate-num {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--ink);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  font-weight: 600;
+}
+
+.hd-annotation-line { stroke: var(--ink); stroke-width: 0.6; fill: none; }
+.hd-annotation-label {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  fill: var(--ink);
+  letter-spacing: 0.05em;
+}
+.hd-annotation-label.sm { font-size: 12px; fill: var(--ink-soft); }
+
+/* ───────── Input form ───────── */
+
+.hd-input-field {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 5px 8px;
+  min-height: 28px;
+  outline: none;
+  transition: border-color 120ms ease;
+  min-width: 0;
+}
+.hd-input-field:focus { border-color: var(--ink); outline: 2px solid rgba(43,31,20,0.18); outline-offset: 2px; }
+.hd-input-field[type="number"] { width: 64px; }
+.hd-input-field::-webkit-credentials-auto-fill-button { visibility: hidden; display: none !important; width: 0; height: 0; }
+.hd-input-field::-webkit-contacts-auto-fill-button { visibility: hidden; display: none !important; width: 0; height: 0; }
+.hd-input-field:-webkit-autofill,
+.hd-input-field:-webkit-autofill:hover,
+.hd-input-field:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--paper) inset !important;
+  -webkit-text-fill-color: var(--ink) !important;
+  border: 1px solid var(--ink) !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* ───────── Index strip below chart ───────── */
+
+.hd-index-strip {
+  margin-top: 32px;
+  border-top: 1px solid var(--ink);
+  padding-top: 14px;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+.hd-index-strip h5 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+}
+.hd-index-grid {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  gap: 4px 8px;
+}
+.hd-index-cell {
+  text-align: center;
+  cursor: pointer;
+  padding: 2px 0;
+  border-radius: 2px;
+  transition: background 120ms ease, color 120ms ease;
+}
+.hd-index-cell:hover { background: var(--ink); color: var(--paper); }
+.hd-index-cell.activated-c { color: var(--crimson); font-weight: 600; }
+.hd-index-cell.activated-u { color: var(--ink); font-weight: 600; text-decoration: underline; }
+.hd-index-cell.activated-both { color: var(--crimson); font-weight: 600; text-decoration: underline; }
+
+/* ───────── Detail drawer ───────── */
+
+.hd-drawer-scrim {
+  position: fixed; inset: 0;
+  background: rgba(43, 31, 20, 0.22);
+  backdrop-filter: blur(1.5px);
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+.hd-drawer-scrim.open { opacity: 1; pointer-events: auto; }
+
+.hd-drawer {
+  position: fixed;
+  top: 0; right: 0;
+  height: 100vh;
+  width: min(440px, 92vw);
+  background: var(--paper);
+  border-left: 1px solid var(--ink);
+  z-index: 60;
+  transform: translateX(100%);
+  transition: transform 320ms cubic-bezier(0.7, 0, 0.2, 1);
+  display: flex; flex-direction: column;
+  box-shadow: -20px 0 60px rgba(43, 31, 20, 0.18);
+}
+.hd-drawer.open { transform: translateX(0); }
+
+.hd-drawer-head {
+  padding: 22px 28px 16px;
+  border-bottom: 1px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 12px;
+}
+.hd-drawer-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.hd-drawer-title {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 36px;
+  line-height: 1;
+  margin: 0;
+  color: var(--ink);
+}
+.hd-drawer-sub {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+}
+.hd-drawer-close {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--ink);
+  width: 32px; height: 32px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+}
+.hd-drawer-close:hover { background: var(--ink); color: var(--paper); }
+
+.hd-drawer-body {
+  padding: 22px 28px 32px;
+  overflow-y: auto;
+  flex: 1;
+}
+.hd-drawer-body h4 {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+  margin: 24px 0 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--ink);
+}
+.hd-drawer-body h4:first-child { margin-top: 0; }
+.hd-drawer-body p {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+.hd-drawer-body p.lead {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 21px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.hd-tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.hd-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--ink);
+  padding: 3px 8px;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.hd-gates-list { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 6px; }
+.hd-gate-chip {
+  border: 1px solid var(--ink);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 0;
+  cursor: pointer;
+  background: var(--paper);
+  color: var(--ink);
+  transition: background 120ms ease, color 120ms ease;
+}
+.hd-gate-chip:hover { background: var(--ink); color: var(--paper); }
+
+.hd-ch-card {
+  border: 1px solid var(--ink);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.hd-ch-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.hd-ch-card-title {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1;
+}
+.hd-ch-card-ref {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+.hd-ch-card-en {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+/* ───────── Planets mobile list (hidden on desktop) ───────── */
+.hd-planets-mobile { display: none; }
+
+/* ───────── Responsive ───────── */
+@media (max-width: 760px) {
+  .hd-chart-row { grid-template-columns: 1fr; }
+  .hd-planets-side { display: none; }
+}
+@media (max-width: 640px) {
+  .hd-index-grid { grid-template-columns: repeat(8, 1fr); }
+
+  /* Show mobile planet list */
+  .hd-planets-mobile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 12px;
+    margin-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .hd-planets-mobile-design     { color: #c8553d; }
+  .hd-planets-mobile-personality { color: var(--ink); }
+  .hd-planets-mobile-header {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-bottom: 1px solid currentcolor;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    opacity: 0.7;
+  }
+  .hd-planets-mobile-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 1px 0;
+    font-weight: 600;
+  }
 }

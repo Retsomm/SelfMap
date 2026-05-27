@@ -81,12 +81,9 @@ export const calculateIncarnationCross = (
   if (groupId < 0) {
     throw new Error(`輪迴交叉閘門無效：閘門 ${namingGate.gate} 不屬於任何已知交叉群組`)
   }
-  for (const g of [persSun, persEarth, desSun, desEarth]) {
-    const gid = GATE_TO_CROSS_GROUP[g.gate] ?? -1
-    if (gid !== groupId) {
-      throw new Error(`輪迴交叉閘門組合不一致：閘門 ${g.gate} 屬於群組 ${gid}，預期群組 ${groupId}`)
-    }
-  }
+  // 注意：persSun/persEarth 同群組，desSun/desEarth 同群組（因為 Earth 距 Sun 32 格，32 % 16 = 0），
+  // 但 personality 軸與 design 軸的群組不需相同（設計時間 ~88° ≠ 整數倍的 90°）。
+  // 交叉命名僅由 namingGate 決定，不需四閘門同群組。
 
   const baseName   = CROSS_BASE_NAMES[groupId]
   const groupGates = CROSS_GROUPS[groupId]
