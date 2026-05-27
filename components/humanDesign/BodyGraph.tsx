@@ -160,42 +160,37 @@ export default function BodyGraph({
       {/* Annotation lines */}
       {showAnnotations && (
         <g className="hd-annotations">
-          <g>
-            <path className="hd-annotation-line" d="M 385 65 L 540 55 L 575 75" />
-            <text className="hd-annotation-label" x="545" y="98">頂輪</text>
-          </g>
-          <g>
-            <path className="hd-annotation-line" d="M 305 210 L 160 210 L 130 225" />
-            <text className="hd-annotation-label" x="40" y="239">邏輯中心</text>
-          </g>
-          <g>
-            <path className="hd-annotation-line" d="M 300 345 L 175 345 L 145 360" />
-            <text className="hd-annotation-label" x="40" y="374">喉嚨中心</text>
-          </g>
-          <g>
-            <path className="hd-annotation-line" d="M 425 485 L 555 485 L 585 470" />
-            <text className="hd-annotation-label" x="540" y="454">G 中心</text>
-          </g>
-          <g>
-            <path className="hd-annotation-line" d="M 477 552 L 555 552 L 585 540" />
-            <text className="hd-annotation-label" x="540" y="526">意志力中心</text>
-          </g>
-          <g>
-            <path className="hd-annotation-line" d="M 118 625 L 40 625 L 10 640" />
-            <text className="hd-annotation-label" x="5" y="654">直覺中心</text>
-          </g>
-          <g>
-            <path className="hd-annotation-line" d="M 400 685 L 605 685 L 635 698" />
-            <text className="hd-annotation-label" x="545" y="720">薦骨中心</text>
-          </g>
-          <g>
-            <path className="hd-annotation-line" d="M 582 620 L 635 620 L 665 635" />
-            <text className="hd-annotation-label" x="588" y="655">情緒中心</text>
-          </g>
-          <g>
-            <path className="hd-annotation-line" d="M 400 810 L 540 810 L 575 820" />
-            <text className="hd-annotation-label" x="540" y="842">根部中心</text>
-          </g>
+          {([
+            { line: 'M 385 65 L 540 55 L 575 75',       tx: 545, ty: 98,  label: '頂輪' },
+            { line: 'M 305 210 L 160 210 L 130 225',    tx: 40,  ty: 239, label: '邏輯中心' },
+            { line: 'M 300 345 L 175 345 L 145 360',    tx: 40,  ty: 374, label: '喉嚨中心' },
+            { line: 'M 425 485 L 555 485 L 585 470',    tx: 540, ty: 454, label: 'G 中心' },
+            { line: 'M 477 552 L 555 552 L 585 540',    tx: 540, ty: 526, label: '意志力中心' },
+            { line: 'M 118 625 L 40 625 L 10 640',      tx: 5,   ty: 654, label: '直覺中心' },
+            { line: 'M 400 685 L 605 685 L 635 698',    tx: 545, ty: 720, label: '薦骨中心' },
+            { line: 'M 582 620 L 635 620 L 665 635',    tx: 588, ty: 655, label: '情緒中心' },
+            { line: 'M 400 810 L 540 810 L 575 820',    tx: 540, ty: 842, label: '根部中心' },
+          ] as const).map(({ line, tx, ty, label }) => (
+            <g key={label}>
+              <path
+                className="hd-annotation-line"
+                d={line}
+                stroke={HD_PALETTE.ink}
+                strokeWidth="0.6"
+                fill="none"
+              />
+              <text
+                className="hd-annotation-label"
+                x={tx} y={ty}
+                fill={HD_PALETTE.ink}
+                fontSize="14"
+                fontFamily="monospace"
+                letterSpacing="0.05em"
+              >
+                {label}
+              </text>
+            </g>
+          ))}
         </g>
       )}
 
@@ -362,9 +357,21 @@ export default function BodyGraph({
                   <circle
                     className="hd-gate-circle"
                     cx={x} cy={y} r="7.5"
-                    style={{ fill: circleFill, stroke: HD_PALETTE.ink, strokeWidth: 1.4 }}
+                    fill={circleFill}
+                    stroke={HD_PALETTE.ink}
+                    strokeWidth="1.4"
                   />
-                  <text className="hd-gate-num" x={x} y={y} style={{ fill: textFill }}>
+                  <text
+                    className="hd-gate-num"
+                    x={x} y={y}
+                    fill={textFill}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize="10.5"
+                    fontWeight="600"
+                    fontFamily="monospace"
+                    pointerEvents="none"
+                  >
                     {num}
                   </text>
                 </g>

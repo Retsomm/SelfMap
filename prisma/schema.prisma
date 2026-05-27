@@ -26,6 +26,7 @@ model Chart {
   birthDate   String
   birthTime   String
   birthCity   String
+  timezone    String?
   type        String
   authority   String
   profile     String

@@ -1,7 +1,6 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { generateChart } from '@/lib/humanDesign'
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,9 +10,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { birthDate, birthTime, birthCity, name } = body
+    const { birthDate, birthTime, birthCity, timezone, name, type, authority, profile, definition, centers, channels, gates } = body
 
-    if (!birthDate || !birthTime || !birthCity) {
+    if (!birthDate || !birthTime || !birthCity || !type || !authority || !profile || !definition) {
       return NextResponse.json({ error: '請填寫所有必填欄位' }, { status: 400 })
     }
 
@@ -30,8 +29,6 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const hdChart = generateChart(birthDate, birthTime, birthCity)
-
     const chart = await prisma.chart.create({
       data: {
         userId: user.id,
@@ -39,13 +36,14 @@ export async function POST(req: NextRequest) {
         birthDate,
         birthTime,
         birthCity,
-        type: hdChart.type,
-        authority: hdChart.authority,
-        profile: hdChart.profile,
-        definition: hdChart.definition,
-        centers: hdChart.centers as object[],
-        channels: hdChart.channels as object[],
-        gates: hdChart.gates,
+        timezone: timezone ?? null,
+        type,
+        authority,
+        profile,
+        definition,
+        centers: centers ?? [],
+        channels: channels ?? [],
+        gates: gates ?? [],
       },
     })
 

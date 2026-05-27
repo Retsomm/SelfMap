@@ -42,7 +42,7 @@ export default function CreatePage() {
             SelfMap
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
+            <Link href="/dashboard" className="text-[12px] md:text-base text-zinc-500 hover:text-zinc-900 transition-colors">
               我的圖表
             </Link>
             <UserButton />
@@ -54,22 +54,22 @@ export default function CreatePage() {
         <div className="max-w-lg mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-zinc-900 mb-2">建立你的地圖</h1>
-            <p className="text-zinc-500 text-sm">輸入出生資料，生成專屬的 Human Design 內在地圖</p>
+            <p className="text-zinc-500 text-[12px] md:text-base">輸入出生資料，生成專屬的 Human Design 內在地圖</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">圖表名稱（選填）</label>
+              <label className="text-[12px] md:text-base font-medium text-zinc-700">圖表名稱（選填）</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="例：我的主圖、25歲版本…"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-[12px] md:text-base text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">
+              <label className="text-[12px] md:text-base font-medium text-zinc-700">
                 出生日期 <span className="text-red-400">*</span>
               </label>
               <input
@@ -77,11 +77,11 @@ export default function CreatePage() {
                 value={form.birthDate}
                 onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
                 required
-                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-[12px] md:text-base text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">
+              <label className="text-[12px] md:text-base font-medium text-zinc-700">
                 出生時間 <span className="text-red-400">*</span>
               </label>
               <input
@@ -89,12 +89,12 @@ export default function CreatePage() {
                 value={form.birthTime}
                 onChange={(e) => setForm({ ...form, birthTime: e.target.value })}
                 required
-                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-[12px] md:text-base text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
-              <p className="text-xs text-zinc-500">不確定出生時間？可先輸入 12:00，之後再更新</p>
+              <p className="text-[12px] md:text-base text-zinc-500">不確定出生時間？可先輸入 12:00，之後再更新</p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">
+              <label className="text-[12px] md:text-base font-medium text-zinc-700">
                 出生城市 <span className="text-red-400">*</span>
               </label>
               <input
@@ -103,16 +103,16 @@ export default function CreatePage() {
                 onChange={(e) => setForm({ ...form, birthCity: e.target.value })}
                 placeholder="例：台北、東京、New York…"
                 required
-                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-[12px] md:text-base text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
             </div>
             {error && (
-              <div className="bg-red-50 border border-red-100 text-red-600 text-sm px-4 py-3 rounded-xl">{error}</div>
+              <div className="bg-red-50 border border-red-100 text-red-600 text-[12px] md:text-base px-4 py-3 rounded-xl">{error}</div>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-zinc-900 text-white text-sm font-medium py-3.5 rounded-full hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-zinc-900 text-white text-[12px] md:text-base font-medium py-3.5 rounded-full hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? '生成中…' : '開始探索'}
             </button>
