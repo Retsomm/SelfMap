@@ -60,6 +60,8 @@ export default function HomePage() {
     setDownloading(true)
     try {
       await downloadChart(el)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '下載失敗，請稍後再試。')
     } finally {
       setDownloading(false)
     }
@@ -70,6 +72,9 @@ export default function HomePage() {
     navigator.clipboard.writeText(buildAiPrompt(result)).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }).catch((err) => {
+      setError(err instanceof Error ? err.message : '複製失敗，請稍後再試。')
+      setCopied(false)
     })
   }, [result])
 

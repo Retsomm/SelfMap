@@ -33,19 +33,26 @@ export interface HdResult {
   definition: { raw: string; label: string }
 }
 
+/** 將 HdResult 組合成可直接貼給 AI 的人類圖解讀 prompt。 */
 export const buildAiPrompt = (r: HdResult): string => {
+  // 優先使用 CROSS_TYPE_LABELS 對照表，找不到則回退為原始 crossType 值
   const crossLabel =
     (CROSS_TYPE_LABELS[r.incarnationCross.crossType] ?? r.incarnationCross.crossType) +
     '之' + r.incarnationCross.crossName
+  // 依 definedCenterIds 成員資格拆分已定義／開放中心
   const definedCenters = (Object.keys(CENTER_INFO) as CenterName[]).filter(id => r.definedCenterIds.has(id))
   const openCenters = (Object.keys(CENTER_INFO) as CenterName[]).filter(id => !r.definedCenterIds.has(id))
+  // 通道以「閘門 id（中心A—中心B）」格式呈現，空白時回退為「無」
   const channels =
     r.definedChannels
       .map(ch => `${ch.id}（${fmtCenterName(CENTER_INFO[ch.centerA].name)}—${fmtCenterName(CENTER_INFO[ch.centerB].name)}）`)
       .join('、') || '無'
-  const planetRows = r.planets
-    .map(p => `  ${p.planetName}：Personality ${p.black.full} ／ Design ${p.red.full}`)
-    .join('\n')
+  // 行星閘門列：每行依序呈現 Personality（黑）與 Design（紅）位置，空陣列時回退為「無」
+  const planetRows = (!r.planets || r.planets.length === 0)
+    ? '  無'
+    : r.planets
+        .map(p => `  ${p.planetName}：Personality ${p.black.full} ／ Design ${p.red.full}`)
+        .join('\n')
 
   return `以下是我的 Human Design（人類圖）資料，請根據這些資料為我進行深度解讀：
 

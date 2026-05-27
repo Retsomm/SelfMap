@@ -464,7 +464,7 @@ body {
 /* ───────── Print / PDF export ───────── */
 @media print {
   @page {
-    size: A4 portrait;
+    size: a4 portrait;
     margin: 12mm 14mm;
   }
 
