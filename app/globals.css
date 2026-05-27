@@ -461,6 +461,47 @@ body {
 /* ───────── Planets mobile list (hidden on desktop) ───────── */
 .hd-planets-mobile { display: none; }
 
+/* ───────── Print / PDF export ───────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 14mm;
+  }
+
+  * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+
+  /* Hide everything except the chart and results */
+  nav,
+  header,
+  .hd-print-hide,
+  .hd-drawer-scrim,
+  .hd-drawer,
+  .hd-index-strip,
+  .hd-planets-mobile {
+    display: none !important;
+  }
+
+  body {
+    background: #efe5d0 !important;
+    background-image: none !important;
+  }
+
+  .hd-chart-row {
+    break-inside: avoid;
+  }
+
+  /* Make sure result section starts on same page if possible */
+  section {
+    break-before: auto;
+  }
+
+  /* Cards should not break across pages */
+  .hd-chart-row > *,
+  section > div {
+    break-inside: avoid;
+  }
+}
+
 /* ───────── Responsive ───────── */
 @media (max-width: 760px) {
   .hd-chart-row { grid-template-columns: 1fr; }

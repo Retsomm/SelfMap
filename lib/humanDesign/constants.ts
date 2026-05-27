@@ -271,3 +271,11 @@ export const GATE_TO_CROSS_GROUP: Readonly<Record<number, number>> =
     gates.forEach(gate => { acc[gate] = groupId })
     return acc
   }, {})
+
+export const PLANET_SYMBOLS: Record<string, string> = {
+  '太陽': '☉', '地球': '⊕', '月亮': '☽',
+  '北交點': '☊', '南交點': '☋',
+  '水星': '☿', '金星': '♀', '火星': '♂',
+  '木星': '♃', '土星': '♄', '天王星': '♅',
+  '海王星': '♆', '冥王星': '♇',
+}

@@ -13,18 +13,15 @@ import {
   calculateIncarnationCross,
   calculateVariables,
   calculateDefinition,
-  type ProfileResult,
-  type AuthorityInfo,
-  type HumanDesignType,
+  toActivations,
+  PLANET_SYMBOLS,
   type CenterName,
-  type ChannelDef,
-  type IncarnationCross,
-  type VariablesResult,
   type PlanetRow,
 } from '@/lib/humanDesign'
 import { toUtcDate, getDesignJd } from '@/utils/ephemeris'
+import { fmtGate, fmtCenterName } from '@/utils/format'
 import Navbar from '@/components/Navbar'
-import BodyGraph, { type Activations, type SelectionPayload } from '@/components/humanDesign/BodyGraph'
+import BodyGraph, { type SelectionPayload } from '@/components/humanDesign/BodyGraph'
 import DetailDrawer from '@/components/humanDesign/DetailDrawer'
 import { HD_GATES } from '@/components/humanDesign/hd-chart-data'
 import LocationPicker, { getOffsetFromTimezone } from '@/components/humanDesign/LocationPicker'
@@ -37,42 +34,8 @@ import {
   SIGNATURE_MAP,
   CROSS_TYPE_LABELS,
 } from '@/lib/humanDesign'
-
-const PLANET_SYMBOLS: Record<string, string> = {
-  '太陽': '☉', '地球': '⊕', '月亮': '☽',
-  '北交點': '☊', '南交點': '☋',
-  '水星': '☿', '金星': '♀', '火星': '♂',
-  '木星': '♃', '土星': '♄', '天王星': '♅',
-  '海王星': '♆', '冥王星': '♇',
-}
-
-interface Result {
-  jd: number
-  designJd: number
-  utcTime: string
-  designUtcTime: string
-  planets: PlanetRow[]
-  profile: ProfileResult
-  type: HumanDesignType
-  authority: AuthorityInfo
-  definedCenterIds: Set<CenterName>
-  definedChannels: ChannelDef[]
-  allGates: Set<number>
-  incarnationCross: IncarnationCross
-  variables: VariablesResult
-  definition: { raw: string; label: string }
-}
-
-const toActivations = (planets: PlanetRow[]): Activations => {
-  const out: Activations = {}
-  for (const p of planets) {
-    const cGate = p.black.gate
-    const uGate = p.red.gate
-    out[cGate] = { c: true, u: out[cGate]?.u ?? false }
-    out[uGate] = { c: out[uGate]?.c ?? false, u: true }
-  }
-  return out
-}
+import { downloadChart } from '@/lib/downloadChart'
+import { buildAiPrompt, type HdResult } from '@/lib/buildAiPrompt'
 
 export default function HomePage() {
   const [birthDate, setBirthDate] = useState<Dayjs>(() => dayjs('1996-12-14'))
@@ -82,10 +45,33 @@ export default function HomePage() {
   const time = birthTime.format('HH:mm')
   const [timezone, setTimezone] = useState('Asia/Taipei')
   const [locationLabel, setLocationLabel] = useState('台北, 台灣')
-  const [result, setResult] = useState<Result | null>(null)
+  const [result, setResult] = useState<HdResult | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const sweRef = useRef<Awaited<ReturnType<typeof initSwissEph>> | null>(null)
+
+  const printAreaRef = useRef<HTMLDivElement>(null)
+  const [copied, setCopied] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+
+  const handleDownload = useCallback(async () => {
+    const el = printAreaRef.current
+    if (!el) return
+    setDownloading(true)
+    try {
+      await downloadChart(el)
+    } finally {
+      setDownloading(false)
+    }
+  }, [])
+
+  const handleCopyPrompt = useCallback(() => {
+    if (!result) return
+    navigator.clipboard.writeText(buildAiPrompt(result)).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [result])
 
   const [selection, setSelection] = useState<SelectionPayload | null>(null)
   const [showGates] = useState(true)
@@ -184,7 +170,7 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      <div className="max-w-[1440px] mx-auto px-14 pb-20 pt-[72px] relative">
+      <div ref={printAreaRef} className="max-w-[1440px] mx-auto px-14 pb-20 pt-[72px] relative">
 
         {/* Masthead */}
         <header className="flex justify-center mb-6 gap-6">
@@ -197,7 +183,7 @@ export default function HomePage() {
         <div className="flex flex-col gap-5">
 
           {/* Input row — full width horizontal */}
-          <div className="py-3.5 px-5 border border-[var(--ink)] bg-[var(--paper-deep)] flex items-end gap-5 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch">
+          <div className="hd-print-hide py-3.5 px-5 border border-[var(--ink)] bg-[var(--paper-deep)] flex items-end gap-5 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch">
             <h4 className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ink)] m-0 p-0 border-none whitespace-nowrap self-end pb-1.5">
               輸入出生資料
             </h4>
@@ -335,7 +321,7 @@ export default function HomePage() {
                     onClick={() => handleJumpToGate(n)}
                     title={HD_GATES[n]?.name}
                   >
-                    {String(n).padStart(2, '0')}
+                    {fmtGate(n)}
                   </div>
                 )
               })}
@@ -369,7 +355,7 @@ export default function HomePage() {
         </div>{/* end flex col */}
 
         {/* Footer */}
-        <footer className="mt-[60px] border-t border-[var(--ink)] pt-3.5 flex justify-between font-mono text-[11px] tracking-[0.12em] uppercase text-[var(--ink-soft)]">
+        <footer className="hd-print-hide mt-[60px] border-t border-[var(--ink)] pt-3.5 flex justify-between font-mono text-[11px] tracking-[0.12em] uppercase text-[var(--ink-soft)]">
           <span>FIELD STUDY · BODYGRAPH</span>
           <span>PRESS · ESC · TO · CLOSE</span>
           <span>FIN.</span>
@@ -502,12 +488,29 @@ export default function HomePage() {
                     <span key={ch.id} className="font-mono text-[11px] tracking-[0.04em] border border-[var(--ink)] py-[3px] px-2 text-[var(--ink)] bg-[var(--paper-deep)]">
                       {ch.id}
                       <span className="text-[var(--ink-soft)] ml-1.5 text-[11px]">
-                        {CENTER_INFO[ch.centerA].name.replace('中心', '')}—{CENTER_INFO[ch.centerB].name.replace('中心', '')}
+                        {fmtCenterName(CENTER_INFO[ch.centerA].name)}—{fmtCenterName(CENTER_INFO[ch.centerB].name)}
                       </span>
                     </span>
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Action buttons */}
+            <div className="hd-print-hide flex gap-3 mt-10 flex-wrap">
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="font-mono text-[11.5px] tracking-[0.12em] uppercase text-(--paper) bg-(--ink) border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--crimson) hover:border-(--crimson) disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {downloading ? '生成中…' : '↓ 下載我的人類圖'}
+              </button>
+              <button
+                onClick={handleCopyPrompt}
+                className="font-mono text-[11.5px] tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper)"
+              >
+                {copied ? '✓ 已複製！' : '⎘ 複製 Prompt 給 AI'}
+              </button>
             </div>
 
           </section>

@@ -13,6 +13,8 @@ import type {
   HumanDesignChart,
   GateAndLine,
   VariablesResult,
+  PlanetRow,
+  Activations,
 } from './types'
 
 const hashStr = (s: string): number => {
@@ -242,4 +244,15 @@ export const generateChart = (
   }))
 
   return { type, authority, profile, definition, centers, channels, gates: Array.from(activeGates) }
+}
+
+export const toActivations = (planets: PlanetRow[]): Activations => {
+  const out: Activations = {}
+  for (const p of planets) {
+    const cGate = p.black.gate
+    const uGate = p.red.gate
+    out[cGate] = { c: true, u: out[cGate]?.u ?? false }
+    out[uGate] = { c: out[uGate]?.c ?? false, u: true }
+  }
+  return out
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import type { CenterName } from '@/lib/humanDesign/types'
+import type { CenterName, GateActivation, Activations } from '@/lib/humanDesign/types'
 import {
   CENTERS_GEOM,
   CENTER_ORDER,
@@ -14,12 +14,7 @@ import {
   type ChartChannel,
 } from './hd-chart-data'
 
-export interface GateActivation {
-  c: boolean  // conscious / personality → 黑色
-  u: boolean  // unconscious / design → 紅色
-}
-
-export type Activations = Record<number, GateActivation>
+export type { GateActivation, Activations }
 
 export type SelectionKind = 'center' | 'gate' | 'channel' | 'integration'
 
