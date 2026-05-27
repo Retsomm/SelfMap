@@ -14,7 +14,7 @@ export default function AboutPage() {
               這個網站是什麼？
             </h2>
             <p className="text-[12px] md:text-base leading-relaxed text-(--ink)">
-              SelfMap 是一個以編輯誌美學為靈感、專注於人類圖（Human Design）計算與探索的工具。我們相信每個人都值得擁有一張精準、易讀的個人地圖，幫助你更清晰地認識自己。
+              SelfMap 是一個熱愛人類圖的投射者，創立的推廣人類圖網站，致力於讓很多人認識人類圖後，進而瞭解自己，並且發揮自己的天賦在生活中。
             </p>
           </section>
           <section>
@@ -38,7 +38,7 @@ export default function AboutPage() {
               聯絡
             </h2>
             <p className="text-[12px] md:text-base leading-relaxed text-(--ink)">
-              如有任何問題或建議，歡迎透過 Email 聯繫我們。SelfMap 目前仍在持續開發中，感謝你的耐心與支持。
+              如有任何問題或建議，歡迎透過 Email 聯繫112182ssss@gmail.com。SelfMap 目前仍在持續開發中，未來可能會支援ＡＰＰ或是其他進階功能，敬請期待。
             </p>
           </section>
         </div>

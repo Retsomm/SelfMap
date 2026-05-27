@@ -4,21 +4,20 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { UserButton } from '@clerk/nextjs'
+import toast from 'react-hot-toast'
 
 export default function CreatePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const [form, setForm] = useState({ birthDate: '', birthTime: '', birthCity: '', name: '' })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.birthDate || !form.birthTime || !form.birthCity) {
-      setError('請填寫所有必填欄位')
+      toast.error('請填寫所有必填欄位')
       return
     }
     setLoading(true)
-    setError('')
     try {
       const res = await fetch('/api/charts', {
         method: 'POST',
@@ -29,7 +28,7 @@ export default function CreatePage() {
       const { chartId } = await res.json()
       router.push(`/map/${chartId}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '建立失敗，請稍後再試')
+      toast.error(err instanceof Error ? err.message : '建立失敗，請稍後再試')
       setLoading(false)
     }
   }
@@ -106,9 +105,6 @@ export default function CreatePage() {
                 className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-[12px] md:text-base text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
             </div>
-            {error && (
-              <div className="bg-red-50 border border-red-100 text-red-600 text-[12px] md:text-base px-4 py-3 rounded-xl">{error}</div>
-            )}
             <button
               type="submit"
               disabled={loading}

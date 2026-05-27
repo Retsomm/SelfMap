@@ -2,7 +2,8 @@
 
 import { useState, useRef, useMemo, useCallback } from 'react'
 import { useUser, useClerk } from '@clerk/nextjs'
-import { toActivations, PLANET_SYMBOLS, type CenterName } from '@/lib/humanDesign'
+import { toActivations, type CenterName } from '@/lib/humanDesign'
+import PlanetIcon from '@/components/humanDesign/PlanetIcon'
 import { fmtGate, fmtCenterName } from '@/utils/format'
 import BodyGraph, { type SelectionPayload } from '@/components/humanDesign/BodyGraph'
 import DetailDrawer from '@/components/humanDesign/DetailDrawer'
@@ -19,6 +20,7 @@ import {
 import { downloadChart } from '@/lib/downloadChart'
 import { buildAiPrompt, type HdResult } from '@/lib/buildAiPrompt'
 import { saveChart } from '@/lib/saveChart'
+import toast from 'react-hot-toast'
 
 interface ChartViewProps {
   result: HdResult
@@ -47,10 +49,9 @@ export default function ChartView({
   const [downloading, setDownloading] = useState(false)
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [saveMsg, setSaveMsg] = useState<string | null>(null)
-  const [downloadError, setDownloadError] = useState('')
 
   const activations = useMemo(() => toActivations(result.planets), [result])
+  const generatedAt = useMemo(() => new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }), [])
 
   const CENTER_CHART_KEY: Record<string, string> = { ego: 'heart', solarPlexus: 'solar' }
   const toChartKey = (id: string) => CENTER_CHART_KEY[id] ?? id
@@ -90,7 +91,7 @@ export default function ChartView({
     try {
       await downloadChart(el)
     } catch (err) {
-      setDownloadError(err instanceof Error ? err.message : '下載失敗，請稍後再試。')
+      toast.error(err instanceof Error ? err.message : '下載失敗，請稍後再試。')
     } finally {
       setDownloading(false)
     }
@@ -105,14 +106,12 @@ export default function ChartView({
 
   const handleSaveChart = useCallback(async () => {
     setSaving(true)
-    setSaveMsg(null)
     try {
       await saveChart({ result, date, time, locationLabel, timezone })
-      setSaveMsg('✓ 已儲存')
-      setTimeout(() => setSaveMsg(null), 3000)
+      toast.success('已儲存人類圖')
       onSaved?.()
     } catch (err) {
-      setSaveMsg(err instanceof Error ? err.message : '儲存失敗')
+      toast.error(err instanceof Error ? err.message : '儲存失敗')
     } finally {
       setSaving(false)
     }
@@ -129,7 +128,7 @@ export default function ChartView({
           <div className="hd-planet-rows">
             {result.planets.map(p => (
               <div key={p.planetName} className="hd-planet-row hd-planet-row--left">
-                <span className="hd-planet-symbol">{PLANET_SYMBOLS[p.planetName] ?? p.planetName}</span>
+                <PlanetIcon name={p.planetName} className="hd-planet-symbol" />
                 <span className="hd-planet-gate">{p.red.full}</span>
               </div>
             ))}
@@ -161,7 +160,7 @@ export default function ChartView({
             {result.planets.map(p => (
               <div key={p.planetName} className="hd-planet-row hd-planet-row--right">
                 <span className="hd-planet-gate">{p.black.full}</span>
-                <span className="hd-planet-symbol">{PLANET_SYMBOLS[p.planetName] ?? p.planetName}</span>
+                <PlanetIcon name={p.planetName} className="hd-planet-symbol" />
               </div>
             ))}
           </div>
@@ -204,7 +203,7 @@ export default function ChartView({
           <div className="hd-planets-mobile-header">Design</div>
           {result.planets.map(p => (
             <div key={p.planetName} className="hd-planets-mobile-row">
-              <span>{PLANET_SYMBOLS[p.planetName]}</span>
+              <PlanetIcon name={p.planetName} className="hd-planets-mobile-icon" />
               <span>{p.red.full}</span>
             </div>
           ))}
@@ -214,18 +213,11 @@ export default function ChartView({
           {result.planets.map(p => (
             <div key={p.planetName} className="hd-planets-mobile-row">
               <span>{p.black.full}</span>
-              <span>{PLANET_SYMBOLS[p.planetName]}</span>
+              <PlanetIcon name={p.planetName} className="hd-planets-mobile-icon" />
             </div>
           ))}
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="hd-print-hide mt-[60px] border-t border-[var(--ink)] pt-3.5 flex justify-between font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-[var(--ink-soft)]">
-        <span>FIELD STUDY · BODYGRAPH</span>
-        <span>PRESS · ESC · TO · CLOSE</span>
-        <span>FIN.</span>
-      </footer>
 
       <DetailDrawer
         selection={selection}
@@ -233,8 +225,34 @@ export default function ChartView({
         onJumpToGate={handleJumpToGate}
       />
 
+      {/* Birth info + generation time */}
+      <div className="mt-14 border border-(--ink) bg-(--paper-deep) px-5 py-4 font-mono text-[12px] md:text-base tracking-[0.06em]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5">
+          <div className="flex gap-3">
+            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">出生日期</span>
+            <span className="text-(--ink)">{date}</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">出生時間</span>
+            <span className="text-(--ink)">{time}</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">出生地點</span>
+            <span className="text-(--ink)">{locationLabel}</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">時區</span>
+            <span className="text-(--ink)">{timezone}</span>
+          </div>
+          <div className="flex gap-3 sm:col-span-2 mt-1 pt-2 border-t border-dotted border-[rgba(43,31,20,0.25)]">
+            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">生成時間</span>
+            <span className="text-(--ink)">{generatedAt}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Full calculation results */}
-      <section className="mt-14 border-t border-[var(--ink)] pt-10">
+      <section className="mt-6 border-t border-(--ink) pt-10">
         <div className="flex items-baseline gap-5 mb-8">
           <h2 className="font-serif italic font-medium text-[clamp(28px,3vw,42px)] leading-none m-0 text-[var(--ink)]">計算結果</h2>
           <span className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)]">Bodygraph Analysis</span>
@@ -381,12 +399,6 @@ export default function ChartView({
             >
               {isSignedIn ? (saving ? '儲存中…' : '⊕ 儲存人類圖') : '⊕ 登入後儲存'}
             </button>
-          )}
-          {saveMsg && (
-            <span className="font-mono text-[12px] md:text-base tracking-[0.08em] text-(--ink-soft)">{saveMsg}</span>
-          )}
-          {downloadError && (
-            <span className="font-mono text-[12px] md:text-base tracking-[0.08em] text-(--crimson)">{downloadError}</span>
           )}
         </div>
       </section>
