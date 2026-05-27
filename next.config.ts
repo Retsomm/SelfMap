@@ -3,7 +3,6 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['tesseract.js', 'sharp'],
-  turbopack: {},
   webpack(config, { isServer }) {
     // 停用 persistent cache，確保 loader 修改每次都被套用
     config.cache = { type: 'memory' }
