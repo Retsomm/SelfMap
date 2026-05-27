@@ -1,12 +1,10 @@
-import type { Appearance } from '@clerk/nextjs'
-
 const paper = '#efe5d0'
 const paperDeep = '#e7d9bd'
 const ink = '#2b1f14'
 const inkSoft = '#6b5a44'
 const crimson = '#c8553d'
 
-export const clerkAppearance: Appearance = {
+export const clerkAppearance = {
   variables: {
     colorBackground: paper,
     colorText: ink,
