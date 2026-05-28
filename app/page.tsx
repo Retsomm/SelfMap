@@ -7,7 +7,7 @@ import LocationPicker from '@/components/humanDesign/LocationPicker'
 import ChartView from '@/components/humanDesign/ChartView'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
-import { useLang } from '@/i18n'
+import { useLang, type Lang } from '@/i18n'
 
 const serializeHdResult = (r: HdResult): string =>
   JSON.stringify({ ...r, definedCenterIds: [...r.definedCenterIds], allGates: [...r.allGates] })
@@ -28,8 +28,19 @@ const readStoredData = (): StoredData => {
   try {
     const saved = sessionStorage.getItem('hd_inputs')
     if (!saved) return null
+    const parsed = JSON.parse(saved)
+    if (
+      typeof parsed !== 'object' || parsed === null ||
+      typeof parsed.date !== 'string' ||
+      typeof parsed.time !== 'string' ||
+      typeof parsed.tz !== 'string' ||
+      typeof parsed.loc !== 'string'
+    ) {
+      sessionStorage.removeItem('hd_inputs')
+      return null
+    }
     return {
-      inputs: JSON.parse(saved),
+      inputs: parsed as { date: string; time: string; tz: string; loc: string },
       hadResult: sessionStorage.getItem('hd_had_result') === 'true',
       cached: sessionStorage.getItem('hd_result'),
     }
@@ -45,17 +56,23 @@ type FormInputs = {
   locationLabel: string
 }
 
-const DEFAULT_INPUTS: FormInputs = {
+const DEFAULT_INPUTS = {
   birthDate: dayjs('2000-01-01'),
   birthTime: dayjs('2000-01-01 00:00'),
   timezone: 'Asia/Taipei',
-  locationLabel: '台北, 台灣',
 }
 
-export default function HomePage() {
-  const { t } = useLang()
+// Returns the locale-appropriate label for the default birth location (Taipei, Taiwan)
+const getDefaultLocationLabel = (lang: Lang): string =>
+  lang === 'en' ? 'Taipei, Taiwan' : '台北, 台灣'
 
-  const [inputs, setInputs] = useState<FormInputs>(DEFAULT_INPUTS)
+export default function HomePage() {
+  const { t, lang } = useLang()
+
+  const [inputs, setInputs] = useState<FormInputs>(() => ({
+    ...DEFAULT_INPUTS,
+    locationLabel: getDefaultLocationLabel(lang),
+  }))
   const { birthDate, birthTime, timezone, locationLabel } = inputs
   const date = birthDate.format('YYYY-MM-DD')
   const time = birthTime.format('HH:mm')

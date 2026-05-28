@@ -43,7 +43,7 @@ export default async function RootLayout({
   const initialLang: Lang = rawLang === 'en' ? 'en' : 'zh'
 
   return (
-    <html lang="zh-TW" className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang={initialLang === 'en' ? 'en' : 'zh-TW'} className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full">
         <ClerkProvider appearance={clerkAppearance} localization={initialLang === 'zh' ? zhTW : enUS}>
           <LanguageProvider initialLang={initialLang}>
