@@ -38,6 +38,8 @@ export default function AccountPage() {
   const { signOut } = useClerk()
   const router = useRouter()
   const { t } = useLang()
+  const tRef = useRef(t)
+  tRef.current = t
 
   const [activeSection, setActiveSection] = useState<SidebarSection>('profile')
   const [activeChartId, setActiveChartId] = useState<string | null>(null)
@@ -183,9 +185,9 @@ export default function AccountPage() {
 
     computeHdResult(chart.birthDate, chart.birthTime, tz)
       .then(r => setChartResult(r))
-      .catch(err => toast.error(err instanceof Error ? err.message : t('account.calcFailed')))
+      .catch(err => toast.error(err instanceof Error ? err.message : tRef.current('account.calcFailed')))
       .finally(() => setChartComputing(false))
-  }, [activeChartId, charts, t])
+  }, [activeChartId, charts])
 
   if (!isLoaded || !isSignedIn) {
     return (

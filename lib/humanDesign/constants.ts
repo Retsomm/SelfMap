@@ -400,6 +400,9 @@ export const MOTIVATION_MAP_EN: Record<number, { label: string; description: str
 }
 
 export const AUTHORITY_KEY_MAP: Record<string, Authority> = Object.entries(AUTHORITY_INFO).reduce<Record<string, Authority>>((acc, [k, v]) => {
+  acc[k] = k as Authority
   acc[v.name] = k as Authority
+  const enInfo = AUTHORITY_INFO_EN[k as Authority]
+  if (enInfo) acc[enInfo.name] = k as Authority
   return acc
 }, {})

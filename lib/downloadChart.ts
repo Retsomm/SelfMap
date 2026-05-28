@@ -42,7 +42,7 @@ export const downloadChart = async (el: HTMLElement): Promise<void> => {
     pdf.setFontSize(8)
     pdf.setTextColor(150, 120, 80)
     pdf.text(
-      'copyright@Retsnom',
+      '© Retsnom',
       a4W / 2,
       contentH + footerH / 2,
       { align: 'center', baseline: 'middle' },

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import zh from './chinese.json'
 import en from './english.json'
 
@@ -32,16 +32,25 @@ const LangContext = createContext<{
   pick: (obj) => obj.zh,
 })
 
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window === 'undefined') return 'zh'
-    const stored = localStorage.getItem(STORAGE_KEY)
-    return stored === 'en' || stored === 'zh' ? stored : 'zh'
-  })
+export const LanguageProvider = ({
+  children,
+  initialLang = 'zh',
+}: {
+  children: ReactNode
+  initialLang?: Lang
+}) => {
+  const [lang, setLangState] = useState<Lang>(initialLang)
+
+  useEffect(() => {
+    document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en'
+  }, [lang])
 
   const setLang = (l: Lang) => {
     setLangState(l)
-    localStorage.setItem(STORAGE_KEY, l)
+    try {
+      localStorage.setItem(STORAGE_KEY, l)
+    } catch {}
+    document.cookie = `${STORAGE_KEY}=${l};path=/;max-age=31536000;SameSite=Lax`
   }
 
   const t = (key: string, vars?: Record<string, string | number>): string => {

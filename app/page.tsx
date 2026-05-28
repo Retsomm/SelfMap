@@ -55,7 +55,12 @@ export default function HomePage() {
   const [locationLabel, setLocationLabel] = useState(() => stored?.inputs.loc ?? '台北, 台灣')
   const [result, setResult] = useState<HdResult | null>(() => {
     if (!stored?.hadResult || !stored.cached) return null
-    return deserializeHdResult(stored.cached)
+    try {
+      return deserializeHdResult(stored.cached)
+    } catch {
+      sessionStorage.removeItem('hd_result')
+      return null
+    }
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)

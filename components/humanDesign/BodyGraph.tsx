@@ -197,7 +197,7 @@ export default function BodyGraph({
             { line: 'M 582 620 L 635 620 L 665 635',    tx: 588, ty: 655, label: annotationLabels.solarPlexus },
             { line: 'M 400 810 L 540 810 L 575 820',    tx: 540, ty: 842, label: annotationLabels.root },
           ]).map(({ line, tx, ty, label }) => (
-            <g key={label}>
+            <g key={`${tx}-${ty}`}>
               <path
                 className="hd-annotation-line"
                 d={line}

@@ -293,7 +293,7 @@ export const HD_CENTERS_INFO: Record<string, ChartCenter> = {
     color: 'tan',
     summary: { zh: '把內在轉化為語言與行動的關鍵閘口。', en: 'The crucial gateway that transforms inner life into language and action.' },
     description: { zh: '喉嚨是所有顯化的出口。「說出來」與「做出來」皆由此發生。它必須被正確的能量（通過通道）連接，才能在對的時刻順利表達。', en: 'The Throat is the outlet for all manifestation. Both "saying it" and "doing it" happen here. It must be connected by the right energy (through channels) to express at the right moment.' },
-    gates: [62, 23, 56, 35, 12, 45, 33, 8, 31, 7, 1, 13, 16, 20],
+    gates: [62, 23, 56, 35, 12, 45, 33, 8, 31, 16, 20],
     keywords: { zh: ['表達', '顯化', '行動', '聲音'], en: ['Expression', 'Manifestation', 'Action', 'Voice'] },
   },
   g: {

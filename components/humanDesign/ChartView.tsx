@@ -80,7 +80,7 @@ export default function ChartView({
   }), [t])
 
   const activations = useMemo(() => toActivations(result.planets), [result])
-  const generatedAt = useMemo(() => new Date().toLocaleString(lang === 'zh' ? 'zh-TW' : 'en-US', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }), [lang])
+  const generatedAt = useMemo(() => new Date().toLocaleString(lang === 'zh' ? 'zh-TW' : 'en-US', { timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }), [lang])
 
   // language-aware label helpers
   const typeLabel = lang === 'en' ? (TYPE_LABELS_EN[result.type] ?? result.type) : TYPE_LABELS[result.type]
@@ -117,7 +117,7 @@ export default function ChartView({
     }
   }, [lang, result.variables, varColors])
 
-  const centerName = (id: CenterName) => lang === 'en' ? CENTER_NAMES_EN[id] : CENTER_INFO[id].name
+  const centerName = (id: CenterName) => lang === 'en' ? (CENTER_NAMES_EN[id] ?? CENTER_INFO[id].name) : CENTER_INFO[id].name
 
   const CENTER_CHART_KEY: Record<string, string> = { ego: 'heart', solarPlexus: 'solar' }
   const toChartKey = (id: string) => CENTER_CHART_KEY[id] ?? id

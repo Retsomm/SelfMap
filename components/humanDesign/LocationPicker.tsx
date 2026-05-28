@@ -46,7 +46,7 @@ function formatOffset(offset: number): string {
 }
 
 export default function LocationPicker({ value, onSelect }: Props) {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const [query, setQuery] = useState(value)
   const [prevValue, setPrevValue] = useState(value)
   const [results, setResults] = useState<GeoResult[]>([])
@@ -97,7 +97,7 @@ export default function LocationPicker({ value, onSelect }: Props) {
     setFetchError(null)
     try {
       const res = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=zh&format=json`,
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=${lang}&format=json`,
         { signal: controller.signal }
       )
       if (controller.signal.aborted) return

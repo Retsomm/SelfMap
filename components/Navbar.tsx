@@ -23,6 +23,10 @@ export default function Navbar() {
   ]
 
   useEffect(() => {
+    setDrawerOpenAtPath(null)
+  }, [pathname])
+
+  useEffect(() => {
     if (drawerOpen) {
       document.body.style.overflow = 'hidden'
     } else {
