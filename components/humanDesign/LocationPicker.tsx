@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useLang } from '@/i18n'
 
 interface GeoResult {
   id: number
@@ -45,7 +46,9 @@ function formatOffset(offset: number): string {
 }
 
 export default function LocationPicker({ value, onSelect }: Props) {
+  const { t, lang } = useLang()
   const [query, setQuery] = useState(value)
+  const [prevValue, setPrevValue] = useState(value)
   const [results, setResults] = useState<GeoResult[]>([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -54,8 +57,11 @@ export default function LocationPicker({ value, onSelect }: Props) {
   const abortRef = useRef<AbortController | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Sync external value changes (e.g. initial value)
-  useEffect(() => { setQuery(value) }, [value])
+  // Sync external value changes during render (React-recommended pattern for derived state)
+  if (prevValue !== value) {
+    setPrevValue(value)
+    setQuery(value)
+  }
 
   // Cleanup pending debounce timer and in-flight fetch on unmount
   useEffect(() => {
@@ -91,12 +97,12 @@ export default function LocationPicker({ value, onSelect }: Props) {
     setFetchError(null)
     try {
       const res = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=zh&format=json`,
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=${lang}&format=json`,
         { signal: controller.signal }
       )
       if (controller.signal.aborted) return
       if (!res.ok) {
-        setFetchError(`搜尋失敗（${res.status}）`)
+        setFetchError(t('home.locationSearchFailed', { status: res.status }))
         return
       }
       const json = await res.json()
@@ -105,11 +111,11 @@ export default function LocationPicker({ value, onSelect }: Props) {
       setOpen(true)
     } catch (err) {
       if ((err as Error).name === 'AbortError') return
-      setFetchError('網路錯誤，請稍後再試')
+      setFetchError(t('home.locationNetworkError'))
     } finally {
       if (!controller.signal.aborted) setLoading(false)
     }
-  }, [])
+  }, [t])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const q = e.target.value
@@ -128,7 +134,7 @@ export default function LocationPicker({ value, onSelect }: Props) {
 
   return (
     <div ref={containerRef} className="hd-input-group" style={{ position: 'relative', width: 180 }}>
-      <label className="hd-input-label">出生地點</label>
+      <label className="hd-input-label">{t('home.locationLabel')}</label>
       <div style={{ position: 'relative' }}>
         <input
           type="text"
@@ -136,7 +142,7 @@ export default function LocationPicker({ value, onSelect }: Props) {
           value={query}
           onChange={handleChange}
           onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="城市名稱…"
+          placeholder={t('home.locationPlaceholder')}
           style={{ width: '100%', paddingRight: loading ? 24 : 8 }}
           autoComplete="off"
           data-lpignore="true"

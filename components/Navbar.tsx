@@ -5,21 +5,25 @@ import { useUser, useClerk } from '@clerk/nextjs'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import SelfMapLogo from './SelfMapLogo'
-
-const NAV_LINKS = [
-  { href: '/', label: '首頁' },
-  { href: '/human-design', label: '人類圖介紹' },
-  { href: '/about', label: '關於網站' },
-]
+import { useLang } from '@/i18n'
 
 export default function Navbar() {
   const { isSignedIn } = useUser()
   const { openSignIn } = useClerk()
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerOpenAtPath, setDrawerOpenAtPath] = useState<string | null>(null)
   const pathname = usePathname()
+  const { lang, setLang, t } = useLang()
+
+  const drawerOpen = drawerOpenAtPath === pathname
+
+  const NAV_LINKS = [
+    { href: '/', label: t('nav.home') },
+    { href: '/human-design', label: t('nav.humanDesign') },
+    { href: '/about', label: t('nav.about') },
+  ]
 
   useEffect(() => {
-    setDrawerOpen(false)
+    setDrawerOpenAtPath(null)
   }, [pathname])
 
   useEffect(() => {
@@ -38,8 +42,8 @@ export default function Navbar() {
           {/* 手機：漢堡選單（左側） */}
           <button
             className="md:hidden flex flex-col justify-center gap-1.5 w-7 h-7 cursor-pointer shrink-0"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="開啟選單"
+            onClick={() => setDrawerOpenAtPath(pathname)}
+            aria-label={t('nav.openMenu')}
           >
             <span className="block w-5 h-px bg-(--ink)" />
             <span className="block w-5 h-px bg-(--ink)" />
@@ -64,21 +68,27 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* 桌機：帳號區塊 */}
-          <nav className="hidden md:flex items-center">
+          {/* 桌機：語言切換 + 帳號 */}
+          <nav className="hidden md:flex items-center gap-3">
+            <button
+              onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
+              className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft) border border-(--ink-soft) px-2 py-0.5 cursor-pointer transition-colors duration-120 hover:text-(--ink) hover:border-(--ink)"
+            >
+              {lang === 'zh' ? 'EN' : '中'}
+            </button>
             {isSignedIn ? (
               <Link
                 href="/account"
                 className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) hover:text-(--ink) transition-colors duration-120 no-underline"
               >
-                個人頁面
+                {t('nav.account')}
               </Link>
             ) : (
               <button
                 onClick={() => openSignIn()}
                 className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--paper) bg-(--ink) border border-(--ink) px-3.5 py-1.25 cursor-pointer transition-colors duration-120 hover:bg-(--crimson) hover:border-(--crimson)"
               >
-                登入
+                {t('nav.signIn')}
               </button>
             )}
           </nav>
@@ -89,7 +99,7 @@ export default function Navbar() {
       {drawerOpen && (
         <div
           className="fixed inset-0 z-60 bg-(--ink)/30 md:hidden"
-          onClick={() => setDrawerOpen(false)}
+          onClick={() => setDrawerOpenAtPath(null)}
           aria-hidden="true"
         />
       )}
@@ -99,7 +109,7 @@ export default function Navbar() {
         className={`fixed top-0 left-0 z-70 h-full w-64 bg-(--paper) border-r border-(--ink) flex flex-col transition-transform duration-200 md:hidden ${
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
-        aria-label="導覽選單"
+        aria-label={t('nav.navLabel')}
       >
         {/* 抽屜標題列 */}
         <div className="h-13 flex items-center justify-between px-6 border-b border-(--ink)">
@@ -107,9 +117,9 @@ export default function Navbar() {
             <SelfMapLogo size={16} />
           </span>
           <button
-            onClick={() => setDrawerOpen(false)}
+            onClick={() => setDrawerOpenAtPath(null)}
             className="w-7 h-7 flex items-center justify-center cursor-pointer text-(--ink-soft) hover:text-(--ink)"
-            aria-label="關閉選單"
+            aria-label={t('nav.closeMenu')}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <line x1="1" y1="1" x2="13" y2="13" stroke="currentColor" strokeWidth="1.5" />
@@ -134,16 +144,22 @@ export default function Navbar() {
               href="/account"
               className="font-mono text-[12px] md:text-base tracking-[0.16em] uppercase text-(--ink-soft) hover:text-(--ink) transition-colors duration-120 no-underline py-2.5 border-b border-(--ink)/20"
             >
-              個人頁面
+              {t('nav.account')}
             </Link>
           ) : (
             <button
-              onClick={() => { setDrawerOpen(false); openSignIn() }}
+              onClick={() => { setDrawerOpenAtPath(null); openSignIn() }}
               className="text-left font-mono text-[12px] md:text-base tracking-[0.16em] uppercase text-(--ink-soft) hover:text-(--ink) transition-colors duration-120 py-2.5 border-b border-(--ink)/20 cursor-pointer bg-transparent border-x-0 border-t-0"
             >
-              登入
+              {t('nav.signIn')}
             </button>
           )}
+          <button
+            onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
+            className="text-left font-mono text-[12px] md:text-base tracking-[0.16em] uppercase text-(--ink-soft) hover:text-(--ink) transition-colors duration-120 py-2.5 cursor-pointer bg-transparent border-0"
+          >
+            {lang === 'zh' ? 'English' : '繁體中文'}
+          </button>
         </nav>
       </aside>
     </>

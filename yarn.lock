@@ -210,38 +210,45 @@
     "@babel/helper-string-parser" "^7.29.7"
     "@babel/helper-validator-identifier" "^7.29.7"
 
-"@clerk/backend@^3.4.13":
-  version "3.4.13"
-  resolved "https://registry.npmmirror.com/@clerk/backend/-/backend-3.4.13.tgz#a1a562565c355d815837471f576ae2b850f56e69"
-  integrity sha512-3BABnKE1YZpQqJ/S8QD5FpzE7jq+mgaMrO7rLiWTI8Bfs/xk11XYSp1lMEf3BTo/rzEtaUsXaVDGvccYogKapg==
+"@clerk/backend@^3.4.14":
+  version "3.4.14"
+  resolved "https://registry.npmmirror.com/@clerk/backend/-/backend-3.4.14.tgz#c17c5e55139ba019407d4eaa1555cee1060433e7"
+  integrity sha512-0iaMT7k4wDk31QVC3HMaoeVFttblwsCECTHKNQpbRzIyD8j2gHdKEw/FNjffoyqyBqPw869IQlk1YokUlwVAqQ==
   dependencies:
-    "@clerk/shared" "^4.13.1"
+    "@clerk/shared" "^4.14.0"
     standardwebhooks "^1.0.0"
     tslib "2.8.1"
 
-"@clerk/nextjs@^7.4.1":
-  version "7.4.1"
-  resolved "https://registry.npmmirror.com/@clerk/nextjs/-/nextjs-7.4.1.tgz#af9ef51219664f137bb11f1d6e8f25db2146d31d"
-  integrity sha512-hFdzwF9RwymIdYuIRxNknAu0IiUZmcFweVWUg+Lu/dOZSHeNS/2H8dVa7B4LpAcYg07nEdU/FIdfvWU12lo/IQ==
+"@clerk/localizations@4.7.0":
+  version "4.7.0"
+  resolved "https://registry.npmmirror.com/@clerk/localizations/-/localizations-4.7.0.tgz#6232160186386e13a5bf219378cc959254185237"
+  integrity sha512-+OLkEGAQeEK8BJITwErW249uSV2FWKunexj5+8eK3iHN1sHg93H/NypEq0Z+QUHL5NFHsGUKvLIYvrhLTcsWnw==
   dependencies:
-    "@clerk/backend" "^3.4.13"
-    "@clerk/react" "^6.7.1"
-    "@clerk/shared" "^4.13.1"
+    "@clerk/shared" "^4.14.0"
+
+"@clerk/nextjs@7.4.2":
+  version "7.4.2"
+  resolved "https://registry.npmmirror.com/@clerk/nextjs/-/nextjs-7.4.2.tgz#2aac12ef287dd2ce94f21213b0084e1a8a81a030"
+  integrity sha512-DpqljtLkTtMNsi03XRWYaWYyt0tb4S07HjS9fSmUtN//CKNqM7QAVMZzpgMAZz5yb2QhIVIVF1Uir2c7f72+MA==
+  dependencies:
+    "@clerk/backend" "^3.4.14"
+    "@clerk/react" "^6.7.2"
+    "@clerk/shared" "^4.14.0"
     server-only "0.0.1"
     tslib "2.8.1"
 
-"@clerk/react@^6.7.1":
-  version "6.7.1"
-  resolved "https://registry.npmmirror.com/@clerk/react/-/react-6.7.1.tgz#06acc89707231e38db4b3ce79dae4524840fa81a"
-  integrity sha512-OW88xeoTLhYC1CuKDa328BNvY4gA0HM/jpFd8K88YBjRNQ9FGlNRq2bmRiCZOqu7XMqq8ky/tRsjU6ccWvd2rg==
+"@clerk/react@^6.7.2":
+  version "6.7.2"
+  resolved "https://registry.npmmirror.com/@clerk/react/-/react-6.7.2.tgz#830dd0dd8ef327ef03a66f69e85dcc053ee33ad9"
+  integrity sha512-tgRWWTfW+ejXj6WiZqx7iMbtvh45h0445uEvbSNVCyJBEOaBlCF0/ZfAfXlWAQNbRZ+bPIphEfNUmatadZgGOQ==
   dependencies:
-    "@clerk/shared" "^4.13.1"
+    "@clerk/shared" "^4.14.0"
     tslib "2.8.1"
 
-"@clerk/shared@^4.13.1":
-  version "4.13.1"
-  resolved "https://registry.npmmirror.com/@clerk/shared/-/shared-4.13.1.tgz#fd8db5a795b06aa704f1da5826022d086dfb0a6c"
-  integrity sha512-DyUtvNHgMmqjtTM0q285jKaAXUmCDSyItiGQTt1dNL0M6DZ3bxqsJz7wXPjh9zezmU4BAnLpwhj5gsM3OuNPzA==
+"@clerk/shared@^4.14.0":
+  version "4.14.0"
+  resolved "https://registry.npmmirror.com/@clerk/shared/-/shared-4.14.0.tgz#b7288e56c45be62fada8d0dc72a7c0c33be6cb91"
+  integrity sha512-StZCFJ2rg0ITE3fYjIN9CKuKq8ZACW6l2+5qGCFPPYd4hZphA+VDselmh/lHPsF1ex/WRVUSHvquykAHR8cQbQ==
   dependencies:
     "@tanstack/query-core" "^5.100.6"
     dequal "2.0.3"

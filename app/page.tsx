@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, startTransition } from 'react'
 import { DatePicker, TimePicker, ConfigProvider } from 'antd'
 import dayjs, { type Dayjs } from 'dayjs'
 import LocationPicker from '@/components/humanDesign/LocationPicker'
 import ChartView from '@/components/humanDesign/ChartView'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
+import { useLang, type Lang } from '@/i18n'
 
 const serializeHdResult = (r: HdResult): string =>
   JSON.stringify({ ...r, definedCenterIds: [...r.definedCenterIds], allGates: [...r.allGates] })
@@ -16,38 +17,96 @@ const deserializeHdResult = (s: string): HdResult => {
   return { ...d, definedCenterIds: new Set(d.definedCenterIds), allGates: new Set(d.allGates) }
 }
 
+type StoredData = {
+  inputs: { date: string; time: string; tz: string; loc: string }
+  hadResult: boolean
+  cached: string | null
+} | null
+
+const readStoredData = (): StoredData => {
+  if (typeof window === 'undefined') return null
+  try {
+    const saved = sessionStorage.getItem('hd_inputs')
+    if (!saved) return null
+    const parsed = JSON.parse(saved)
+    if (
+      typeof parsed !== 'object' || parsed === null ||
+      typeof parsed.date !== 'string' ||
+      typeof parsed.time !== 'string' ||
+      typeof parsed.tz !== 'string' ||
+      typeof parsed.loc !== 'string'
+    ) {
+      sessionStorage.removeItem('hd_inputs')
+      return null
+    }
+    return {
+      inputs: parsed as { date: string; time: string; tz: string; loc: string },
+      hadResult: sessionStorage.getItem('hd_had_result') === 'true',
+      cached: sessionStorage.getItem('hd_result'),
+    }
+  } catch {
+    return null
+  }
+}
+
+type FormInputs = {
+  birthDate: Dayjs
+  birthTime: Dayjs
+  timezone: string
+  locationLabel: string
+}
+
+const DEFAULT_INPUTS = {
+  birthDate: dayjs('2000-01-01'),
+  birthTime: dayjs('2000-01-01 00:00'),
+  timezone: 'Asia/Taipei',
+}
+
+// Returns the locale-appropriate label for the default birth location (Taipei, Taiwan)
+const getDefaultLocationLabel = (lang: Lang): string =>
+  lang === 'en' ? 'Taipei, Taiwan' : '台北, 台灣'
+
 export default function HomePage() {
-  const [birthDate, setBirthDate] = useState<Dayjs>(() => dayjs('2000-01-01'))
-  const [birthTime, setBirthTime] = useState<Dayjs>(() => dayjs('2000-01-01 00:00'))
+  const { t, lang } = useLang()
+
+  const [inputs, setInputs] = useState<FormInputs>(() => ({
+    ...DEFAULT_INPUTS,
+    locationLabel: getDefaultLocationLabel(lang),
+  }))
+  const { birthDate, birthTime, timezone, locationLabel } = inputs
   const date = birthDate.format('YYYY-MM-DD')
   const time = birthTime.format('HH:mm')
-  const [timezone, setTimezone] = useState('Asia/Taipei')
-  const [locationLabel, setLocationLabel] = useState('台北, 台灣')
+  const setBirthDate = (d: Dayjs) => setInputs(prev => ({ ...prev, birthDate: d }))
+  const setBirthTime = (t: Dayjs) => setInputs(prev => ({ ...prev, birthTime: t }))
+  const setTimezone = (tz: string) => setInputs(prev => ({ ...prev, timezone: tz }))
+  const setLocationLabel = (loc: string) => setInputs(prev => ({ ...prev, locationLabel: loc }))
   const [result, setResult] = useState<HdResult | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [isRestoring, setIsRestoring] = useState(false)
-  const [triggerCalc, setTriggerCalc] = useState(false)
+  const triggerCalcRef = useRef(false)
 
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem('hd_inputs')
-      const hadResult = sessionStorage.getItem('hd_had_result') === 'true'
-      if (!saved) return
-      const { date: d, time: t, tz, loc } = JSON.parse(saved)
-      setBirthDate(dayjs(d))
-      setBirthTime(dayjs(`${d} ${t}`))
-      setTimezone(tz)
-      setLocationLabel(loc)
-      if (!hadResult) return
-      const cached = sessionStorage.getItem('hd_result')
-      if (cached) {
-        setResult(deserializeHdResult(cached))
-      } else {
+    const stored = readStoredData()
+    if (!stored) return
+    startTransition(() => {
+      setInputs({
+        birthDate: dayjs(stored.inputs.date),
+        birthTime: dayjs(`${stored.inputs.date} ${stored.inputs.time}`),
+        timezone: stored.inputs.tz,
+        locationLabel: stored.inputs.loc,
+      })
+      if (stored.hadResult && stored.cached) {
+        try {
+          setResult(deserializeHdResult(stored.cached))
+        } catch {
+          sessionStorage.removeItem('hd_result')
+        }
+      } else if (stored.hadResult && !stored.cached) {
         setIsRestoring(true)
-        setTriggerCalc(true)
+        triggerCalcRef.current = true
       }
-    } catch {}
+    })
   }, [])
 
   const calculate = useCallback(async () => {
@@ -71,10 +130,10 @@ export default function HomePage() {
   }, [date, time, timezone, locationLabel])
 
   useEffect(() => {
-    if (!triggerCalc) return
-    setTriggerCalc(false)
+    if (!triggerCalcRef.current) return
+    triggerCalcRef.current = false
     calculate()
-  }, [triggerCalc, calculate])
+  }, [calculate])
 
   return (
     <>
@@ -82,7 +141,7 @@ export default function HomePage() {
 
         <header className="flex justify-center mb-6 gap-6">
           <h1 className="font-serif font-medium italic text-[clamp(36px,4vw,56px)] leading-[0.95] tracking-[-0.01em] text-center m-0">
-            Human Design
+            {t('home.title')}
           </h1>
         </header>
 
@@ -91,7 +150,7 @@ export default function HomePage() {
           {/* Input row */}
           <div className="hd-print-hide py-3.5 px-5 border border-[var(--ink)] bg-[var(--paper-deep)] flex items-end gap-5 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch">
             <h4 className="font-sans text-[12px] md:text-base font-semibold uppercase tracking-[0.18em] text-[var(--ink)] m-0 p-0 border-none whitespace-nowrap self-end pb-1.5">
-              輸入出生資料
+              {t('home.inputLabel')}
             </h4>
             <div className="flex gap-2 flex-wrap items-end flex-1">
               <ConfigProvider
@@ -109,7 +168,7 @@ export default function HomePage() {
                 }}
               >
                 <div className="flex flex-col gap-1">
-                  <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">生日</label>
+                  <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.dateLabel')}</label>
                   <DatePicker
                     value={birthDate}
                     onChange={(d) => { if (d) setBirthDate(d) }}
@@ -121,7 +180,7 @@ export default function HomePage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">時間</label>
+                  <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.timeLabel')}</label>
                   <TimePicker
                     value={birthTime}
                     onChange={(t) => { if (t) setBirthTime(t) }}
@@ -144,7 +203,7 @@ export default function HomePage() {
                 onClick={calculate}
                 disabled={loading}
               >
-                {loading ? (isRestoring ? '載入中…' : '計算中…') : '生成人類圖'}
+                {loading ? (isRestoring ? t('home.loading') : t('home.calculating')) : t('home.generate')}
               </button>
               {error && (
                 <div className="font-mono text-[12px] md:text-base text-[var(--crimson)] mt-2 py-1.5 px-2 border border-[var(--crimson)] tracking-[0.02em]">
@@ -160,7 +219,7 @@ export default function HomePage() {
               {loading && (
                 <div className="absolute inset-0 z-10 flex items-start justify-center pt-20 bg-(--paper)/70 backdrop-blur-[2px]">
                   <span className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-(--ink-soft)">
-                    {isRestoring ? '載入中…' : '計算中…'}
+                    {isRestoring ? t('home.loading') : t('home.calculating')}
                   </span>
                 </div>
               )}

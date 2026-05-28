@@ -279,3 +279,130 @@ export const PLANET_SYMBOLS: Record<string, string> = {
   '木星': '♃', '土星': '♄', '天王星': '♅',
   '海王星': '♆', '冥王星': '♇',
 }
+
+// ── English display maps ────────────────────────────────────────────────────
+
+export const TYPE_LABELS_EN: Record<HumanDesignType, string> = {
+  'Manifestor':           'Manifestor',
+  'Generator':            'Generator',
+  'Manifesting Generator':'Manifesting Generator',
+  'Projector':            'Projector',
+  'Reflector':            'Reflector',
+}
+
+export const PROFILE_LABELS_EN: Record<string, string> = {
+  '1/3': 'Investigator / Martyr',
+  '1/4': 'Investigator / Opportunist',
+  '2/4': 'Hermit / Opportunist',
+  '2/5': 'Hermit / Heretic',
+  '3/5': 'Martyr / Heretic',
+  '3/6': 'Martyr / Role Model',
+  '4/6': 'Opportunist / Role Model',
+  '4/1': 'Opportunist / Investigator',
+  '5/1': 'Heretic / Investigator',
+  '5/2': 'Heretic / Hermit',
+  '6/2': 'Role Model / Hermit',
+  '6/3': 'Role Model / Martyr',
+}
+
+export const AUTHORITY_INFO_EN: Record<Authority, AuthorityInfo> = {
+  'Emotional':      { name: 'Emotional Authority',       tip: 'Wait for emotional clarity after the wave passes before deciding.' },
+  'Sacral':         { name: 'Sacral Authority',          tip: 'Listen to your sacral gut sound — uh-huh is yes, uhn-uhn is no.' },
+  'Splenic':        { name: 'Splenic Authority',         tip: 'Trust the fleeting intuitive impulse in the moment — it won\'t repeat itself.' },
+  'Ego':            { name: 'Ego Authority',             tip: 'Only commit to what you truly want and can deliver.' },
+  'Self-Projected': { name: 'Self-Projected Authority',  tip: 'Speak your thoughts aloud to trusted people and listen to your own voice for direction.' },
+  'Mental':         { name: 'Mental / No Inner Authority', tip: 'Discuss with different people and find clarity through outer reflection.' },
+  'Lunar':          { name: 'Lunar Authority',           tip: 'Wait a full lunar cycle (28 days) before making major decisions.' },
+}
+
+export const STRATEGY_MAP_EN: Record<string, string> = {
+  'Manifestor':           'Inform before acting',
+  'Generator':            'Wait to respond',
+  'Manifesting Generator':'Wait to respond, then inform',
+  'Projector':            'Wait for the invitation',
+  'Reflector':            'Wait a lunar cycle (28 days)',
+}
+
+export const SIGNATURE_MAP_EN: Record<string, { positive: string; negative: string }> = {
+  'Manifestor':           { positive: 'Peace',        negative: 'Anger' },
+  'Generator':            { positive: 'Satisfaction', negative: 'Frustration' },
+  'Manifesting Generator':{ positive: 'Satisfaction', negative: 'Frustration & Anger' },
+  'Projector':            { positive: 'Success',      negative: 'Bitterness' },
+  'Reflector':            { positive: 'Surprise',     negative: 'Disappointment' },
+}
+
+export const CROSS_TYPE_LABELS_EN: Record<CrossType, string> = {
+  RAC: 'Right Angle Cross',
+  JC:  'Juxtaposition Cross',
+  LAC: 'Left Angle Cross',
+}
+
+export const CROSS_BASE_NAMES_EN: readonly string[] = [
+  'Tension', 'Duality', 'Sphinx', 'Revolution', 'Four Ways', 'Sleeping Phoenix',
+  'Community', 'Consciousness', 'Rulership', 'Eden', 'Vessel of Love', 'Laws',
+  'Confrontation', 'Penetration', 'Continuity', 'Limitation',
+]
+
+export const DEFINITION_LABEL_EN: Record<string, string> = {
+  'Single':          'Single Definition',
+  'Split':           'Split Definition',
+  'Triple Split':    'Triple Split',
+  'Quadruple Split': 'Quadruple Split',
+  'None':            'No Definition (Reflector)',
+}
+
+export const CENTER_NAMES_EN: Record<CenterName, string> = {
+  head:        'Head',
+  ajna:        'Ajna',
+  throat:      'Throat',
+  g:           'G Center',
+  ego:         'Heart / Will',
+  sacral:      'Sacral',
+  solarPlexus: 'Solar Plexus',
+  spleen:      'Spleen',
+  root:        'Root',
+}
+
+export const DIGESTION_MAP_EN: Record<number, { label: string; description: string }> = {
+  1: { label: 'Appetite',  description: 'Follow instinctive appetite — eat what you crave, no fixed dietary rules needed.' },
+  2: { label: 'Taste',     description: 'Value flavour and texture; let your taste guide food choices.' },
+  3: { label: 'Thirst',    description: 'Hydration first — thirst signals precede hunger.' },
+  4: { label: 'Touch',     description: 'Prefer fresh, seasonal produce with consistent staples; no need to force variety.' },
+  5: { label: 'Sound',     description: 'Eat in quiet environments so your body can tune into its digestive rhythm.' },
+  6: { label: 'Light',     description: 'Dine in naturally lit spaces; lighting directly affects digestive energy.' },
+}
+
+export const ENVIRONMENT_MAP_EN: Record<number, { label: string; description: string }> = {
+  1: { label: 'Caves',     description: 'Need private, enclosed personal space — a cave-like sanctuary for full withdrawal.' },
+  2: { label: 'Markets',   description: 'Thrive in vibrant, open spaces with diverse stimulation.' },
+  3: { label: 'Kitchens',  description: 'Need a well-equipped transformative space — warm, humid, practical.' },
+  4: { label: 'Mountains', description: 'Elevated, expansive vantage points with a wide view of everything below.' },
+  5: { label: 'Valleys',   description: 'Sheltered, valley-like environments — warm, protected, enclosed by mountains.' },
+  6: { label: 'Shores',    description: 'Boundary zones like coastlines — fluid transitions between two worlds.' },
+}
+
+export const PERSPECTIVE_MAP_EN: Record<number, { label: string; description: string }> = {
+  1: { label: 'Survival',    description: 'View the world through the lens of survival, resources, and basic safety.' },
+  2: { label: 'Possibility', description: 'Naturally sees potential and future possibilities others overlook.' },
+  3: { label: 'Power',       description: 'Observes power dynamics — who influences whom and how.' },
+  4: { label: 'Personal',    description: 'Focused on where one can personally contribute compared to others.' },
+  5: { label: 'Probability', description: 'Evaluates patterns and statistics to see the most likely outcomes.' },
+  6: { label: 'Desire',      description: 'Reads through the lens of desire — what people truly long for.' },
+}
+
+export const MOTIVATION_MAP_EN: Record<number, { label: string; description: string }> = {
+  1: { label: 'Fear',       description: 'Driven to seek individual knowledge and security.' },
+  2: { label: 'Hope',       description: 'Motivated by hope for a better future — things will work out.' },
+  3: { label: 'Desire',     description: 'Driven by authentic passion — pursuing what the heart truly wants.' },
+  4: { label: 'Need',       description: 'Responds to genuine needs — only does what is truly necessary and meaningful.' },
+  5: { label: 'Guilt',      description: 'Motivated by responsibility — acting from reflection on one\'s impact on others.' },
+  6: { label: 'Innocence',  description: 'Sees the world with pure, child-like openness and wonder.' },
+}
+
+export const AUTHORITY_KEY_MAP: Record<string, Authority> = Object.entries(AUTHORITY_INFO).reduce<Record<string, Authority>>((acc, [k, v]) => {
+  acc[k] = k as Authority
+  acc[v.name] = k as Authority
+  const enInfo = AUTHORITY_INFO_EN[k as Authority]
+  if (enInfo) acc[enInfo.name] = k as Authority
+  return acc
+}, {})

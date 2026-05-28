@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import ChartView from '@/components/humanDesign/ChartView'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
+import { useLang } from '@/i18n'
 
 const PROVIDER_LABEL: Record<string, string> = {
   google: 'Google',
@@ -36,6 +37,9 @@ export default function AccountPage() {
   const { isLoaded, isSignedIn, user } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
+  const { t } = useLang()
+  const tRef = useRef(t)
+  tRef.current = t
 
   const [activeSection, setActiveSection] = useState<SidebarSection>('profile')
   const [activeChartId, setActiveChartId] = useState<string | null>(null)
@@ -43,7 +47,6 @@ export default function AccountPage() {
   const [chartsLoading, setChartsLoading] = useState(false)
   const [chartsFetched, setChartsFetched] = useState(false)
 
-  // computed HdResult for the active chart
   const [chartResult, setChartResult] = useState<HdResult | null>(null)
   const [chartComputing, setChartComputing] = useState(false)
 
@@ -66,7 +69,6 @@ export default function AccountPage() {
     }
   }, [])
 
-  // Profile editing
   const [editingName, setEditingName] = useState(false)
   const [displayName, setDisplayName] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
@@ -89,9 +91,9 @@ export default function AccountPage() {
       const lastName = spaceIdx === -1 ? '' : trimmed.slice(spaceIdx + 1)
       await user.update({ firstName, lastName })
       setEditingName(false)
-      toast.success('名稱已更新')
+      toast.success(t('account.nameUpdated'))
     } catch {
-      toast.error('儲存失敗，請稍後再試')
+      toast.error(t('account.saveFailed'))
     } finally {
       setNameSaving(false)
     }
@@ -101,17 +103,17 @@ export default function AccountPage() {
     const file = e.target.files?.[0]
     if (!file || !user) return
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('圖片不能超過 10MB')
+      toast.error(t('account.imageTooLarge'))
       if (avatarInputRef.current) avatarInputRef.current.value = ''
       return
     }
     setAvatarUploading(true)
     try {
       await user.setProfileImage({ file })
-      toast.success('大頭貼已更新')
+      toast.success(t('account.avatarUpdated'))
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
-      toast.error(msg || '上傳失敗，請確認 Clerk 已開啟大頭貼上傳功能')
+      toast.error(msg || t('account.avatarUploadFailed'))
     } finally {
       setAvatarUploading(false)
       if (avatarInputRef.current) avatarInputRef.current.value = ''
@@ -164,14 +166,12 @@ export default function AccountPage() {
     finally { setDeletingId(null) }
   }, [deletingId])
 
-  // Load charts when entering Human Design section (only once)
   useEffect(() => {
     if (activeSection === 'humandesign' && !chartsFetched && !chartsLoading) {
       startTransition(() => { fetchCharts() })
     }
   }, [activeSection, chartsFetched, chartsLoading, fetchCharts])
 
-  // Re-compute HdResult whenever active chart changes
   useEffect(() => {
     if (!activeChartId) return
     const chart = charts.find(c => c.id === activeChartId)
@@ -185,7 +185,7 @@ export default function AccountPage() {
 
     computeHdResult(chart.birthDate, chart.birthTime, tz)
       .then(r => setChartResult(r))
-      .catch(err => toast.error(err instanceof Error ? err.message : '計算失敗'))
+      .catch(err => toast.error(err instanceof Error ? err.message : tRef.current('account.calcFailed')))
       .finally(() => setChartComputing(false))
   }, [activeChartId, charts])
 
@@ -194,7 +194,7 @@ export default function AccountPage() {
       <>
         <div className="min-h-screen flex items-center justify-center pt-[52px]">
           <span className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-(--ink-soft)">
-            Loading…
+            {t('account.loading')}
           </span>
         </div>
       </>
@@ -208,9 +208,9 @@ export default function AccountPage() {
   }
 
   const NAV_ITEMS: { key: SidebarSection; label: string }[] = [
-    { key: 'profile', label: 'Profile' },
-    { key: 'humandesign', label: 'Human Design' },
-    { key: 'connected', label: 'Connected Accounts' },
+    { key: 'profile', label: t('account.profile') },
+    { key: 'humandesign', label: t('account.humanDesign') },
+    { key: 'connected', label: t('account.connectedAccounts') },
   ]
 
   return (
@@ -233,19 +233,19 @@ export default function AccountPage() {
               onClick={() => signOut(() => router.push('/'))}
               className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink-soft) border border-(--ink-soft) px-2.5 py-1 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--crimson) hover:border-(--crimson)"
             >
-              登出
+              {t('account.signOut')}
             </button>
           </div>
         </div>
 
         {/* ── Desktop sidebar ── */}
-        <nav className="hidden md:flex w-56 shrink-0 border-r border-(--ink) min-h-[calc(100vh-52px)] flex-col py-8 px-0">
+        <nav className="hidden md:flex w-56 shrink-0 border-r border-(--ink) h-[calc(100vh-52px)] sticky top-13 flex-col py-8 px-0 overflow-y-auto">
 
           <button
             onClick={() => handleSectionClick('profile')}
             className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'profile' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
           >
-            Profile
+            {t('account.profile')}
           </button>
 
           <div>
@@ -253,7 +253,7 @@ export default function AccountPage() {
               onClick={() => handleSectionClick('humandesign')}
               className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'humandesign' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
             >
-              Human Design
+              {t('account.humanDesign')}
             </button>
 
             {activeSection === 'humandesign' && charts.length >= 1 && (
@@ -291,7 +291,7 @@ export default function AccountPage() {
                         <button
                           onClick={() => handleStartRenameChart(ch)}
                           className="opacity-0 group-hover:opacity-100 pl-1 text-(--ink-soft) hover:text-(--ink) text-[12px] md:text-base cursor-pointer transition-all duration-120"
-                          title="編輯名稱"
+                          title={t('account.editChartTitle')}
                         >
                           ✎
                         </button>
@@ -299,7 +299,7 @@ export default function AccountPage() {
                           onClick={() => handleDeleteChart(ch.id)}
                           disabled={deletingId === ch.id}
                           className="opacity-0 group-hover:opacity-100 px-2 text-(--ink-soft) hover:text-(--crimson) text-[12px] md:text-base cursor-pointer transition-all duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
-                          title="刪除"
+                          title={t('account.deleteChart')}
                         >
                           {deletingId === ch.id ? '…' : '✕'}
                         </button>
@@ -315,7 +315,7 @@ export default function AccountPage() {
             onClick={() => handleSectionClick('connected')}
             className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'connected' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
           >
-            Connected Accounts
+            {t('account.connectedAccounts')}
           </button>
 
           <div className="mt-auto px-5">
@@ -323,7 +323,7 @@ export default function AccountPage() {
               onClick={() => signOut(() => router.push('/'))}
               className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) border border-(--ink-soft) px-3.5 py-1.5 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--crimson) hover:border-(--crimson) w-full"
             >
-              登出
+              {t('account.signOut')}
             </button>
           </div>
         </nav>
@@ -336,7 +336,7 @@ export default function AccountPage() {
             <div className="px-5 py-8 md:px-10 md:py-10 max-w-3xl">
               <header className="mb-8 pb-3 border-b border-(--ink)">
                 <h1 className="font-serif italic font-medium text-[clamp(24px,3vw,36px)] leading-none m-0 text-(--ink)">
-                  Profile
+                  {t('account.profile')}
                 </h1>
               </header>
 
@@ -354,7 +354,7 @@ export default function AccountPage() {
                     onClick={() => avatarInputRef.current?.click()}
                     disabled={avatarUploading}
                     className="relative w-20 h-20 block cursor-pointer border border-(--ink) overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
-                    title="更換大頭貼"
+                    title={t('account.changeAvatar')}
                   >
                     {user.imageUrl ? (
                       <Image
@@ -365,12 +365,12 @@ export default function AccountPage() {
                       />
                     ) : (
                       <div className="w-full h-full bg-(--paper-deep) flex items-center justify-center">
-                        <span className="font-mono text-[12px] md:text-base text-(--ink-soft)">No img</span>
+                        <span className="font-mono text-[12px] md:text-base text-(--ink-soft)">{t('account.noImage')}</span>
                       </div>
                     )}
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                       <span className="font-mono text-[12px] md:text-base tracking-widest uppercase text-white">
-                        {avatarUploading ? '上傳中…' : '更換'}
+                        {avatarUploading ? t('account.uploading') : t('account.change')}
                       </span>
                     </div>
                   </button>
@@ -387,7 +387,7 @@ export default function AccountPage() {
                         onClick={handleStartEditName}
                         className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft) border border-(--ink-soft) px-2 py-0.5 cursor-pointer transition-colors duration-120 hover:text-(--ink) hover:border-(--ink) shrink-0"
                       >
-                        編輯
+                        {t('account.edit')}
                       </button>
                     </div>
                   ) : (
@@ -395,7 +395,7 @@ export default function AccountPage() {
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          placeholder="顯示名稱"
+                          placeholder={t('account.displayNamePlaceholder')}
                           value={displayName}
                           onChange={e => setDisplayName(e.target.value)}
                           className="font-mono text-[12px] md:text-base tracking-[0.04em] border border-(--ink) bg-(--paper) text-(--ink) px-3 py-1.5 w-52 outline-none placeholder:text-(--ink-soft)"
@@ -407,14 +407,14 @@ export default function AccountPage() {
                           disabled={nameSaving}
                           className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--paper) bg-(--ink) border border-(--ink) px-3 py-1 cursor-pointer transition-colors duration-120 hover:bg-transparent hover:text-(--ink) disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {nameSaving ? '儲存中…' : '儲存'}
+                          {nameSaving ? t('account.saving') : t('account.save')}
                         </button>
                         <button
                           onClick={() => setEditingName(false)}
                           disabled={nameSaving}
                           className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft) border border-(--ink-soft) px-3 py-1 cursor-pointer transition-colors duration-120 hover:text-(--ink) hover:border-(--ink) disabled:opacity-50"
                         >
-                          取消
+                          {t('account.cancel')}
                         </button>
                       </div>
                     </div>
@@ -433,24 +433,24 @@ export default function AccountPage() {
             <div className="px-5 py-8 md:px-10 md:py-10">
               <header className="mb-6 pb-3 border-b border-(--ink)">
                 <h1 className="font-serif italic font-medium text-[clamp(24px,3vw,36px)] leading-none m-0 text-(--ink)">
-                  Human Design
+                  {t('account.humanDesign')}
                 </h1>
               </header>
 
               {chartsLoading && (
-                <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft)">載入中…</div>
+                <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft)">{t('account.loadingCharts')}</div>
               )}
 
               {!chartsLoading && charts.length === 0 && (
                 <div className="border border-dashed border-(--ink) py-10 px-6 text-center max-w-md">
                   <div className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink-soft) mb-3">
-                    尚無儲存的人類圖
+                    {t('account.noCharts')}
                   </div>
                   <button
                     onClick={() => router.push('/')}
                     className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink) border border-(--ink) px-4 py-2 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper)"
                   >
-                    前往計算
+                    {t('account.goCalculate')}
                   </button>
                 </div>
               )}
@@ -487,14 +487,14 @@ export default function AccountPage() {
                           <button
                             onClick={() => handleStartRenameChart(ch)}
                             className="px-1.5 py-1.5 text-[12px] md:text-base text-(--ink-soft) hover:text-(--ink) border-l border-(--ink) cursor-pointer transition-colors duration-120"
-                            title="編輯名稱"
+                            title={t('account.editChartTitle')}
                           >
                             ✎
                           </button>
                           <button
                             onClick={() => handleDeleteChart(ch.id)}
                             className="px-2 py-1.5 text-[12px] md:text-base text-(--ink-soft) hover:text-(--crimson) border-l border-(--ink) cursor-pointer transition-colors duration-120"
-                            title="刪除"
+                            title={t('account.deleteChart')}
                           >
                             ✕
                           </button>
@@ -508,7 +508,7 @@ export default function AccountPage() {
               {!chartsLoading && activeChart && (
                 <>
                   {chartComputing && (
-                    <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) mb-6">計算中…</div>
+                    <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) mb-6">{t('account.computing')}</div>
                   )}
                   {chartResult && (
                     <ChartView
@@ -530,11 +530,11 @@ export default function AccountPage() {
             <div className="px-5 py-8 md:px-10 md:py-10 max-w-3xl">
               <header className="mb-8 pb-3 border-b border-(--ink)">
                 <h1 className="font-serif italic font-medium text-[clamp(24px,3vw,36px)] leading-none m-0 text-(--ink)">
-                  Connected Accounts
+                  {t('account.connectedAccounts')}
                 </h1>
               </header>
               {user.externalAccounts.length === 0 ? (
-                <div className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft)">尚無連結帳號</div>
+                <div className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft)">{t('account.noConnected')}</div>
               ) : (
                 <div className="flex flex-col border border-(--ink)">
                   {user.externalAccounts.map((account) => (

@@ -24,6 +24,30 @@ export interface SelectionPayload {
   data: unknown
 }
 
+export interface AnnotationLabels {
+  head: string
+  ajna: string
+  throat: string
+  g: string
+  ego: string
+  spleen: string
+  sacral: string
+  solarPlexus: string
+  root: string
+}
+
+const DEFAULT_ANNOTATION_LABELS: AnnotationLabels = {
+  head: '頂輪',
+  ajna: '邏輯中心',
+  throat: '喉嚨中心',
+  g: 'G 中心',
+  ego: '意志力中心',
+  spleen: '直覺中心',
+  sacral: '薦骨中心',
+  solarPlexus: '情緒中心',
+  root: '根部中心',
+}
+
 interface BodyGraphProps {
   onSelect: (sel: SelectionPayload) => void
   activeId?: string
@@ -34,6 +58,7 @@ interface BodyGraphProps {
   activations?: Activations
   // lib CenterName keys differ: ego → heart, solarPlexus → solar
   definedCenterIds?: Set<CenterName>
+  annotationLabels?: AnnotationLabels
 }
 
 // Lookup gate anchor position across all centers
@@ -76,6 +101,7 @@ export default function BodyGraph({
   showSilhouette = true,
   activations = {},
   definedCenterIds,
+  annotationLabels = DEFAULT_ANNOTATION_LABELS,
 }: BodyGraphProps) {
   const isDefined = (chartKey: string): boolean => {
     if (!definedCenterIds) return true  // no data = show all colored
@@ -161,17 +187,17 @@ export default function BodyGraph({
       {showAnnotations && (
         <g className="hd-annotations">
           {([
-            { line: 'M 385 65 L 540 55 L 575 75',       tx: 545, ty: 98,  label: '頂輪' },
-            { line: 'M 305 210 L 160 210 L 130 225',    tx: 40,  ty: 239, label: '邏輯中心' },
-            { line: 'M 300 345 L 175 345 L 145 360',    tx: 40,  ty: 374, label: '喉嚨中心' },
-            { line: 'M 425 485 L 555 485 L 585 470',    tx: 540, ty: 454, label: 'G 中心' },
-            { line: 'M 477 552 L 555 552 L 585 540',    tx: 540, ty: 526, label: '意志力中心' },
-            { line: 'M 118 625 L 40 625 L 10 640',      tx: 5,   ty: 654, label: '直覺中心' },
-            { line: 'M 400 685 L 605 685 L 635 698',    tx: 545, ty: 720, label: '薦骨中心' },
-            { line: 'M 582 620 L 635 620 L 665 635',    tx: 588, ty: 655, label: '情緒中心' },
-            { line: 'M 400 810 L 540 810 L 575 820',    tx: 540, ty: 842, label: '根部中心' },
-          ] as const).map(({ line, tx, ty, label }) => (
-            <g key={label}>
+            { line: 'M 385 65 L 540 55 L 575 75',       tx: 545, ty: 98,  label: annotationLabels.head },
+            { line: 'M 305 210 L 160 210 L 130 225',    tx: 40,  ty: 239, label: annotationLabels.ajna },
+            { line: 'M 300 345 L 175 345 L 145 360',    tx: 40,  ty: 374, label: annotationLabels.throat },
+            { line: 'M 425 485 L 555 485 L 585 470',    tx: 540, ty: 454, label: annotationLabels.g },
+            { line: 'M 477 552 L 555 552 L 585 540',    tx: 540, ty: 526, label: annotationLabels.ego },
+            { line: 'M 118 625 L 40 625 L 10 640',      tx: 5,   ty: 654, label: annotationLabels.spleen },
+            { line: 'M 400 685 L 605 685 L 635 698',    tx: 545, ty: 720, label: annotationLabels.sacral },
+            { line: 'M 582 620 L 635 620 L 665 635',    tx: 588, ty: 655, label: annotationLabels.solarPlexus },
+            { line: 'M 400 810 L 540 810 L 575 820',    tx: 540, ty: 842, label: annotationLabels.root },
+          ]).map(({ line, tx, ty, label }) => (
+            <g key={`${tx}-${ty}`}>
               <path
                 className="hd-annotation-line"
                 d={line}
