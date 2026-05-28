@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, startTransition } from 'react'
 import { DatePicker, TimePicker, ConfigProvider } from 'antd'
 import dayjs, { type Dayjs } from 'dayjs'
 import LocationPicker from '@/components/humanDesign/LocationPicker'
@@ -38,36 +38,59 @@ const readStoredData = (): StoredData => {
   }
 }
 
+type FormInputs = {
+  birthDate: Dayjs
+  birthTime: Dayjs
+  timezone: string
+  locationLabel: string
+}
+
+const DEFAULT_INPUTS: FormInputs = {
+  birthDate: dayjs('2000-01-01'),
+  birthTime: dayjs('2000-01-01 00:00'),
+  timezone: 'Asia/Taipei',
+  locationLabel: '台北, 台灣',
+}
+
 export default function HomePage() {
   const { t } = useLang()
 
-  const [stored] = useState<StoredData>(readStoredData)
-
-  const [birthDate, setBirthDate] = useState<Dayjs>(() =>
-    stored ? dayjs(stored.inputs.date) : dayjs('2000-01-01')
-  )
-  const [birthTime, setBirthTime] = useState<Dayjs>(() =>
-    stored ? dayjs(`${stored.inputs.date} ${stored.inputs.time}`) : dayjs('2000-01-01 00:00')
-  )
+  const [inputs, setInputs] = useState<FormInputs>(DEFAULT_INPUTS)
+  const { birthDate, birthTime, timezone, locationLabel } = inputs
   const date = birthDate.format('YYYY-MM-DD')
   const time = birthTime.format('HH:mm')
-  const [timezone, setTimezone] = useState(() => stored?.inputs.tz ?? 'Asia/Taipei')
-  const [locationLabel, setLocationLabel] = useState(() => stored?.inputs.loc ?? '台北, 台灣')
-  const [result, setResult] = useState<HdResult | null>(() => {
-    if (!stored?.hadResult || !stored.cached) return null
-    try {
-      return deserializeHdResult(stored.cached)
-    } catch {
-      sessionStorage.removeItem('hd_result')
-      return null
-    }
-  })
+  const setBirthDate = (d: Dayjs) => setInputs(prev => ({ ...prev, birthDate: d }))
+  const setBirthTime = (t: Dayjs) => setInputs(prev => ({ ...prev, birthTime: t }))
+  const setTimezone = (tz: string) => setInputs(prev => ({ ...prev, timezone: tz }))
+  const setLocationLabel = (loc: string) => setInputs(prev => ({ ...prev, locationLabel: loc }))
+  const [result, setResult] = useState<HdResult | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [isRestoring, setIsRestoring] = useState(() =>
-    !!(stored?.hadResult && !stored.cached)
-  )
-  const triggerCalcRef = useRef(!!(stored?.hadResult && !stored?.cached))
+  const [isRestoring, setIsRestoring] = useState(false)
+  const triggerCalcRef = useRef(false)
+
+  useEffect(() => {
+    const stored = readStoredData()
+    if (!stored) return
+    startTransition(() => {
+      setInputs({
+        birthDate: dayjs(stored.inputs.date),
+        birthTime: dayjs(`${stored.inputs.date} ${stored.inputs.time}`),
+        timezone: stored.inputs.tz,
+        locationLabel: stored.inputs.loc,
+      })
+      if (stored.hadResult && stored.cached) {
+        try {
+          setResult(deserializeHdResult(stored.cached))
+        } catch {
+          sessionStorage.removeItem('hd_result')
+        }
+      } else if (stored.hadResult && !stored.cached) {
+        setIsRestoring(true)
+        triggerCalcRef.current = true
+      }
+    })
+  }, [])
 
   const calculate = useCallback(async () => {
     setError('')

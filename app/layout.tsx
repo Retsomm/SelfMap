@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
+import { zhTW, enUS } from '@clerk/localizations'
 import { Toaster } from 'react-hot-toast'
 import { cookies } from 'next/headers'
 import { clerkAppearance } from '@/lib/clerkAppearance'
@@ -44,7 +45,7 @@ export default async function RootLayout({
   return (
     <html lang="zh-TW" className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full">
-        <ClerkProvider appearance={clerkAppearance}>
+        <ClerkProvider appearance={clerkAppearance} localization={initialLang === 'zh' ? zhTW : enUS}>
           <LanguageProvider initialLang={initialLang}>
             <Navbar />
             {children}
