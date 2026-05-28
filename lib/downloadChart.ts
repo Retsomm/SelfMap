@@ -31,13 +31,22 @@ export const downloadChart = async (el: HTMLElement): Promise<void> => {
     await new Promise<void>((resolve) => { img.onload = () => resolve(); img.src = dataUrl })
     const a4W = 210
     const contentH = (img.naturalHeight / img.naturalWidth) * a4W
+    const footerH = 8
 
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: [a4W, contentH],
+      format: [a4W, contentH + footerH],
     })
     pdf.addImage(dataUrl, 'PNG', 0, 0, a4W, contentH)
+    pdf.setFontSize(8)
+    pdf.setTextColor(150, 120, 80)
+    pdf.text(
+      'copyright@Retsnom',
+      a4W / 2,
+      contentH + footerH / 2,
+      { align: 'center', baseline: 'middle' },
+    )
     pdf.save('human-design.pdf')
   } catch (err) {
     console.error('[downloadChart]', err)

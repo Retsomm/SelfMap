@@ -4,6 +4,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from 'react-hot-toast'
 import { clerkAppearance } from '@/lib/clerkAppearance'
 import Navbar from '@/components/Navbar'
+import { LanguageProvider } from '@/i18n'
 import './globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -39,9 +40,11 @@ export default function RootLayout({
     <html lang="zh-TW" className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full">
         <ClerkProvider appearance={clerkAppearance}>
-          <Navbar />
-          {children}
-          <Toaster position="bottom-center" toastOptions={{ duration: 3500 }} />
+          <LanguageProvider>
+            <Navbar />
+            {children}
+            <Toaster position="bottom-center" toastOptions={{ duration: 3500 }} />
+          </LanguageProvider>
         </ClerkProvider>
       </body>
     </html>
