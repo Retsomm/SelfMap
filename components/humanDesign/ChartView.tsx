@@ -80,7 +80,7 @@ export default function ChartView({
   }), [t])
 
   const activations = useMemo(() => toActivations(result.planets), [result])
-  const generatedAt = useMemo(() => new Date().toLocaleString(lang === 'zh' ? 'zh-TW' : 'en-US', { timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }), [lang])
+  const generatedAt = useMemo(() => new Date().toLocaleString(lang === 'zh' ? 'zh-TW' : 'en-US', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }), [lang])
 
   // language-aware label helpers
   const typeLabel = lang === 'en' ? (TYPE_LABELS_EN[result.type] ?? result.type) : TYPE_LABELS[result.type]
@@ -137,12 +137,42 @@ export default function ChartView({
     setSelection({ kind: 'gate', data: { ...g, number: num }, id: `gate-${num}` })
   }, [])
 
-  const handleSelectCenter = useCallback((id: string) => {
+  const handleSelectCenter = useCallback((id: string, isDefined: boolean) => {
     const chartKey = toChartKey(id)
     const info = HD_CENTERS_INFO[chartKey]
-    if (info) setSelection({ kind: 'center', data: info, id: `center-${chartKey}` })
+    if (info) setSelection({ kind: 'center', data: { center: info, isDefined }, id: `center-${chartKey}` })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleSelectType = useCallback(() => {
+    setSelection({ kind: 'type', data: { typeKey: result.type }, id: `type-${result.type}` })
+  }, [result.type])
+
+  const handleSelectProfile = useCallback(() => {
+    setSelection({ kind: 'profile', data: { profile: result.profile.profile }, id: `profile-${result.profile.profile}` })
+  }, [result.profile.profile])
+
+  const handleSelectAuthority = useCallback(() => {
+    setSelection({ kind: 'authority', data: { authorityKey: authorityKey ?? result.authority.name }, id: `authority-${result.authority.name}` })
+  }, [authorityKey, result.authority.name])
+
+  const handleSelectDefinition = useCallback(() => {
+    setSelection({ kind: 'definition', data: { definitionRaw: result.definition.raw }, id: `definition-${result.definition.raw}` })
+  }, [result.definition.raw])
+
+  const handleSelectCross = useCallback(() => {
+    setSelection({
+      kind: 'cross',
+      data: {
+        crossType: result.incarnationCross.crossType,
+        sunGate: result.incarnationCross.persSunGate,
+        crossBaseName: result.incarnationCross.crossBaseName,
+        variant: result.incarnationCross.variant,
+        gatesLabel: result.incarnationCross.gatesLabel,
+      },
+      id: `cross-${result.incarnationCross.crossName}`,
+    })
+  }, [result.incarnationCross])
 
   const handleSelectChannel = useCallback((channelId: string) => {
     const [a, b] = channelId.split('-').map(Number)
@@ -327,7 +357,7 @@ export default function ChartView({
 
         {/* Overview cards */}
         <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 mb-6">
-          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)]">
+          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={handleSelectType}>
             <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.typeCard')}</div>
             <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{typeLabel}</div>
             {lang === 'zh' && <div className="font-mono text-[11px] text-[var(--ink-soft)] opacity-60">{result.type}</div>}
@@ -337,19 +367,19 @@ export default function ChartView({
             </div>
           </div>
 
-          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)]">
+          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={handleSelectProfile}>
             <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.profileCard')}</div>
             <div className="font-serif italic font-medium text-[40px] leading-[1.1] text-[var(--ink)] mb-1 tracking-[0.06em]">{result.profile.profile}</div>
             <div className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] leading-[1.5]">{profileLabel}</div>
           </div>
 
-          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)]">
+          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={handleSelectAuthority}>
             <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.authorityCard')}</div>
             <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{authorityInfo.name}</div>
             <div className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] leading-[1.5]">{authorityInfo.tip}</div>
           </div>
 
-          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)]">
+          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={handleSelectDefinition}>
             <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.definitionCard')}</div>
             <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{definitionLabel}</div>
             {lang === 'en' && <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)] mt-1 tracking-[0.04em]">{result.definition.raw}</div>}
@@ -358,7 +388,7 @@ export default function ChartView({
             </div>
           </div>
 
-          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] sm:col-span-2">
+          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] sm:col-span-2 cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={handleSelectCross}>
             <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.crossCard')}</div>
             <div className="font-serif italic font-medium text-[22px] leading-[1.1] text-[var(--ink)] mb-1">
               {lang === 'en'
@@ -385,11 +415,11 @@ export default function ChartView({
             { category: t('chart.motivation'), val: varLabels.motivation },
           ].map(r => (
             <div
-              className="grid grid-cols-1 sm:grid-cols-[180px_120px_1fr] gap-1 sm:gap-4 py-2.5 px-4 border-b border-dotted border-[rgba(43,31,20,0.2)] items-start last:border-b-0"
+              className="grid grid-cols-1 sm:grid-cols-[180px_160px_1fr] gap-1 sm:gap-4 py-2.5 px-4 border-b border-dotted border-[rgba(43,31,20,0.2)] items-start last:border-b-0"
               key={r.category}
             >
               <div className="font-mono text-[12px] md:text-base tracking-[0.04em] text-[var(--ink-soft)] leading-[1.5]">{r.category}</div>
-              <div className="font-sans text-[12px] md:text-base font-semibold text-[var(--ink)]">{r.val.label}</div>
+              <div className="font-sans text-[12px] md:text-base font-semibold text-[var(--ink)] whitespace-nowrap">{r.val.label}</div>
               <div className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] leading-[1.55]">{r.val.description}</div>
             </div>
           ))}
@@ -406,7 +436,7 @@ export default function ChartView({
               <div
                 key={id}
                 className={`border border-[var(--ink)] py-2.5 px-3 flex items-center gap-2 cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)] ${defined ? 'bg-[var(--paper-deep)]' : 'bg-[var(--paper)] opacity-55 hover:opacity-100'}`}
-                onClick={() => handleSelectCenter(id)}
+                onClick={() => handleSelectCenter(id, defined)}
               >
                 <div className={`w-2.5 h-2.5 border-[1.5px] border-[var(--ink)] shrink-0${defined ? ' bg-[var(--ink)]' : ''}`} />
                 <div>

@@ -32,7 +32,9 @@
     "privacyTitle": "Privacy",
     "privacyBody": "Your birth data is used solely for chart calculation and will never be used for advertising or third-party analytics. Account data is securely managed through Clerk, and chart data is encrypted.",
     "contactTitle": "Contact",
-    "contactBody": "For any questions or suggestions, feel free to reach us at 112182ssss@gmail.com. SelfMap is under active development — app support and advanced features may be added in the future."
+    "contactBody": "For any questions or suggestions, feel free to reach us at 112182ssss@gmail.com. SelfMap is under active development — app support and advanced features may be added in the future.",
+    "disclaimerTitle": "Disclaimer",
+    "disclaimerBody": "The Human Design information and interpretations provided on this site are for reference purposes only and are not a substitute for personal consultations with a qualified Human Design analyst. For in-depth and comprehensive chart readings, we recommend seeking guidance from a certified or formally trained Human Design professional. SelfMap assumes no responsibility for any decisions or outcomes arising from the use of content on this site."
   },
   "hdPage": {
     "eyebrow": "Human Design",
@@ -156,6 +158,8 @@
     "integrationTitle": "Integration Channels",
     "integrationSub": "34 — 10 — 20 — 57 · Individuation Loop",
     "integrationLead": "Four gates and four channels form a closed energy loop. This is the circuit of pure individuality — strong selfhood, instant intuition, immediate action.",
-    "integrationNote": "This loop appears in the chart as a trunk (20-57) plus two vertical spurs (gates 10 & 34). All four channels share the same visual structure, so clicking any segment opens this Integration Channels panel."
+    "integrationNote": "This loop appears in the chart as a trunk (20-57) plus two vertical spurs (gates 10 & 34). All four channels share the same visual structure, so clicking any segment opens this Integration Channels panel.",
+    "definedCenter": "Defined",
+    "openCenter": "Open (Undefined)"
   }
 }

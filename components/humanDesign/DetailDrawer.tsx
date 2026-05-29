@@ -5,6 +5,8 @@ import { fmtGate } from '@/utils/format'
 import { HD_GATES, HD_CENTERS_INFO, type ChartChannel } from './hd-chart-data'
 import type { SelectionPayload } from './BodyGraph'
 import { useLang } from '@/i18n'
+import { HD_TYPE_CONTENT, HD_PROFILE_CONTENT, HD_AUTHORITY_CONTENT, HD_DEFINITION_CONTENT } from './hd-summary-data'
+import { HD_CROSS_CONTENT } from './hd-cross-data'
 
 interface DetailDrawerProps {
   selection: SelectionPayload | null
@@ -23,6 +25,15 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
   let kicker = ''
   let title = ''
   let sub = ''
@@ -32,7 +43,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
     const { kind, data } = selection
 
     if (kind === 'center') {
-      const d = data as typeof HD_CENTERS_INFO[string]
+      const { center: d, isDefined } = data as { center: typeof HD_CENTERS_INFO[string]; isDefined: boolean }
       kicker = `${t('drawer.centerKicker')} · ${pick(d.name).toUpperCase()}`
       title = pick(d.name)
       sub = pick(d.type)
@@ -41,6 +52,16 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
           <p className="lead">{pick(d.summary)}</p>
           <h4>{t('drawer.description')}</h4>
           <p>{pick(d.description)}</p>
+          <div className="hd-center-states">
+            <div className={`hd-center-state${isDefined === true ? ' hd-center-state--active' : ''}`}>
+              <div className="hd-center-state-label">{t('drawer.definedCenter')}</div>
+              <p>{pick(d.definedContent)}</p>
+            </div>
+            <div className={`hd-center-state${isDefined === false ? ' hd-center-state--active' : ''}`}>
+              <div className="hd-center-state-label">{t('drawer.openCenter')}</div>
+              <p>{pick(d.openContent)}</p>
+            </div>
+          </div>
           <h4>{t('drawer.keywords')}</h4>
           <div className="hd-tag-row">
             {pick(d.keywords).map(k => <span className="hd-tag" key={k}>{k}</span>)}
@@ -109,10 +130,11 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
       )
     } else if (kind === 'integration') {
       const integrationList = [
-        { a: 34, b: 10, name: { zh: '探索通道',   en: 'Exploration'   }, desc: { zh: '力量到形式 — 依循信念而行動的能量。', en: "Force to Form — energy to act on one's convictions." } },
-        { a: 10, b: 20, name: { zh: '覺醒通道',   en: 'Awakening'     }, desc: { zh: '忠於當下的自我展現。', en: 'Awakening to self — authentic expression in the now.' } },
-        { a: 20, b: 57, name: { zh: '腦波通道',   en: 'The Brainwave' }, desc: { zh: '當下的直覺洞察，瞬間即達。', en: 'Intuitive insight in the present moment — instantaneous.' } },
-        { a: 34, b: 57, name: { zh: '力量通道',   en: 'Power'         }, desc: { zh: '原型化的存在；完美的生存直覺。', en: 'Archetypal existence — perfect survival intuition.' } },
+        { a: 10, b: 20, name: { zh: '覺醒通道',   en: 'Awakening'     }, desc: { zh: '你對「真不真實」有一種近乎本能的敏感，要求自己活得誠實有原則，這種處世態度讓身邊的人不自覺開始思考「我是不是也可以更做自己一點」。你只在乎「當下」，這種活在當下的能量是你給周圍人最大的禮物之一。', en: 'Awakening to self — authentic expression in the now.' } },
+        { a: 10, b: 34, name: { zh: '探索通道',   en: 'Exploration'   }, desc: { zh: '你就是要走自己的路，當你按照自己的感覺和直覺行動，你會感覺對了、有力量。這條通道有個特別能量：當你真的活出自己的樣子，你身邊的人也會被感染，開始有勇氣去做自己。', en: "Acting in accordance with one's own convictions." } },
+        { a: 10, b: 57, name: { zh: '生存力通道', en: 'Perfected Form' }, desc: { zh: '你有一種很難用邏輯解釋的化險為夷能力，脾中心有一套超靈敏的生存雷達，在危險靠近之前就悄悄提醒你。你的直覺靠「聽起來對不對」來判斷，前提是你要願意相信它。', en: "Intuition of one's own survival and self-expression." } },
+        { a: 20, b: 34, name: { zh: '忙碌通道',   en: 'Charisma'      }, desc: { zh: '當你找到一件真心喜歡的事，你會整個人燃起來，精力充沛停不下來，旁邊的人光看著你就會被帶動。但不是每一件事都值得你去忙——只為你愛的事忙，才是這條通道最美的狀態。', en: 'The present-moment exhibitor. The power of being busy in the now.' } },
+        { a: 34, b: 57, name: { zh: '力量通道',   en: 'Power'         }, desc: { zh: '這條通道讓你天生精力充沛，在關鍵時刻反應特別快特別準，在危機處理上特別厲害。你很自然地想替人療傷解決問題，但要先照顧好自己才能照顧好別人，選擇值得你投入力量的人和事。', en: 'Archetypal existence — perfect survival intuition.' } },
       ]
       kicker = t('drawer.integrationKicker')
       title = t('drawer.integrationTitle')
@@ -144,6 +166,138 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
           </p>
         </>
       )
+    } else if (kind === 'type') {
+      const { typeKey } = data as { typeKey: string }
+      const d = HD_TYPE_CONTENT[typeKey]
+      if (d) {
+        kicker = '人類圖類型'
+        title = d.title
+        sub = d.subtitle ?? ''
+        body = (
+          <>
+            <p className="lead">{d.intro}</p>
+            {d.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+            {d.highlights && (
+              <>
+                <h4>關鍵特質</h4>
+                <div className="hd-center-states">
+                  {d.highlights.map(h => (
+                    <div key={h.label} className="hd-center-state">
+                      <div className="hd-center-state-label">{h.label}</div>
+                      <p>{h.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )
+      }
+    } else if (kind === 'profile') {
+      const { profile } = data as { profile: string }
+      const d = HD_PROFILE_CONTENT[profile]
+      if (d) {
+        kicker = '人生角色'
+        title = d.title
+        sub = d.subtitle ?? ''
+        body = (
+          <>
+            <p className="lead">{d.intro}</p>
+            {d.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+            {d.highlights && d.highlights.map(h => (
+              <div key={h.label} className="hd-center-state hd-center-state--active" style={{ marginTop: 12 }}>
+                <div className="hd-center-state-label">{h.label}</div>
+                <p>{h.text}</p>
+              </div>
+            ))}
+          </>
+        )
+      }
+    } else if (kind === 'authority') {
+      const { authorityKey } = data as { authorityKey: string }
+      const d = HD_AUTHORITY_CONTENT[authorityKey]
+      if (d) {
+        kicker = '決策權威'
+        title = d.title
+        sub = d.subtitle ?? ''
+        body = (
+          <>
+            <p className="lead">{d.intro}</p>
+            {d.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+            {d.highlights && d.highlights.map(h => (
+              <div key={h.label} className="hd-center-state hd-center-state--active" style={{ marginTop: 12 }}>
+                <div className="hd-center-state-label">{h.label}</div>
+                <p>{h.text}</p>
+              </div>
+            ))}
+          </>
+        )
+      }
+    } else if (kind === 'definition') {
+      const { definitionRaw } = data as { definitionRaw: string }
+      const d = HD_DEFINITION_CONTENT[definitionRaw]
+      if (d) {
+        kicker = '定義'
+        title = d.title
+        sub = d.subtitle ?? ''
+        body = (
+          <>
+            <p className="lead">{d.intro}</p>
+            {d.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+            {d.highlights && d.highlights.map(h => (
+              <div key={h.label} className="hd-center-state hd-center-state--active" style={{ marginTop: 12 }}>
+                <div className="hd-center-state-label">{h.label}</div>
+                <p>{h.text}</p>
+              </div>
+            ))}
+          </>
+        )
+      }
+    } else if (kind === 'cross') {
+      const { crossType, sunGate, crossBaseName, variant, gatesLabel } = data as {
+        crossType: string
+        sunGate: number
+        crossBaseName: string
+        variant: number
+        gatesLabel: string
+      }
+      const gateContent = HD_CROSS_CONTENT[sunGate]
+      const crossTypeMap: Record<string, { label: string; key: 'RAC' | 'JC' | 'LAC' }> = {
+        RAC: { label: '右角度交叉', key: 'RAC' },
+        JC:  { label: '並列交叉',   key: 'JC'  },
+        LAC: { label: '左角度交叉', key: 'LAC' },
+      }
+      const ctInfo = crossTypeMap[crossType] ?? { label: crossType, key: 'RAC' as const }
+      kicker = '輪迴交叉'
+      title = `${ctInfo.label}之${crossBaseName}${variant}`
+      sub = gatesLabel
+
+      if (gateContent) {
+        const entry = gateContent[ctInfo.key]
+        body = (
+          <>
+            {gateContent.intro && <p className="lead">{gateContent.intro}</p>}
+            {entry ? (
+              <>
+                <h4>{ctInfo.label}・{entry.title}</h4>
+                {entry.body.split('\n').filter(Boolean).map((p, i) => <p key={i}>{p}</p>)}
+              </>
+            ) : (
+              <p style={{ color: '#6b5a44' }}>此閘門的輪迴交叉內容暫未收錄。</p>
+            )}
+            <h4>閘門組合</h4>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#6b5a44' }}>{gatesLabel}</p>
+          </>
+        )
+      } else {
+        body = (
+          <>
+            <p className="lead">此閘門的輪迴交叉說明暫未收錄，敬請期待。</p>
+            <h4>閘門組合</h4>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#6b5a44' }}>{gatesLabel}</p>
+          </>
+        )
+      }
     }
   }
 
