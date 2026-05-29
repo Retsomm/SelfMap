@@ -47,6 +47,14 @@ export default function AboutPage() {
               {t('about.contactBody')}
             </p>
           </section>
+          <section className="border border-(--ink-soft) rounded-md p-5 bg-(--surface-muted)">
+            <h2 className="font-mono text-base tracking-[0.16em] uppercase text-(--ink-soft) mb-3">
+              {t('about.disclaimerTitle')}
+            </h2>
+            <p className="text-sm leading-relaxed text-(--ink-soft)">
+              {t('about.disclaimerBody')}
+            </p>
+          </section>
         </div>
       </div>
     </main>

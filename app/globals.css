@@ -9,6 +9,7 @@
 :root {
   --paper: #efe5d0;
   --paper-deep: #e7d9bd;
+  --surface-muted: #e8dcc5;
   --ink: #2b1f14;
   --ink-soft: #6b5a44;
   --rule: #2b1f14;
@@ -27,6 +28,9 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
 
 body {
   background: var(--paper);
@@ -447,6 +451,44 @@ body {
   transition: background 120ms ease, color 120ms ease;
 }
 .hd-gate-chip:hover { background: var(--ink); color: var(--paper); }
+
+.hd-center-states {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+.hd-center-state {
+  border: 1px solid var(--ink-soft);
+  border-left: 3px solid var(--ink-soft);
+  padding: 12px 14px;
+  opacity: 0.45;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+.hd-center-state--active {
+  border: 1px solid var(--ink);
+  border-left: 3px solid var(--ink);
+  opacity: 1;
+  background: rgba(43, 31, 20, 0.04);
+}
+.hd-center-state-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.hd-center-state--active .hd-center-state-label {
+  color: var(--ink);
+  font-weight: 700;
+}
+.hd-center-state p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
 
 .hd-ch-card {
   border: 1px solid var(--ink);

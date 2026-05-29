@@ -94,7 +94,7 @@ export const CENTER_INFO: Record<CenterName, Omit<Center, 'id' | 'defined'>> = {
     suggestion: '學會識別哪些問題值得你思考，哪些只是雜訊',
   },
   ajna: {
-    name: '直覺中心',
+    name: '心智中心',
     description: '概念化、分析與思維模式',
     summary: '理性分析中心，將靈感轉化為觀點',
     behavior: '你善於分析複雜問題，有獨特的思維框架',

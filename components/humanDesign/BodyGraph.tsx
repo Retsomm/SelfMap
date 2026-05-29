@@ -16,7 +16,7 @@ import {
 
 export type { GateActivation, Activations }
 
-export type SelectionKind = 'center' | 'gate' | 'channel' | 'integration'
+export type SelectionKind = 'center' | 'gate' | 'channel' | 'integration' | 'type' | 'profile' | 'authority' | 'definition' | 'cross'
 
 export interface SelectionPayload {
   kind: SelectionKind
@@ -42,7 +42,7 @@ const DEFAULT_ANNOTATION_LABELS: AnnotationLabels = {
   throat: '喉嚨中心',
   g: 'G 中心',
   ego: '意志力中心',
-  spleen: '直覺中心',
+  spleen: '脾中心',
   sacral: '薦骨中心',
   solarPlexus: '情緒中心',
   root: '根部中心',
@@ -129,8 +129,8 @@ export default function BodyGraph({
     fillColour: string | null, key: string,
     isActive: boolean,
   ) => {
-    const w = isActive ? 7 : 5
-    const inner = isActive ? 2 : 1.4
+    const w = isActive ? 14 : 10
+    const inner = isActive ? 4 : 2.8
     if (fillColour) {
       return (
         <line key={key}
@@ -152,7 +152,7 @@ export default function BodyGraph({
   }
 
   return (
-    <svg className="hd-chart-svg" viewBox="0 -40 700 960" xmlns="http://www.w3.org/2000/svg">
+    <svg className="hd-chart-svg" viewBox="0 -40 700 1030" xmlns="http://www.w3.org/2000/svg">
 
       <defs>
         <pattern id="hd-rb-stripes" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
@@ -167,14 +167,16 @@ export default function BodyGraph({
           <path
             d="M 350 -32
                C 230 -32, 195 80, 195 175
-               C 200 240, 248 266, 283 274
-               C 242 296, 148 384, 75 510
-               C 60 640, 75 750, 145 815
-               C 200 880, 285 905, 350 905
-               C 415 905, 500 880, 555 815
-               C 625 750, 640 640, 625 510
-               C 552 384, 458 296, 417 274
-               C 452 266, 500 240, 505 175
+               C 196 215, 218 260, 287 278
+               C 286 302, 286 322, 285 330
+               C 242 375, 148 420, 75 510
+               C 60 640, 75 780, 145 850
+               C 200 930, 285 960, 350 960
+               C 415 960, 500 930, 555 850
+               C 625 780, 640 640, 625 510
+               C 552 420, 458 378, 415 330
+               C 414 322, 414 302, 413 278
+               C 482 260, 504 215, 505 175
                C 505 80, 470 -32, 350 -32 Z"
             fill="rgba(43, 31, 20, 0.022)"
             stroke="rgba(43, 31, 20, 0.14)"
@@ -189,13 +191,13 @@ export default function BodyGraph({
           {([
             { line: 'M 385 65 L 540 55 L 575 75',       tx: 545, ty: 98,  label: annotationLabels.head },
             { line: 'M 305 210 L 160 210 L 130 225',    tx: 40,  ty: 239, label: annotationLabels.ajna },
-            { line: 'M 300 345 L 175 345 L 145 360',    tx: 40,  ty: 374, label: annotationLabels.throat },
-            { line: 'M 425 485 L 555 485 L 585 470',    tx: 540, ty: 454, label: annotationLabels.g },
-            { line: 'M 477 552 L 555 552 L 585 540',    tx: 540, ty: 526, label: annotationLabels.ego },
-            { line: 'M 118 625 L 40 625 L 10 640',      tx: 5,   ty: 654, label: annotationLabels.spleen },
-            { line: 'M 400 685 L 605 685 L 635 698',    tx: 545, ty: 720, label: annotationLabels.sacral },
-            { line: 'M 582 620 L 635 620 L 665 635',    tx: 588, ty: 655, label: annotationLabels.solarPlexus },
-            { line: 'M 400 810 L 540 810 L 575 820',    tx: 540, ty: 842, label: annotationLabels.root },
+            { line: 'M 300 375 L 175 375 L 145 390',    tx: 40,  ty: 404, label: annotationLabels.throat },
+            { line: 'M 425 540 L 555 540 L 585 525',    tx: 540, ty: 509, label: annotationLabels.g },
+            { line: 'M 477 607 L 555 607 L 585 595',    tx: 540, ty: 581, label: annotationLabels.ego },
+            { line: 'M 118 675 L 40 675 L 10 690',      tx: 5,   ty: 704, label: annotationLabels.spleen },
+            { line: 'M 400 740 L 605 740 L 635 753',    tx: 545, ty: 775, label: annotationLabels.sacral },
+            { line: 'M 582 670 L 635 670 L 665 685',    tx: 588, ty: 705, label: annotationLabels.solarPlexus },
+            { line: 'M 400 865 L 540 865 L 575 875',    tx: 540, ty: 897, label: annotationLabels.root },
           ]).map(({ line, tx, ty, label }) => (
             <g key={`${tx}-${ty}`}>
               <path
@@ -330,7 +332,7 @@ export default function BodyGraph({
               stroke={HD_PALETTE.ink}
               strokeWidth="2.8"
               strokeLinejoin="round"
-              onClick={() => onSelect({ kind: 'center', data: info, id: `center-${k}` })}
+              onClick={() => onSelect({ kind: 'center', data: { center: info, isDefined: defined }, id: `center-${k}` })}
             />
           )
         })}
@@ -339,14 +341,14 @@ export default function BodyGraph({
       {/* G-center smiley */}
       {showFace && (
         <g pointerEvents="none">
-          <ellipse cx="338" cy="478" rx="2.6" ry="3.2" fill={HD_PALETTE.ink} />
-          <ellipse cx="362" cy="478" rx="2.6" ry="3.2" fill={HD_PALETTE.ink} />
-          <circle cx="339" cy="477" r="0.8" fill={HD_PALETTE.paper} />
-          <circle cx="363" cy="477" r="0.8" fill={HD_PALETTE.paper} />
-          <path d="M 338 492 Q 350 503 362 492" fill="none"
+          <ellipse cx="338" cy="533" rx="2.6" ry="3.2" fill={HD_PALETTE.ink} />
+          <ellipse cx="362" cy="533" rx="2.6" ry="3.2" fill={HD_PALETTE.ink} />
+          <circle cx="339" cy="532" r="0.8" fill={HD_PALETTE.paper} />
+          <circle cx="363" cy="532" r="0.8" fill={HD_PALETTE.paper} />
+          <path d="M 338 547 Q 350 558 362 547" fill="none"
             stroke={HD_PALETTE.ink} strokeWidth="1.8" strokeLinecap="round" />
-          <ellipse cx="328" cy="492" rx="3" ry="1.8" fill={HD_PALETTE.crimson} opacity="0.45" />
-          <ellipse cx="372" cy="492" rx="3" ry="1.8" fill={HD_PALETTE.crimson} opacity="0.45" />
+          <ellipse cx="328" cy="547" rx="3" ry="1.8" fill={HD_PALETTE.crimson} opacity="0.45" />
+          <ellipse cx="372" cy="547" rx="3" ry="1.8" fill={HD_PALETTE.crimson} opacity="0.45" />
         </g>
       )}
 
