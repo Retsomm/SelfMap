@@ -160,6 +160,14 @@
     "integrationLead": "四個閘門、五條通道組成一個閉合的能量環。這是純粹個體性的迴路——強烈的自我、瞬時的直覺、立即的行動。",
     "integrationNote": "此迴路在圖中以「主幹（20-57）+ 兩條垂直短線（閘門 10、34）」呈現。五條通道共享同一視覺結構，因此點擊任一段都會打開此整合迴路說明。",
     "definedCenter": "有定義",
-    "openCenter": "開放（無定義）"
+    "openCenter": "開放（無定義）",
+    "typeKicker": "人類圖類型",
+    "profileKicker": "人生角色",
+    "authorityKicker": "決策權威",
+    "definitionKicker": "定義",
+    "crossKicker": "輪迴交叉",
+    "keyTraits": "關鍵特質",
+    "crossGateNotFound": "此閘門的輪迴交叉內容暫未收錄。",
+    "crossNotFound": "此閘門的輪迴交叉說明暫未收錄，敬請期待。"
   }
 }

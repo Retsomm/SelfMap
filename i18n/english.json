@@ -160,6 +160,14 @@
     "integrationLead": "Four gates and four channels form a closed energy loop. This is the circuit of pure individuality — strong selfhood, instant intuition, immediate action.",
     "integrationNote": "This loop appears in the chart as a trunk (20-57) plus two vertical spurs (gates 10 & 34). All four channels share the same visual structure, so clicking any segment opens this Integration Channels panel.",
     "definedCenter": "Defined",
-    "openCenter": "Open (Undefined)"
+    "openCenter": "Open (Undefined)",
+    "typeKicker": "HD Type",
+    "profileKicker": "Profile",
+    "authorityKicker": "Authority",
+    "definitionKicker": "Definition",
+    "crossKicker": "Incarnation Cross",
+    "keyTraits": "Key Traits",
+    "crossGateNotFound": "Cross content for this gate is not yet available.",
+    "crossNotFound": "Cross explanation for this gate is not yet available."
   }
 }

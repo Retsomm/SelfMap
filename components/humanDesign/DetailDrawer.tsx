@@ -170,7 +170,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
       const { typeKey } = data as { typeKey: string }
       const d = HD_TYPE_CONTENT[typeKey]
       if (d) {
-        kicker = '人類圖類型'
+        kicker = t('drawer.typeKicker')
         title = d.title
         sub = d.subtitle ?? ''
         body = (
@@ -179,7 +179,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
             {d.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
             {d.highlights && (
               <>
-                <h4>關鍵特質</h4>
+                <h4>{t('drawer.keyTraits')}</h4>
                 <div className="hd-center-states">
                   {d.highlights.map(h => (
                     <div key={h.label} className="hd-center-state">
@@ -197,7 +197,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
       const { profile } = data as { profile: string }
       const d = HD_PROFILE_CONTENT[profile]
       if (d) {
-        kicker = '人生角色'
+        kicker = t('drawer.profileKicker')
         title = d.title
         sub = d.subtitle ?? ''
         body = (
@@ -217,7 +217,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
       const { authorityKey } = data as { authorityKey: string }
       const d = HD_AUTHORITY_CONTENT[authorityKey]
       if (d) {
-        kicker = '決策權威'
+        kicker = t('drawer.authorityKicker')
         title = d.title
         sub = d.subtitle ?? ''
         body = (
@@ -237,7 +237,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
       const { definitionRaw } = data as { definitionRaw: string }
       const d = HD_DEFINITION_CONTENT[definitionRaw]
       if (d) {
-        kicker = '定義'
+        kicker = t('drawer.definitionKicker')
         title = d.title
         sub = d.subtitle ?? ''
         body = (
@@ -268,7 +268,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
         LAC: { label: '左角度交叉', key: 'LAC' },
       }
       const ctInfo = crossTypeMap[crossType] ?? { label: crossType, key: 'RAC' as const }
-      kicker = '輪迴交叉'
+      kicker = t('drawer.crossKicker')
       title = `${ctInfo.label}之${crossBaseName}${variant}`
       sub = gatesLabel
 
@@ -283,7 +283,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
                 {entry.body.split('\n').filter(Boolean).map((p, i) => <p key={i}>{p}</p>)}
               </>
             ) : (
-              <p style={{ color: '#6b5a44' }}>此閘門的輪迴交叉內容暫未收錄。</p>
+              <p style={{ color: '#6b5a44' }}>{t('drawer.crossGateNotFound')}</p>
             )}
             <h4>閘門組合</h4>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#6b5a44' }}>{gatesLabel}</p>
@@ -292,7 +292,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
       } else {
         body = (
           <>
-            <p className="lead">此閘門的輪迴交叉說明暫未收錄，敬請期待。</p>
+            <p className="lead">{t('drawer.crossNotFound')}</p>
             <h4>閘門組合</h4>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#6b5a44' }}>{gatesLabel}</p>
           </>

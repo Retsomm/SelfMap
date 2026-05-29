@@ -6,7 +6,9 @@ import { HD_TOPICS } from '@/lib/humanDesign/hd-topics'
 
 export default function HdSubNav() {
   const searchParams = useSearchParams()
-  const activeTopic = searchParams.get('topic') ?? 'intro'
+  const rawTopic = searchParams.get('topic')
+  const validSlugs: string[] = HD_TOPICS.map(({ slug }) => slug)
+  const activeTopic = rawTopic && validSlugs.includes(rawTopic) ? rawTopic : 'intro'
 
   return (
     <nav className="border-b border-(--ink)/30 bg-(--paper)" aria-label="人類圖主題導覽">

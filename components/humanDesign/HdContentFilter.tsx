@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { renderMarkdownLines } from './HdMarkdown'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -59,63 +60,6 @@ function parseChannels(content: string): { intro: string[]; sections: FlatSectio
   return { intro, sections }
 }
 
-// ─── Inline bold renderer ─────────────────────────────────────
-
-function renderInline(text: string): React.ReactNode[] {
-  return text.split(/(\*\*[^*]+\*\*)/).map((part, i) =>
-    part.startsWith('**') && part.endsWith('**')
-      ? <strong key={i} className="font-semibold text-(--ink)">{part.slice(2, -2)}</strong>
-      : part
-  )
-}
-
-// ─── Markdown line renderer ───────────────────────────────────
-
-function renderLines(lines: string[]): React.ReactNode[] {
-  const out: React.ReactNode[] = []
-  let listBuf: string[] = []
-  let key = 0
-
-  const flushList = () => {
-    if (!listBuf.length) return
-    out.push(
-      <ul key={`l${key++}`} className="space-y-2 mb-5 list-none pl-0">
-        {listBuf.map((t, i) => (
-          <li key={i} className="text-base leading-relaxed text-(--ink) flex gap-2">
-            <span className="text-(--ink-soft) shrink-0">—</span>
-            <span>{renderInline(t)}</span>
-          </li>
-        ))}
-      </ul>
-    )
-    listBuf = []
-  }
-
-  for (const line of lines) {
-    if (!line.trim()) { flushList(); continue }
-    if (line.startsWith('### ')) {
-      flushList()
-      out.push(<h3 key={key++} className="font-mono text-[12px] md:text-[14px] tracking-[0.12em] uppercase text-(--ink-soft) mt-8 mb-3">{renderInline(line.slice(4))}</h3>)
-    } else if (line.startsWith('## ')) {
-      flushList()
-      out.push(<h2 key={key++} className="font-mono text-[13px] md:text-[15px] tracking-[0.14em] uppercase text-(--ink) mt-10 mb-4 pb-2 border-b border-(--ink)/30">{renderInline(line.slice(3))}</h2>)
-    } else if (line.startsWith('# ')) {
-      flushList()
-      out.push(<h1 key={key++} className="font-serif italic text-3xl md:text-4xl text-(--ink) leading-tight mt-10 mb-6 first:mt-0">{renderInline(line.slice(2))}</h1>)
-    } else if (/^[-*]\s/.test(line)) {
-      listBuf.push(line.replace(/^[-*]\s/, ''))
-    } else if (line.trim() === '---') {
-      flushList()
-      out.push(<hr key={key++} className="border-0 border-t border-(--ink)/20 my-10" />)
-    } else {
-      flushList()
-      out.push(<p key={key++} className="text-base leading-relaxed text-(--ink) mb-5">{renderInline(line)}</p>)
-    }
-  }
-  flushList()
-  return out
-}
-
 // ─── Item filter button bar ───────────────────────────────────
 
 function ItemFilterBar({
@@ -128,6 +72,8 @@ function ItemFilterBar({
   return (
     <div className="flex flex-wrap gap-1.5 mb-8 pb-6 border-b border-(--ink)/15">
       <button
+        type="button"
+        aria-pressed={active === 'all'}
         onClick={() => onSelect('all')}
         className={`font-mono text-[11px] tracking-[0.1em] px-3 py-1 border transition-colors duration-120 cursor-pointer ${
           active === 'all'
@@ -140,6 +86,8 @@ function ItemFilterBar({
       {items.map(({ key, label }) => (
         <button
           key={key}
+          type="button"
+          aria-pressed={active === key}
           onClick={() => onSelect(key)}
           className={`font-mono text-[11px] tracking-[0.08em] px-2.5 py-1 border transition-colors duration-120 cursor-pointer ${
             active === key
@@ -166,10 +114,10 @@ function GateView({ content }: { content: string }) {
   return (
     <div>
       <ItemFilterBar items={items} active={active} onSelect={setActive} />
-      {active === 'all' && renderLines(intro)}
+      {active === 'all' && renderMarkdownLines(intro)}
       {visible.map(s => (
         <div key={s.id} className="mb-6 pb-6 border-b border-(--ink)/10 last:border-0 last:pb-0">
-          {renderLines(s.lines)}
+          {renderMarkdownLines(s.lines)}
         </div>
       ))}
     </div>
@@ -188,10 +136,10 @@ function ChannelView({ content }: { content: string }) {
   return (
     <div>
       <ItemFilterBar items={items} active={active} onSelect={setActive} />
-      {active === 'all' && renderLines(intro)}
+      {active === 'all' && renderMarkdownLines(intro)}
       {visible.map(s => (
         <div key={s.id} className="mb-8 pb-8 border-b border-(--ink)/10 last:border-0 last:pb-0">
-          {renderLines(s.lines)}
+          {renderMarkdownLines(s.lines)}
         </div>
       ))}
     </div>

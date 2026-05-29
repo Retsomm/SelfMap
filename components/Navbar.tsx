@@ -70,12 +70,14 @@ export default function Navbar() {
 
           {/* 桌機：語言切換 + 帳號 */}
           <nav className="hidden md:flex items-center gap-3">
+            {/* 語言切換按鈕（暫時隱藏）
             <button
               onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
               className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft) border border-(--ink-soft) px-2 py-0.5 cursor-pointer transition-colors duration-120 hover:text-(--ink) hover:border-(--ink)"
             >
               {lang === 'zh' ? 'EN' : '中'}
             </button>
+            */}
             {isSignedIn ? (
               <Link
                 href="/account"
@@ -154,12 +156,14 @@ export default function Navbar() {
               {t('nav.signIn')}
             </button>
           )}
+          {/* 語言切換按鈕（暫時隱藏）
           <button
             onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
             className="text-left font-mono text-[12px] md:text-base tracking-[0.16em] uppercase text-(--ink-soft) hover:text-(--ink) transition-colors duration-120 py-2.5 cursor-pointer bg-transparent border-0"
           >
             {lang === 'zh' ? 'English' : '繁體中文'}
           </button>
+          */}
         </nav>
       </aside>
     </>

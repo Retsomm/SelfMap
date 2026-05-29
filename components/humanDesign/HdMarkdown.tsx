@@ -28,10 +28,14 @@ function renderInline(text: string): React.ReactNode[] {
   })
 }
 
-export default function HdMarkdown({ content }: { content: string }) {
-  const lines = content.split('\n')
+/**
+ * Renders an array of markdown-like lines into React nodes.
+ * Handles headings (h1–h3), bullet lists (- / *), horizontal rules (---),
+ * paragraphs, and inline bold (**text**). Lists are flushed and wrapped in
+ * a <ul> whenever a non-list token or end of input is reached.
+ */
+export const renderMarkdownLines = (lines: string[]): React.ReactNode[] => {
   const tokens: Token[] = []
-
   for (const line of lines) {
     const token = parseLine(line)
     if (token) tokens.push(token)
@@ -102,5 +106,9 @@ export default function HdMarkdown({ content }: { content: string }) {
     flushList('list-end')
   }
 
-  return <div className="hd-prose">{elements}</div>
+  return elements
+}
+
+export default function HdMarkdown({ content }: { content: string }) {
+  return <div className="hd-prose">{renderMarkdownLines(content.split('\n'))}</div>
 }
