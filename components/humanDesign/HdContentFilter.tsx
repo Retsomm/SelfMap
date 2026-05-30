@@ -102,6 +102,12 @@ function ItemFilterBar({
   )
 }
 
+// Updates active filter key and tracks selection with umami (topic: 'gate' or 'channel').
+const createHandleSelect = (topic: string, setActive: (k: string) => void) => (k: string) => {
+  setActive(k)
+  if (k !== 'all') window.umami?.track('hd-filter-click', { topic, filter: k })
+}
+
 // ─── Gate (閘門) view — 64 individual buttons ──────────────────
 
 function GateView({ content }: { content: string }) {
@@ -111,10 +117,7 @@ function GateView({ content }: { content: string }) {
   const items = sections.map(s => ({ key: s.key, label: s.key }))
   const visible = active === 'all' ? sections : sections.filter(s => s.key === active)
 
-  const handleSelect = (k: string) => {
-    setActive(k)
-    if (k !== 'all') window.umami?.track('hd-filter-click', { topic: 'gate', filter: k })
-  }
+  const handleSelect = createHandleSelect('gate', setActive)
 
   return (
     <div>
@@ -138,10 +141,7 @@ function ChannelView({ content }: { content: string }) {
   const items = sections.map(s => ({ key: s.key, label: s.key }))
   const visible = active === 'all' ? sections : sections.filter(s => s.key === active)
 
-  const handleSelect = (k: string) => {
-    setActive(k)
-    if (k !== 'all') window.umami?.track('hd-filter-click', { topic: 'channel', filter: k })
-  }
+  const handleSelect = createHandleSelect('channel', setActive)
 
   return (
     <div>

@@ -45,8 +45,8 @@ export default async function RootLayout({
 
   return (
     <html lang={initialLang === 'en' ? 'en' : 'zh-TW'} className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
-      <Script defer src="https://cloud.umami.is/script.js" data-website-id="757127df-87af-47d5-a73b-9feb455d6867" />
       <body className="min-h-full">
+        <Script defer src="https://cloud.umami.is/script.js" data-website-id="757127df-87af-47d5-a73b-9feb455d6867" />
         <ClerkProvider appearance={clerkAppearance} localization={initialLang === 'zh' ? zhTW : enUS}>
           <LanguageProvider initialLang={initialLang}>
             <Navbar />

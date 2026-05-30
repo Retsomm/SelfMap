@@ -208,6 +208,16 @@ export default function AccountPage() {
 
   const activeChart = charts.find(c => c.id === activeChartId) ?? null
 
+  const handleSignOut = async () => {
+    window.umami?.track('account-sign-out')
+    try {
+      await signOut()
+      router.push('/')
+    } catch {
+      toast.error('Sign out failed')
+    }
+  }
+
   const handleSectionClick = (section: SidebarSection) => {
     setActiveSection(section)
     window.umami?.track('account-section-click', { section })
@@ -236,7 +246,7 @@ export default function AccountPage() {
           ))}
           <div className="ml-auto shrink-0 flex items-center pr-4">
             <button
-              onClick={() => { window.umami?.track('account-sign-out'); signOut(() => router.push('/')) }}
+              onClick={handleSignOut}
               className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink-soft) border border-(--ink-soft) px-2.5 py-1 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--crimson) hover:border-(--crimson)"
             >
               {t('account.signOut')}
@@ -326,7 +336,7 @@ export default function AccountPage() {
 
           <div className="mt-auto px-5">
             <button
-              onClick={() => { window.umami?.track('account-sign-out'); signOut(() => router.push('/')) }}
+              onClick={handleSignOut}
               className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) border border-(--ink-soft) px-3.5 py-1.5 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--crimson) hover:border-(--crimson) w-full"
             >
               {t('account.signOut')}
