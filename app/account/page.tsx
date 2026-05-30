@@ -10,6 +10,7 @@ import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
 import { useLang } from '@/i18n'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { ConfirmModal } from '@/components/ConfirmModal'
 
 const PROVIDER_LABEL: Record<string, string> = {
   google: 'Google',
@@ -40,8 +41,6 @@ export default function AccountPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { t } = useLang()
-  const tRef = useRef(t)
-  tRef.current = t
 
   const initialSection = (searchParams.get('section') as SidebarSection | null) ?? 'profile'
   const [activeSection, setActiveSection] = useState<SidebarSection>(
@@ -197,7 +196,7 @@ export default function AccountPage() {
 
     computeHdResult(chart.birthDate, chart.birthTime, tz)
       .then(r => setChartResult(r))
-      .catch(err => toast.error(err instanceof Error ? err.message : tRef.current('account.calcFailed')))
+      .catch(err => toast.error(err instanceof Error ? err.message : t('account.calcFailed')))
       .finally(() => setChartComputing(false))
   }, [activeChartId, charts])
 
@@ -582,40 +581,16 @@ export default function AccountPage() {
         </main>
       </div>
 
-      {/* ── 刪除確認彈窗 ── */}
-      {confirmDeleteId && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setConfirmDeleteId(null)}
-        >
-          <div
-            className="bg-(--paper) border border-(--ink) rounded-sm px-8 py-7 max-w-sm w-full mx-4 shadow-xl"
-            onClick={e => e.stopPropagation()}
-          >
-            <h2 className="font-mono text-base tracking-widest uppercase text-(--ink) mb-3">
-              {t('account.deleteChartConfirmTitle')}
-            </h2>
-            <p className="text-sm text-(--ink-soft) mb-6 leading-relaxed">
-              {t('account.deleteChartConfirmMessage')}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setConfirmDeleteId(null)}
-                className="px-4 py-2 text-sm font-mono tracking-widest uppercase text-(--ink-soft) hover:text-(--ink) border border-(--ink) transition-colors duration-120 cursor-pointer"
-              >
-                {t('account.cancel')}
-              </button>
-              <button
-                onClick={() => handleDeleteChart(confirmDeleteId)}
-                disabled={!!deletingId}
-                className="px-4 py-2 text-sm font-mono tracking-widest uppercase text-(--paper) bg-(--crimson) hover:opacity-80 border border-(--crimson) transition-opacity duration-120 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
-                {deletingId === confirmDeleteId ? '…' : t('account.deleteChartConfirm')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title={t('account.deleteChartConfirmTitle')}
+        message={t('account.deleteChartConfirmMessage')}
+        confirmLabel={t('account.deleteChartConfirm')}
+        cancelLabel={t('account.cancel')}
+        onConfirm={() => handleDeleteChart(confirmDeleteId!)}
+        onCancel={() => setConfirmDeleteId(null)}
+        isLoading={!!deletingId}
+      />
     </>
   )
 }
