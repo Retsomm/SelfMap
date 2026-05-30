@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="36%" r="62%">
+      <stop offset="0%" stop-color="#e6c542" stop-opacity="0.12"></stop>
+      <stop offset="60%" stop-color="#e6c542" stop-opacity="0"></stop>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="#2b1f14"></rect>
+  <rect width="1024" height="1024" fill="url(#glow)"></rect>
+  <g transform="translate(295,225.5) scale(2.17)" stroke-linejoin="round" stroke-linecap="round">
+    <g stroke="rgba(239,229,208,0.40)" stroke-width="3.5" fill="none">
+      <line x1="100" y1="40" x2="100" y2="236"></line>
+      <line x1="74" y1="170" x2="60" y2="170"></line>
+      <line x1="126" y1="170" x2="140" y2="170"></line>
+    </g>
+    <polygon points="100,12 80,44 120,44" fill="none" stroke="#efe5d0" stroke-width="5"></polygon>
+    <polygon points="80,54 120,54 100,86" fill="none" stroke="#efe5d0" stroke-width="5"></polygon>
+    <rect x="82" y="96" width="36" height="36" fill="none" stroke="#efe5d0" stroke-width="5"></rect>
+    <polygon points="40,150 40,190 74,170" fill="none" stroke="#efe5d0" stroke-width="5"></polygon>
+    <polygon points="160,150 160,190 126,170" fill="none" stroke="#efe5d0" stroke-width="5"></polygon>
+    <polygon points="100,142 128,170 100,198 72,170" fill="#e6c542" stroke="#efe5d0" stroke-width="5"></polygon>
+    <rect x="82" y="208" width="36" height="36" fill="none" stroke="#efe5d0" stroke-width="5"></rect>
+  </g>
+</svg>

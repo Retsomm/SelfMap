@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 2 160 252" width="640" height="1008">
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <g stroke="rgba(43,31,20,0.38)" stroke-width="3.15" fill="none">
+      <line x1="100" y1="40" x2="100" y2="236"></line>
+      <line x1="74" y1="170" x2="60" y2="170"></line>
+      <line x1="126" y1="170" x2="140" y2="170"></line>
+    </g>
+    <polygon points="100,12 80,44 120,44" fill="#e6c542" stroke="#2b1f14" stroke-width="4.5"></polygon>
+    <polygon points="80,54 120,54 100,86" fill="#9bbf52" stroke="#2b1f14" stroke-width="4.5"></polygon>
+    <rect x="82" y="96" width="36" height="36" fill="#c69a5d" stroke="#2b1f14" stroke-width="4.5"></rect>
+    <polygon points="40,150 40,190 74,170" fill="#c69a5d" stroke="#2b1f14" stroke-width="4.5"></polygon>
+    <polygon points="160,150 160,190 126,170" fill="#d04830" stroke="#2b1f14" stroke-width="4.5"></polygon>
+    <polygon points="100,142 128,170 100,198 72,170" fill="#e6c542" stroke="#2b1f14" stroke-width="4.5"></polygon>
+    <rect x="82" y="208" width="36" height="36" fill="#d04830" stroke="#2b1f14" stroke-width="4.5"></rect>
+  </g>
+</svg>
