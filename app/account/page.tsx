@@ -292,7 +292,7 @@ export default function AccountPage() {
                           onBlur={() => handleSaveChartName(ch.id)}
                           onKeyDown={e => e.key === 'Escape' && handleCancelRenameChart()}
                           disabled={renamingId === ch.id}
-                          className="flex-1 min-w-0 font-mono text-[12px] md:text-base tracking-[0.06em] bg-(--paper) border-b border-(--ink) text-(--ink) outline-none px-1 py-0.5 disabled:opacity-50"
+                          className="flex-1 min-w-0 font-mono text-base tracking-[0.06em] bg-(--paper) border-b border-(--ink) text-(--ink) outline-none px-1 py-0.5 disabled:opacity-50"
                           autoFocus
                         />
                       </form>
@@ -414,7 +414,7 @@ export default function AccountPage() {
                           placeholder={t('account.displayNamePlaceholder')}
                           value={displayName}
                           onChange={e => setDisplayName(e.target.value)}
-                          className="font-mono text-[12px] md:text-base tracking-[0.04em] border border-(--ink) bg-(--paper) text-(--ink) px-3 py-1.5 w-52 outline-none placeholder:text-(--ink-soft)"
+                          className="font-mono text-base tracking-[0.04em] border border-(--ink) bg-(--paper) text-(--ink) px-3 py-1.5 w-52 outline-none placeholder:text-(--ink-soft)"
                         />
                       </div>
                       <div className="flex gap-2">
@@ -488,7 +488,7 @@ export default function AccountPage() {
                             onBlur={() => handleSaveChartName(ch.id)}
                             onKeyDown={e => e.key === 'Escape' && handleCancelRenameChart()}
                             disabled={renamingId === ch.id}
-                            className="font-mono text-[12px] md:text-base tracking-[0.06em] bg-(--paper) text-(--ink) outline-none px-3 py-1.5 w-36 disabled:opacity-50"
+                            className="font-mono text-base tracking-[0.06em] bg-(--paper) text-(--ink) outline-none px-3 py-1.5 w-36 disabled:opacity-50"
                             autoFocus
                           />
                         </form>
