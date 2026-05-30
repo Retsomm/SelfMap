@@ -10,7 +10,17 @@ const isPublicRoute = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
+  const url = req.nextUrl.pathname + req.nextUrl.search
+  const isPublic = isPublicRoute(req)
+  const { userId } = await auth()
+
+  console.log(`[Auth] ${req.method} ${url} | public=${isPublic} | userId=${userId ?? 'none'}`)
+
+  if (!isPublic && !userId) {
+    console.log(`[Auth] 未登入，阻擋存取: ${url}`)
+  }
+
+  if (!isPublic) {
     await auth.protect()
   }
 })

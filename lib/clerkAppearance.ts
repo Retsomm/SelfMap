@@ -19,7 +19,7 @@ export const clerkAppearance = {
   },
   elements: {
     // ── Root / Card ──
-    rootBox: { width: '100%' },
+    rootBox: { width: '100%', maxWidth: '400px' },
     card: {
       background: paper,
       border: `1px solid ${ink}`,
