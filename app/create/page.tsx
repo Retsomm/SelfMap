@@ -76,7 +76,7 @@ export default function CreatePage() {
                 value={form.birthDate}
                 onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
                 required
-                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-[12px] md:text-base text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-base text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
             </div>
             <div className="space-y-2">
@@ -88,7 +88,7 @@ export default function CreatePage() {
                 value={form.birthTime}
                 onChange={(e) => setForm({ ...form, birthTime: e.target.value })}
                 required
-                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-[12px] md:text-base text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-base text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
               <p className="text-[12px] md:text-base text-zinc-500">不確定出生時間？可先輸入 12:00，之後再更新</p>
             </div>
