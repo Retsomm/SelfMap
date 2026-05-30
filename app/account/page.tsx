@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser, useClerk } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, useCallback, startTransition, useRef } from 'react'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
@@ -9,6 +9,8 @@ import ChartView from '@/components/humanDesign/ChartView'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
 import { useLang } from '@/i18n'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { ConfirmModal } from '@/components/ConfirmModal'
 
 const PROVIDER_LABEL: Record<string, string> = {
   google: 'Google',
@@ -37,11 +39,13 @@ export default function AccountPage() {
   const { isLoaded, isSignedIn, user } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { t } = useLang()
-  const tRef = useRef(t)
-  tRef.current = t
 
-  const [activeSection, setActiveSection] = useState<SidebarSection>('profile')
+  const initialSection = (searchParams.get('section') as SidebarSection | null) ?? 'profile'
+  const [activeSection, setActiveSection] = useState<SidebarSection>(
+    ['profile', 'humandesign', 'connected'].includes(initialSection) ? initialSection : 'profile'
+  )
   const [activeChartId, setActiveChartId] = useState<string | null>(null)
   const [charts, setCharts] = useState<SavedChart[]>([])
   const [chartsLoading, setChartsLoading] = useState(false)
@@ -154,10 +158,12 @@ export default function AccountPage() {
   const handleCancelRenameChart = () => setEditingChartId(null)
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const handleDeleteChart = useCallback(async (id: string) => {
     if (deletingId) return
     setDeletingId(id)
+    setConfirmDeleteId(null)
     window.umami?.track('account-delete-chart')
     try {
       const res = await fetch(`/api/charts/${id}`, { method: 'DELETE' })
@@ -190,7 +196,7 @@ export default function AccountPage() {
 
     computeHdResult(chart.birthDate, chart.birthTime, tz)
       .then(r => setChartResult(r))
-      .catch(err => toast.error(err instanceof Error ? err.message : tRef.current('account.calcFailed')))
+      .catch(err => toast.error(err instanceof Error ? err.message : t('account.calcFailed')))
       .finally(() => setChartComputing(false))
   }, [activeChartId, charts])
 
@@ -198,9 +204,7 @@ export default function AccountPage() {
     return (
       <>
         <div className="min-h-screen flex items-center justify-center pt-[52px]">
-          <span className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-(--ink-soft)">
-            {t('account.loading')}
-          </span>
+          <LoadingSpinner />
         </div>
       </>
     )
@@ -312,7 +316,7 @@ export default function AccountPage() {
                           ✎
                         </button>
                         <button
-                          onClick={() => handleDeleteChart(ch.id)}
+                          onClick={() => setConfirmDeleteId(ch.id)}
                           disabled={deletingId === ch.id}
                           className="opacity-0 group-hover:opacity-100 px-2 text-(--ink-soft) hover:text-(--crimson) text-[12px] md:text-base cursor-pointer transition-all duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
                           title={t('account.deleteChart')}
@@ -454,7 +458,9 @@ export default function AccountPage() {
               </header>
 
               {chartsLoading && (
-                <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft)">{t('account.loadingCharts')}</div>
+                <div className="flex items-center justify-center py-10">
+                  <LoadingSpinner />
+                </div>
               )}
 
               {!chartsLoading && charts.length === 0 && (
@@ -508,11 +514,12 @@ export default function AccountPage() {
                             ✎
                           </button>
                           <button
-                            onClick={() => handleDeleteChart(ch.id)}
-                            className="px-2 py-1.5 text-[12px] md:text-base text-(--ink-soft) hover:text-(--crimson) border-l border-(--ink) cursor-pointer transition-colors duration-120"
+                            onClick={() => setConfirmDeleteId(ch.id)}
+                            disabled={deletingId === ch.id}
+                            className="px-2 py-1.5 text-[12px] md:text-base text-(--ink-soft) hover:text-(--crimson) border-l border-(--ink) cursor-pointer transition-colors duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
                             title={t('account.deleteChart')}
                           >
-                            ✕
+                            {deletingId === ch.id ? '…' : '✕'}
                           </button>
                         </>
                       )}
@@ -573,6 +580,17 @@ export default function AccountPage() {
 
         </main>
       </div>
+
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title={t('account.deleteChartConfirmTitle')}
+        message={t('account.deleteChartConfirmMessage')}
+        confirmLabel={t('account.deleteChartConfirm')}
+        cancelLabel={t('account.cancel')}
+        onConfirm={() => handleDeleteChart(confirmDeleteId!)}
+        onCancel={() => setConfirmDeleteId(null)}
+        isLoading={!!deletingId}
+      />
     </>
   )
 }
