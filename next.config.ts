@@ -4,6 +4,9 @@ import CopyPlugin from "copy-webpack-plugin";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['@swisseph/browser'],
+  experimental: {
+    optimizePackageImports: ['react-hot-toast', '@clerk/nextjs'],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'img.clerk.com' },
