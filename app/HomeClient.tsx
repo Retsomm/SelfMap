@@ -113,6 +113,7 @@ export default function HomeClient({ lang: initialLang }: { lang: Lang }) {
   const calculate = useCallback(async () => {
     setError('')
     setLoading(true)
+    window.umami?.track('chart-calculate')
     try {
       const { computeHdResult } = await import('@/lib/computeHdResult')
       const [r] = await Promise.all([
