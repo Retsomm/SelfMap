@@ -87,7 +87,7 @@ export default function Navbar() {
               </Link>
             ) : (
               <button
-                onClick={() => openSignIn()}
+                onClick={() => { window.umami?.track('signin-click', { location: 'navbar' }); openSignIn() }}
                 className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--paper) bg-(--ink) border border-(--ink) px-3.5 py-1.25 cursor-pointer transition-colors duration-120 hover:bg-(--crimson) hover:border-(--crimson)"
               >
                 {t('nav.signIn')}
@@ -150,7 +150,7 @@ export default function Navbar() {
             </Link>
           ) : (
             <button
-              onClick={() => { setDrawerOpenAtPath(null); openSignIn() }}
+              onClick={() => { setDrawerOpenAtPath(null); window.umami?.track('signin-click', { location: 'drawer' }); openSignIn() }}
               className="text-left font-mono text-[12px] md:text-base tracking-[0.16em] uppercase text-(--ink-soft) hover:text-(--ink) transition-colors duration-120 py-2.5 border-b border-(--ink)/20 cursor-pointer bg-transparent border-x-0 border-t-0"
             >
               {t('nav.signIn')}

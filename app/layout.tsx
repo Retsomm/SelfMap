@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import { Cormorant_Garamond, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { zhTW, enUS } from '@clerk/localizations'
@@ -44,6 +45,7 @@ export default async function RootLayout({
 
   return (
     <html lang={initialLang === 'en' ? 'en' : 'zh-TW'} className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
+      <Script defer src="https://cloud.umami.is/script.js" data-website-id="757127df-87af-47d5-a73b-9feb455d6867" />
       <body className="min-h-full">
         <ClerkProvider appearance={clerkAppearance} localization={initialLang === 'zh' ? zhTW : enUS}>
           <LanguageProvider initialLang={initialLang}>

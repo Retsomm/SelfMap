@@ -111,9 +111,14 @@ function GateView({ content }: { content: string }) {
   const items = sections.map(s => ({ key: s.key, label: s.key }))
   const visible = active === 'all' ? sections : sections.filter(s => s.key === active)
 
+  const handleSelect = (k: string) => {
+    setActive(k)
+    if (k !== 'all') window.umami?.track('hd-filter-click', { topic: 'gate', filter: k })
+  }
+
   return (
     <div>
-      <ItemFilterBar items={items} active={active} onSelect={setActive} />
+      <ItemFilterBar items={items} active={active} onSelect={handleSelect} />
       {active === 'all' && renderMarkdownLines(intro)}
       {visible.map(s => (
         <div key={s.id} className="mb-6 pb-6 border-b border-(--ink)/10 last:border-0 last:pb-0">
@@ -133,9 +138,14 @@ function ChannelView({ content }: { content: string }) {
   const items = sections.map(s => ({ key: s.key, label: s.key }))
   const visible = active === 'all' ? sections : sections.filter(s => s.key === active)
 
+  const handleSelect = (k: string) => {
+    setActive(k)
+    if (k !== 'all') window.umami?.track('hd-filter-click', { topic: 'channel', filter: k })
+  }
+
   return (
     <div>
-      <ItemFilterBar items={items} active={active} onSelect={setActive} />
+      <ItemFilterBar items={items} active={active} onSelect={handleSelect} />
       {active === 'all' && renderMarkdownLines(intro)}
       {visible.map(s => (
         <div key={s.id} className="mb-8 pb-8 border-b border-(--ink)/10 last:border-0 last:pb-0">

@@ -20,6 +20,7 @@ export default function HdSubNav() {
               <li key={slug} className="shrink-0">
                 <Link
                   href={`/human-design?topic=${slug}`}
+                  onClick={() => window.umami?.track('hd-topic-click', { topic: slug })}
                   className={`
                     block font-mono text-[11px] md:text-[13px] tracking-[0.14em] uppercase
                     px-4 md:px-5 py-3 md:py-3.5 no-underline transition-colors duration-120

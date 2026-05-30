@@ -79,11 +79,13 @@ export default function AccountPage() {
     if (!user) return
     setDisplayName(user.fullName?.trim() || user.username || '')
     setEditingName(true)
+    window.umami?.track('account-edit-name')
   }
 
   const handleSaveName = async () => {
     if (nameSaving || !user) return
     setNameSaving(true)
+    window.umami?.track('account-save-name')
     try {
       const trimmed = displayName.trim()
       const spaceIdx = trimmed.indexOf(' ')
@@ -108,6 +110,7 @@ export default function AccountPage() {
       return
     }
     setAvatarUploading(true)
+    window.umami?.track('account-avatar-upload')
     try {
       await user.setProfileImage({ file })
       toast.success(t('account.avatarUpdated'))
@@ -129,6 +132,7 @@ export default function AccountPage() {
     setEditingChartId(ch.id)
     setEditingChartName(ch.name ?? `${ch.birthCity} · ${ch.birthDate}`)
     setTimeout(() => chartNameInputRef.current?.select(), 0)
+    window.umami?.track('account-rename-chart')
   }
 
   const handleSaveChartName = async (id: string) => {
@@ -154,6 +158,7 @@ export default function AccountPage() {
   const handleDeleteChart = useCallback(async (id: string) => {
     if (deletingId) return
     setDeletingId(id)
+    window.umami?.track('account-delete-chart')
     try {
       const res = await fetch(`/api/charts/${id}`, { method: 'DELETE' })
       if (!res.ok) return
@@ -205,6 +210,7 @@ export default function AccountPage() {
 
   const handleSectionClick = (section: SidebarSection) => {
     setActiveSection(section)
+    window.umami?.track('account-section-click', { section })
   }
 
   const NAV_ITEMS: { key: SidebarSection; label: string }[] = [
@@ -230,7 +236,7 @@ export default function AccountPage() {
           ))}
           <div className="ml-auto shrink-0 flex items-center pr-4">
             <button
-              onClick={() => signOut(() => router.push('/'))}
+              onClick={() => { window.umami?.track('account-sign-out'); signOut(() => router.push('/')) }}
               className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink-soft) border border-(--ink-soft) px-2.5 py-1 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--crimson) hover:border-(--crimson)"
             >
               {t('account.signOut')}
@@ -320,7 +326,7 @@ export default function AccountPage() {
 
           <div className="mt-auto px-5">
             <button
-              onClick={() => signOut(() => router.push('/'))}
+              onClick={() => { window.umami?.track('account-sign-out'); signOut(() => router.push('/')) }}
               className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) border border-(--ink-soft) px-3.5 py-1.5 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--crimson) hover:border-(--crimson) w-full"
             >
               {t('account.signOut')}

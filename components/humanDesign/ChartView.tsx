@@ -184,6 +184,7 @@ export default function ChartView({
     const el = printAreaRef.current
     if (!el) return
     setDownloading(true)
+    window.umami?.track('chart-download')
     try {
       await downloadChart(el)
     } catch (err) {
@@ -194,6 +195,7 @@ export default function ChartView({
   }, [t])
 
   const handleCopyPrompt = useCallback(() => {
+    window.umami?.track('chart-copy-prompt')
     navigator.clipboard.writeText(buildAiPrompt(result)).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -202,6 +204,7 @@ export default function ChartView({
 
   const handleSaveChart = useCallback(async () => {
     setSaving(true)
+    window.umami?.track('chart-save')
     try {
       await saveChart({ result, date, time, locationLabel, timezone })
       toast.success(t('chart.chartSaved'))
@@ -357,7 +360,7 @@ export default function ChartView({
 
         {/* Overview cards */}
         <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 mb-6">
-          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={handleSelectType}>
+          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={() => { window.umami?.track('chart-detail', { card: 'type' }); handleSelectType() }}>
             <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.typeCard')}</div>
             <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{typeLabel}</div>
             {lang === 'zh' && <div className="font-mono text-[11px] text-[var(--ink-soft)] opacity-60">{result.type}</div>}
@@ -367,19 +370,19 @@ export default function ChartView({
             </div>
           </div>
 
-          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={handleSelectProfile}>
+          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={() => { window.umami?.track('chart-detail', { card: 'profile' }); handleSelectProfile() }}>
             <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.profileCard')}</div>
             <div className="font-serif italic font-medium text-[40px] leading-[1.1] text-[var(--ink)] mb-1 tracking-[0.06em]">{result.profile.profile}</div>
             <div className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] leading-[1.5]">{profileLabel}</div>
           </div>
 
-          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={handleSelectAuthority}>
+          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={() => { window.umami?.track('chart-detail', { card: 'authority' }); handleSelectAuthority() }}>
             <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.authorityCard')}</div>
             <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{authorityInfo.name}</div>
             <div className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] leading-[1.5]">{authorityInfo.tip}</div>
           </div>
 
-          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={handleSelectDefinition}>
+          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={() => { window.umami?.track('chart-detail', { card: 'definition' }); handleSelectDefinition() }}>
             <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.definitionCard')}</div>
             <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{definitionLabel}</div>
             {lang === 'en' && <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)] mt-1 tracking-[0.04em]">{result.definition.raw}</div>}
@@ -388,7 +391,7 @@ export default function ChartView({
             </div>
           </div>
 
-          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] sm:col-span-2 cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={handleSelectCross}>
+          <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] sm:col-span-2 cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={() => { window.umami?.track('chart-detail', { card: 'cross' }); handleSelectCross() }}>
             <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.crossCard')}</div>
             <div className="font-serif italic font-medium text-[22px] leading-[1.1] text-[var(--ink)] mb-1">
               {lang === 'en'
