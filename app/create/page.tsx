@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
 
 const selectClass =
-  'flex-1 px-3 py-3 rounded-xl border border-zinc-200 text-base text-zinc-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition appearance-none'
+  'flex-1 px-3 py-3 rounded-xl border border-zinc-200 text-base font-medium text-white [-webkit-text-fill-color:white] bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition appearance-none'
 
 function daysInMonth(year: number, month: number) {
   return new Date(year, month, 0).getDate()
