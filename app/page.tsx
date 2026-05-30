@@ -155,8 +155,9 @@ export default function HomePage() {
             </h4>
             <div className="flex gap-2 flex-wrap items-end flex-1">
               <div className="flex flex-col gap-1">
-                <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.dateLabel')}</label>
+                <label htmlFor="birth-date" className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.dateLabel')}</label>
                 <DateSelect
+                  id="birth-date"
                   value={birthDate}
                   onChange={setBirthDate}
                   minDate={dayjs('1900-01-01')}

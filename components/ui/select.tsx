@@ -9,16 +9,26 @@ const Select = SelectPrimitive.Root
 const SelectGroup = SelectPrimitive.Group
 const SelectValue = SelectPrimitive.Value
 
+const triggerBaseClasses = [
+  // layout & border
+  'flex items-center justify-between gap-1 border border-[var(--ink)]',
+  // background & typography
+  'bg-[var(--paper-deep)] px-2 font-mono text-[12.5px] text-[var(--ink)]',
+  // interaction
+  'cursor-pointer outline-none whitespace-nowrap',
+  // focus & disabled states
+  'focus:ring-1 focus:ring-[var(--ink)] disabled:opacity-50',
+  // child overrides
+  '[&>span]:line-clamp-1',
+].join(' ')
+
 const SelectTrigger = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
-    className={cn(
-      'flex items-center justify-between gap-1 border border-[var(--ink)] bg-[var(--paper-deep)] px-2 font-mono text-[12.5px] text-[var(--ink)] cursor-pointer outline-none whitespace-nowrap focus:ring-1 focus:ring-[var(--ink)] disabled:opacity-50 [&>span]:line-clamp-1',
-      className
-    )}
+    className={cn(triggerBaseClasses, className)}
     {...props}
   >
     {children}

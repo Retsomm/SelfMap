@@ -24,9 +24,7 @@ const Calendar = ({ className, classNames, showOutsideDays = true, ...props }: C
       weekday: 'w-8 font-mono text-[11px] text-[var(--ink-soft)] text-center',
       week: 'flex w-full mt-1',
       day: 'h-8 w-8 text-center font-mono text-[12.5px] p-0 relative',
-      day_button: cn(
-        'h-8 w-8 flex items-center justify-center font-mono text-[12.5px] text-[var(--ink)] cursor-pointer hover:bg-[var(--tan-2)] transition-colors duration-100 w-full h-full'
-      ),
+      day_button: 'h-8 w-8 flex items-center justify-center font-mono text-[12.5px] text-[var(--ink)] cursor-pointer hover:bg-[var(--tan-2)] transition-colors duration-100 w-full h-full',
       selected: '[&>button]:bg-[var(--ink)] [&>button]:text-[var(--paper)] [&>button]:hover:bg-[var(--ink)]',
       today: '[&>button]:border [&>button]:border-[var(--ink)]',
       outside: 'opacity-30',
