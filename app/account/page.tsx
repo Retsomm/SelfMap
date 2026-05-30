@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser, useClerk } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, useCallback, startTransition, useRef } from 'react'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
@@ -9,6 +9,7 @@ import ChartView from '@/components/humanDesign/ChartView'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
 import { useLang } from '@/i18n'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
 
 const PROVIDER_LABEL: Record<string, string> = {
   google: 'Google',
@@ -37,11 +38,15 @@ export default function AccountPage() {
   const { isLoaded, isSignedIn, user } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { t } = useLang()
   const tRef = useRef(t)
   tRef.current = t
 
-  const [activeSection, setActiveSection] = useState<SidebarSection>('profile')
+  const initialSection = (searchParams.get('section') as SidebarSection | null) ?? 'profile'
+  const [activeSection, setActiveSection] = useState<SidebarSection>(
+    ['profile', 'humandesign', 'connected'].includes(initialSection) ? initialSection : 'profile'
+  )
   const [activeChartId, setActiveChartId] = useState<string | null>(null)
   const [charts, setCharts] = useState<SavedChart[]>([])
   const [chartsLoading, setChartsLoading] = useState(false)
@@ -154,10 +159,12 @@ export default function AccountPage() {
   const handleCancelRenameChart = () => setEditingChartId(null)
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const handleDeleteChart = useCallback(async (id: string) => {
     if (deletingId) return
     setDeletingId(id)
+    setConfirmDeleteId(null)
     window.umami?.track('account-delete-chart')
     try {
       const res = await fetch(`/api/charts/${id}`, { method: 'DELETE' })
@@ -198,9 +205,7 @@ export default function AccountPage() {
     return (
       <>
         <div className="min-h-screen flex items-center justify-center pt-[52px]">
-          <span className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-(--ink-soft)">
-            {t('account.loading')}
-          </span>
+          <LoadingSpinner />
         </div>
       </>
     )
@@ -312,7 +317,7 @@ export default function AccountPage() {
                           ✎
                         </button>
                         <button
-                          onClick={() => handleDeleteChart(ch.id)}
+                          onClick={() => setConfirmDeleteId(ch.id)}
                           disabled={deletingId === ch.id}
                           className="opacity-0 group-hover:opacity-100 px-2 text-(--ink-soft) hover:text-(--crimson) text-[12px] md:text-base cursor-pointer transition-all duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
                           title={t('account.deleteChart')}
@@ -454,7 +459,9 @@ export default function AccountPage() {
               </header>
 
               {chartsLoading && (
-                <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft)">{t('account.loadingCharts')}</div>
+                <div className="flex items-center justify-center py-10">
+                  <LoadingSpinner />
+                </div>
               )}
 
               {!chartsLoading && charts.length === 0 && (
@@ -508,11 +515,12 @@ export default function AccountPage() {
                             ✎
                           </button>
                           <button
-                            onClick={() => handleDeleteChart(ch.id)}
-                            className="px-2 py-1.5 text-[12px] md:text-base text-(--ink-soft) hover:text-(--crimson) border-l border-(--ink) cursor-pointer transition-colors duration-120"
+                            onClick={() => setConfirmDeleteId(ch.id)}
+                            disabled={deletingId === ch.id}
+                            className="px-2 py-1.5 text-[12px] md:text-base text-(--ink-soft) hover:text-(--crimson) border-l border-(--ink) cursor-pointer transition-colors duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
                             title={t('account.deleteChart')}
                           >
-                            ✕
+                            {deletingId === ch.id ? '…' : '✕'}
                           </button>
                         </>
                       )}
@@ -573,6 +581,41 @@ export default function AccountPage() {
 
         </main>
       </div>
+
+      {/* ── 刪除確認彈窗 ── */}
+      {confirmDeleteId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="bg-(--paper) border border-(--ink) rounded-sm px-8 py-7 max-w-sm w-full mx-4 shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="font-mono text-base tracking-widest uppercase text-(--ink) mb-3">
+              {t('account.deleteChartConfirmTitle')}
+            </h2>
+            <p className="text-sm text-(--ink-soft) mb-6 leading-relaxed">
+              {t('account.deleteChartConfirmMessage')}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 text-sm font-mono tracking-widest uppercase text-(--ink-soft) hover:text-(--ink) border border-(--ink) transition-colors duration-120 cursor-pointer"
+              >
+                {t('account.cancel')}
+              </button>
+              <button
+                onClick={() => handleDeleteChart(confirmDeleteId)}
+                disabled={!!deletingId}
+                className="px-4 py-2 text-sm font-mono tracking-widest uppercase text-(--paper) bg-(--crimson) hover:opacity-80 border border-(--crimson) transition-opacity duration-120 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {deletingId === confirmDeleteId ? '…' : t('account.deleteChartConfirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

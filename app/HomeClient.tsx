@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, startTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import TimeSelect from '@/components/humanDesign/TimeSelect'
 import DateSelect from '@/components/humanDesign/DateSelect'
@@ -8,6 +9,7 @@ import dayjs, { type Dayjs } from 'dayjs'
 import LocationPicker from '@/components/humanDesign/LocationPicker'
 import type { HdResult } from '@/lib/buildAiPrompt'
 import { useLang, type Lang } from '@/i18n'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
 
 const ChartView = dynamic(() => import('@/components/humanDesign/ChartView'), { ssr: false })
 
@@ -69,6 +71,7 @@ const getDefaultLocationLabel = (lang: Lang): string =>
 
 export default function HomeClient({ lang: initialLang }: { lang: Lang }) {
   const { t, lang } = useLang()
+  const router = useRouter()
 
   const [inputs, setInputs] = useState<FormInputs>(() => ({
     ...DEFAULT_INPUTS,
@@ -187,10 +190,8 @@ export default function HomeClient({ lang: initialLang }: { lang: Lang }) {
       {result && (
         <div className="relative">
           {loading && (
-            <div className="absolute inset-0 z-10 flex items-start justify-center pt-20 bg-(--paper)/70 backdrop-blur-[2px]">
-              <span className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-(--ink-soft)">
-                {isRestoring ? t('home.loading') : t('home.calculating')}
-              </span>
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-(--paper)/70 backdrop-blur-[2px]">
+              <LoadingSpinner />
             </div>
           )}
           <ChartView
@@ -199,6 +200,7 @@ export default function HomeClient({ lang: initialLang }: { lang: Lang }) {
             time={time}
             locationLabel={locationLabel}
             timezone={timezone}
+            onSaved={() => router.push('/account?section=humandesign')}
           />
         </div>
       )}
