@@ -5,7 +5,7 @@ import CopyPlugin from "copy-webpack-plugin";
 const nextConfig: NextConfig = {
   serverExternalPackages: ['@swisseph/browser'],
   experimental: {
-    optimizePackageImports: ['react-hot-toast', '@clerk/nextjs'],
+    optimizePackageImports: ['react-hot-toast', '@clerk/nextjs', 'lucide-react', 'framer-motion'],
   },
   images: {
     remotePatterns: [
