@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, startTransition } from 'react'
-import { DatePicker, TimePicker, ConfigProvider } from 'antd'
+import { DatePicker, ConfigProvider } from 'antd'
+import TimeSelect from '@/components/humanDesign/TimeSelect'
 import dayjs, { type Dayjs } from 'dayjs'
 import LocationPicker from '@/components/humanDesign/LocationPicker'
 import ChartView from '@/components/humanDesign/ChartView'
@@ -184,14 +185,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.timeLabel')}</label>
-                  <TimePicker
-                    value={birthTime}
-                    onChange={(t) => { if (t) setBirthTime(t) }}
-                    format="HH:mm"
-                    minuteStep={5}
-                    allowClear={false}
-                    style={{ width: 90 }}
-                  />
+                  <TimeSelect value={birthTime} onChange={setBirthTime} />
                 </div>
               </ConfigProvider>
               <LocationPicker
