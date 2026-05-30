@@ -35,14 +35,20 @@ export default function DateSelect({ value, onChange, minDate, maxDate, id }: Pr
         <Calendar
           mode="single"
           selected={selected}
-          // defaultMonth keeps the calendar view centred on the current value
           defaultMonth={selected}
+          captionLayout="dropdown"
+          startMonth={new Date((minDate ?? dayjs().subtract(120, 'year')).year(), 0)}
+          endMonth={new Date((maxDate ?? dayjs()).year(), 11)}
           onSelect={date => { if (date) onChange(dayjs(date)) }}
           disabled={date => {
-            // Boundary checks use 'day' granularity to ignore time components
             if (minDate && dayjs(date).isBefore(minDate, 'day')) return true
             if (maxDate && dayjs(date).isAfter(maxDate, 'day')) return true
             return false
+          }}
+          classNames={{
+            month_caption: 'flex justify-center items-center h-7 px-1',
+            caption_label: 'hidden',
+            nav: 'hidden',
           }}
         />
       </PopoverContent>
