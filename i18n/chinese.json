@@ -20,7 +20,8 @@
     "locationNetworkError": "網路錯誤，請稍後再試",
     "loading": "載入中…",
     "calculating": "計算中…",
-    "generate": "生成人類圖"
+    "generate": "生成人類圖",
+    "calculationError": "計算發生錯誤，請稍後再試"
   },
   "about": {
     "eyebrow": "關於",
