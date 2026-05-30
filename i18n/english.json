@@ -20,7 +20,8 @@
     "locationNetworkError": "Network error, please try again",
     "loading": "Loading…",
     "calculating": "Calculating…",
-    "generate": "Generate Chart"
+    "generate": "Generate Chart",
+    "calculationError": "An error occurred during calculation, please try again"
   },
   "about": {
     "eyebrow": "About",

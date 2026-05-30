@@ -124,7 +124,8 @@ export default function HomeClient({ lang: initialLang }: { lang: Lang }) {
       sessionStorage.setItem('hd_had_result', 'true')
       sessionStorage.setItem('hd_result', serializeHdResult(r as HdResult))
     } catch (err) {
-      setError(String(err))
+      console.error('[calculate]', err)
+      setError(t('home.calculationError'))
     } finally {
       setLoading(false)
       setIsRestoring(false)
