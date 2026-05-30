@@ -19,6 +19,20 @@ const MINUTES = Array.from({ length: 60 }, (_, i) => i)
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
+/**
+ * Returns a new Dayjs with the hour changed, preserving the existing minute.
+ * Dayjs `.hour()` already preserves other fields, but this makes the intent explicit.
+ */
+const setHourPreserveMinute = (valueObj: Dayjs, newHour: number): Dayjs =>
+  valueObj.hour(newHour)
+
+/**
+ * Returns a new Dayjs with the minute changed, preserving the existing hour.
+ * Re-applies the current hour to guard against any implicit DST shift from `.minute()`.
+ */
+const setMinutePreserveHour = (valueObj: Dayjs, newMinute: number): Dayjs =>
+  valueObj.hour(valueObj.hour()).minute(newMinute)
+
 export default function TimeSelect({ value, onChange }: Props) {
   if (!value?.isValid?.()) {
     return (
@@ -35,7 +49,7 @@ export default function TimeSelect({ value, onChange }: Props) {
     <div className="flex items-center gap-0.5 h-[28px]">
       <Select
         value={String(hour)}
-        onValueChange={(v: string) => onChange(value.hour(Number(v)))}
+        onValueChange={(v: string) => onChange(setHourPreserveMinute(value, Number(v)))}
       >
         <SelectTrigger className="h-[28px] w-[52px]" aria-label="Hour">
           <SelectValue />
@@ -51,7 +65,7 @@ export default function TimeSelect({ value, onChange }: Props) {
 
       <Select
         value={String(minute)}
-        onValueChange={(v: string) => onChange(value.hour(hour).minute(Number(v)))}
+        onValueChange={(v: string) => onChange(setMinutePreserveHour(value, Number(v)))}
       >
         <SelectTrigger className="h-[28px] w-[52px]" aria-label="Minute">
           <SelectValue />

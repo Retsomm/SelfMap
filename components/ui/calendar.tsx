@@ -10,12 +10,16 @@ function CalendarDropdown({ value, onChange, options = [] }: DropdownProps) {
   const [open, setOpen] = React.useState(false)
   const ref = React.useRef<HTMLDivElement>(null)
   const listRef = React.useRef<HTMLUListElement>(null)
+  const listId = React.useId()
   const selected = options.find(o => o.value === value)
 
   React.useEffect(() => {
     if (!open) return
-    const el = listRef.current?.querySelector('[data-selected="true"]') as HTMLElement | null
-    el?.scrollIntoView({ block: 'center' })
+    const sel = listRef.current?.querySelector('[data-selected="true"]') as HTMLElement | null
+    const first = listRef.current?.querySelector('[role="option"]:not([aria-disabled="true"])') as HTMLElement | null
+    const target = sel ?? first
+    target?.focus()
+    target?.scrollIntoView({ block: 'center' })
   }, [open])
 
   React.useEffect(() => {
@@ -31,11 +35,62 @@ function CalendarDropdown({ value, onChange, options = [] }: DropdownProps) {
     setOpen(false)
   }
 
+  const handleButtonKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      setOpen(true)
+    } else if (e.key === 'Escape') {
+      setOpen(false)
+    }
+  }
+
+  const handleListKeyDown = (e: React.KeyboardEvent<HTMLUListElement>) => {
+    const items = Array.from(
+      listRef.current?.querySelectorAll('[role="option"]:not([aria-disabled="true"])') ?? []
+    ) as HTMLElement[]
+    const focused = document.activeElement as HTMLElement
+    const idx = items.indexOf(focused)
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        items[Math.min(idx + 1, items.length - 1)]?.focus()
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        items[Math.max(idx - 1, 0)]?.focus()
+        break
+      case 'Home':
+        e.preventDefault()
+        items[0]?.focus()
+        break
+      case 'End':
+        e.preventDefault()
+        items[items.length - 1]?.focus()
+        break
+      case 'Enter':
+      case ' ': {
+        e.preventDefault()
+        const val = focused?.dataset?.value
+        if (val !== undefined) handleSelect(Number(val))
+        break
+      }
+      case 'Escape':
+        e.preventDefault()
+        setOpen(false)
+        break
+    }
+  }
+
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
+        onKeyDown={handleButtonKeyDown}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
         className="font-mono text-[12.5px] font-medium text-(--ink) bg-(--paper-deep) border border-(--ink) px-1 py-0.5 cursor-pointer outline-none focus:ring-1 focus:ring-(--ink) min-w-14"
       >
         {selected?.label ?? value}
@@ -43,12 +98,20 @@ function CalendarDropdown({ value, onChange, options = [] }: DropdownProps) {
       {open && (
         <ul
           ref={listRef}
+          id={listId}
+          role="listbox"
+          onKeyDown={handleListKeyDown}
           className="absolute z-50 top-full left-0 mt-0.5 bg-(--paper-deep) border border-(--ink) overflow-y-auto max-h-[33vh] min-w-full shadow-md"
         >
           {options.map(opt => (
             <li
               key={opt.value}
+              role="option"
+              aria-selected={opt.value === value}
+              aria-disabled={opt.disabled}
+              tabIndex={opt.disabled ? -1 : 0}
               data-selected={opt.value === value}
+              data-value={opt.value}
               onClick={() => !opt.disabled && handleSelect(opt.value)}
               className={cn(
                 'font-mono text-[12.5px] px-2 py-1 cursor-pointer',
