@@ -47,24 +47,36 @@ export const LanguageProvider = ({
 }) => {
   const [lang, setLangState] = useState<Lang>(initialLang)
   const dicts = useRef<Partial<Record<Lang, LangDict>>>({ [initialLang]: initialDict })
+  const latestLangRequest = useRef<Lang>(initialLang)
 
   useEffect(() => {
     document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en'
   }, [lang])
 
-  const setLang = (l: Lang) => {
-    if (!dicts.current[l]) {
-      LOADERS[l]().then(dict => {
-        dicts.current[l] = dict
-        setLangState(l)
-      })
-    } else {
-      setLangState(l)
-    }
+  const persist = (l: Lang) => {
     try {
       localStorage.setItem(STORAGE_KEY, l)
     } catch {}
     document.cookie = `${STORAGE_KEY}=${l};path=/;max-age=31536000;SameSite=Lax`
+  }
+
+  const setLang = (l: Lang) => {
+    latestLangRequest.current = l
+    if (!dicts.current[l]) {
+      LOADERS[l]()
+        .then(dict => {
+          if (latestLangRequest.current !== l) return
+          dicts.current[l] = dict
+          setLangState(l)
+          persist(l)
+        })
+        .catch(err => {
+          console.error(`[i18n] 語言包載入失敗 "${l}":`, err)
+        })
+    } else {
+      setLangState(l)
+      persist(l)
+    }
   }
 
   const t = (key: string, vars?: Record<string, string | number>): string => {
