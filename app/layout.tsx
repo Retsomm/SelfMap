@@ -29,9 +29,57 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400', '500', '600'],
 })
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://selfmap.app'
+
 export const metadata: Metadata = {
-  title: 'SelfMap — 探索你的內在地圖',
-  description: '用互動式地圖，探索你的人類圖內在結構',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'SelfMap — 免費人類圖計算器',
+    template: '%s | SelfMap 人類圖',
+  },
+  description: '免費線上人類圖計算器。輸入出生日期、時間與地點，即時生成完整人類圖（Body Graph），包含類型、人生角色、內在權威、九大中心、通道與閘門的完整分析。',
+  keywords: ['人類圖', '人類圖計算器', '免費人類圖', 'Human Design', 'BodyGraph', '身體圖', '人生角色', '五大類型', '內在權威', '九大中心', '通道', '閘門', '輪迴交叉'],
+  authors: [{ name: 'SelfMap', url: SITE_URL }],
+  creator: 'SelfMap',
+  openGraph: {
+    type: 'website',
+    locale: 'zh_TW',
+    alternateLocale: ['en_US'],
+    siteName: 'SelfMap',
+    title: 'SelfMap — 免費人類圖計算器',
+    description: '輸入出生日期、時間與地點，即時生成完整人類圖，包含類型、人生角色、內在權威等深度分析。',
+    url: SITE_URL,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SelfMap — 免費人類圖計算器',
+    description: '輸入出生日期、時間與地點，即時生成完整人類圖，包含類型、人生角色、內在權威等深度分析。',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
+  },
+  icons: {
+    icon: [
+      { url: '/icon-figure-rounded-60.png', sizes: '60x60', type: 'image/png' },
+      { url: '/icon-figure-rounded-80.png', sizes: '80x80', type: 'image/png' },
+    ],
+    apple: [{ url: '/icon-figure-rounded-180.png', sizes: '180x180', type: 'image/png' }],
+  },
+  alternates: {
+    canonical: SITE_URL,
+    languages: {
+      'zh-TW': SITE_URL,
+      'en': `${SITE_URL}`,
+    },
+  },
 }
 
 export default async function RootLayout({
