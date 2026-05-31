@@ -107,6 +107,14 @@ export default function ChartView({
     motivation:  result.planets[0]?.black.color ?? 1,
   }), [result.planets])
 
+  // four-arrow directions from tone (1-3 = left, 4-6 = right) per HD standard
+  const arrowTones = useMemo(() => ({
+    topLeft:     result.planets[0]?.red.tone   ?? 1,  // Design 太陽 (Body)
+    bottomLeft:  result.planets[3]?.red.tone   ?? 1,  // Design 北交點 (Environment)
+    topRight:    result.planets[0]?.black.tone ?? 1,  // Personality 太陽 (Mind)
+    bottomRight: result.planets[3]?.black.tone ?? 1,  // Personality 北交點 (Perspective)
+  }), [result.planets])
+
   const varLabels = useMemo(() => {
     if (lang !== 'en') return result.variables
     return {
@@ -234,6 +242,16 @@ export default function ChartView({
           </div>
         </aside>
 
+        {/* Left arrows: Body top-left (Design 太陽 tone), Environment bottom-left (Design 北交點 tone) */}
+        <aside className="hd-arrows-col hd-arrows-col--left h-30">
+          <div className="hd-arrow-item">
+            <div className={`hd-arrow-shape hd-arrow-shape--${arrowTones.topLeft <= 3 ? 'left' : 'right'}`} />
+          </div>
+          <div className="hd-arrow-item">
+            <div className={`hd-arrow-shape hd-arrow-shape--${arrowTones.bottomLeft <= 3 ? 'left' : 'right'}`} />
+          </div>
+        </aside>
+
         <main className="hd-col-mid">
           <div className="hd-chart-frame">
             <span className="hd-chart-corner tl" />
@@ -253,6 +271,16 @@ export default function ChartView({
             />
           </div>
         </main>
+
+        {/* Right arrows: Mind top-right (Personality 太陽 tone), Perspective bottom-right (Personality 北交點 tone) */}
+        <aside className="hd-arrows-col hd-arrows-col--right h-30">
+          <div className="hd-arrow-item">
+            <div className={`hd-arrow-shape hd-arrow-shape--${arrowTones.topRight <= 3 ? 'left' : 'right'}`} />
+          </div>
+          <div className="hd-arrow-item">
+            <div className={`hd-arrow-shape hd-arrow-shape--${arrowTones.bottomRight <= 3 ? 'left' : 'right'}`} />
+          </div>
+        </aside>
 
         <aside className="hd-planets-side hd-planets-side--personality">
           <div className="hd-planets-side-header">{t('chart.personalityLabel')}</div>
