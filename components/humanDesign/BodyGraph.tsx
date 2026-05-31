@@ -59,6 +59,8 @@ interface BodyGraphProps {
   // lib CenterName keys differ: ego → heart, solarPlexus → solar
   definedCenterIds?: Set<CenterName>
   annotationLabels?: AnnotationLabels
+  /** Scale factor for gate circles, gate numbers, and channel stroke widths (default 1) */
+  gateScale?: number
 }
 
 // Lookup gate anchor position across all centers
@@ -102,6 +104,7 @@ export default function BodyGraph({
   activations = {},
   definedCenterIds,
   annotationLabels = DEFAULT_ANNOTATION_LABELS,
+  gateScale = 1,
 }: BodyGraphProps) {
   const isDefined = (chartKey: string): boolean => {
     if (!definedCenterIds) return true  // no data = show all colored
@@ -129,8 +132,8 @@ export default function BodyGraph({
     fillColour: string | null, key: string,
     isActive: boolean,
   ) => {
-    const w = isActive ? 14 : 10
-    const inner = isActive ? 4 : 2.8
+    const w = (isActive ? 14 : 10) * gateScale
+    const inner = (isActive ? 4 : 2.8) * gateScale
     if (fillColour) {
       return (
         <line key={key}
@@ -384,10 +387,10 @@ export default function BodyGraph({
                 >
                   <circle
                     className="hd-gate-circle"
-                    cx={x} cy={y} r="7.5"
+                    cx={x} cy={y} r={7.5 * gateScale}
                     fill={circleFill}
                     stroke={HD_PALETTE.ink}
-                    strokeWidth="1.4"
+                    strokeWidth={1.4 * gateScale}
                   />
                   <text
                     className="hd-gate-num"
@@ -395,7 +398,7 @@ export default function BodyGraph({
                     fill={textFill}
                     textAnchor="middle"
                     dominantBaseline="central"
-                    fontSize="10.5"
+                    fontSize={10.5 * gateScale}
                     fontWeight="600"
                     fontFamily="monospace"
                     pointerEvents="none"

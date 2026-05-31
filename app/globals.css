@@ -196,7 +196,6 @@ body {
   gap: 3px;
   padding: 1px 0;
   min-width: 0;
-  overflow: hidden;
 }
 .hd-planet-row--left  { flex-direction: row; justify-content: space-between; }
 .hd-planet-row--right { flex-direction: row; justify-content: space-between; }
@@ -562,6 +561,139 @@ body {
   text-transform: uppercase;
   color: var(--ink-soft);
   margin-bottom: 6px;
+}
+
+/* ───────── Mini chart variant (used in composite side-by-side) ───────── */
+
+.hd-chart-row--mini {
+  grid-template-columns: minmax(0, 1.5fr) 20px minmax(0, 5fr) 20px minmax(0, 1.5fr);
+  gap: 4px;
+}
+.hd-chart-row--mini .hd-planets-side { font-size: 14px; }
+.hd-chart-row--mini .hd-planet-gate {
+  font-size: clamp(7px, 0.9vw, 9.5px);
+  font-weight: 700; letter-spacing: 0;
+}
+.hd-chart-row--mini .hd-planets-side-header { font-size: 8px; letter-spacing: 0.08em; }
+.hd-chart-row--mini .hd-planet-symbol {
+  width: clamp(8px, 1vw, 10px);
+  height: clamp(8px, 1vw, 10px);
+}
+.hd-chart-row--mini .hd-planet-row { gap: 1px; padding: 0; }
+.hd-chart-row--mini .hd-arrows-col { padding-top: 12px; gap: 2px; }
+.hd-chart-row--mini .hd-arrow-shape { width: 8px; height: 8px; }
+
+/* ───────── Composite chart row: [PersonA] [BodyGraph] [PersonB] ───────── */
+/* 比照個人頁 hd-chart-row 的 1fr/5fr/1fr 比例，SVG 佔 ~71% */
+
+.composite-chart-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 5fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.composite-person-panel {
+  font-family: var(--font-mono);
+  display: flex;
+  flex-direction: column;
+  padding-top: 2px;
+  min-width: 0;
+}
+
+.composite-person-panel--a { color: #c8553d; }
+.composite-person-panel--b { color: var(--ink); }
+
+.composite-person-label {
+  font-size: clamp(10px, 1.4vw, 16px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  padding-bottom: 5px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid currentcolor;
+  opacity: 0.75;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.composite-planet-rows {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.composite-planet-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(2px, 0.3vw, 4px);
+  padding: 0;
+  min-width: 0;
+}
+.composite-planet-row--left  { flex-direction: row-reverse; justify-content: flex-end; }
+.composite-planet-row--right { flex-direction: row; justify-content: flex-start; }
+
+/* 比照 hd-planet-symbol 22px，合盤有兩欄所以用 vw 縮放 */
+.composite-planet-icon {
+  width: clamp(12px, 1.5vw, 20px);
+  height: clamp(12px, 1.5vw, 20px);
+  display: block;
+  flex-shrink: 0;
+}
+.composite-planet-icon svg { width: 100%; height: 100%; display: block; }
+
+/* 比照 hd-planet-gate 18px，合盤雙欄等比例縮放 */
+.composite-gate {
+  font-size: clamp(10px, 1.4vw, 18px);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.composite-gate--left  { text-align: right; }
+.composite-gate--right { text-align: left; }
+
+@media (max-width: 760px) {
+  .composite-person-panel { display: none; }
+  .composite-chart-row { grid-template-columns: 1fr; }
+}
+
+/* ───────── Composite mobile planet list (shown ≤760px only) ───────── */
+.composite-planets-mobile { display: none; }
+
+@media (max-width: 760px) {
+  .composite-planets-mobile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 12px;
+    margin-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    border-top: 1px solid var(--ink);
+    padding-top: 12px;
+  }
+  .composite-planets-mobile-col--a { color: #c8553d; }
+  .composite-planets-mobile-col--b { color: var(--ink); }
+  .composite-planets-mobile-header {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-bottom: 1px solid currentcolor;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    opacity: 0.7;
+    font-weight: 700;
+  }
+  .composite-planets-mobile-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 0;
+    font-weight: 600;
+    font-size: 12px;
+  }
 }
 
 /* ───────── Planets mobile list (hidden on desktop) ───────── */

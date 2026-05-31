@@ -1,0 +1,198 @@
+'use client'
+
+import { useState, useEffect, useCallback, useRef, startTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
+import TimeSelect from '@/components/humanDesign/TimeSelect'
+import DateSelect from '@/components/humanDesign/DateSelect'
+import dayjs, { type Dayjs } from 'dayjs'
+import LocationPicker from '@/components/humanDesign/LocationPicker'
+import type { HdResult } from '@/lib/buildAiPrompt'
+import { useLang, type Lang } from '@/i18n'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
+
+const ChartView = dynamic(() => import('@/components/humanDesign/ChartView'), { ssr: false })
+
+const serializeHdResult = (r: HdResult): string =>
+  JSON.stringify({ ...r, definedCenterIds: [...r.definedCenterIds], allGates: [...r.allGates] })
+
+const deserializeHdResult = (s: string): HdResult => {
+  const d = JSON.parse(s)
+  return { ...d, definedCenterIds: new Set(d.definedCenterIds), allGates: new Set(d.allGates) }
+}
+
+type StoredData = {
+  inputs: { date: string; time: string; tz: string; loc: string }
+  hadResult: boolean
+  cached: string | null
+} | null
+
+const readStoredData = (): StoredData => {
+  if (typeof window === 'undefined') return null
+  try {
+    const saved = sessionStorage.getItem('hd_inputs')
+    if (!saved) return null
+    const parsed = JSON.parse(saved)
+    if (
+      typeof parsed !== 'object' || parsed === null ||
+      typeof parsed.date !== 'string' ||
+      typeof parsed.time !== 'string' ||
+      typeof parsed.tz !== 'string' ||
+      typeof parsed.loc !== 'string'
+    ) {
+      sessionStorage.removeItem('hd_inputs')
+      return null
+    }
+    return {
+      inputs: parsed as { date: string; time: string; tz: string; loc: string },
+      hadResult: sessionStorage.getItem('hd_had_result') === 'true',
+      cached: sessionStorage.getItem('hd_result'),
+    }
+  } catch {
+    return null
+  }
+}
+
+type FormInputs = {
+  birthDate: Dayjs
+  birthTime: Dayjs
+  timezone: string
+  locationLabel: string
+}
+
+const DEFAULT_INPUTS = {
+  birthDate: dayjs('2000-01-01'),
+  birthTime: dayjs('2000-01-01 12:00'),
+  timezone: 'Asia/Taipei',
+}
+
+const getDefaultLocationLabel = (lang: Lang): string =>
+  lang === 'en' ? 'Taipei, Taiwan' : '台北, 台灣'
+
+export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
+  const { t } = useLang()
+  const router = useRouter()
+
+  const [inputs, setInputs] = useState<FormInputs>(() => ({
+    ...DEFAULT_INPUTS,
+    locationLabel: getDefaultLocationLabel(initialLang),
+  }))
+  const { birthDate, birthTime, timezone, locationLabel } = inputs
+  const date = birthDate.format('YYYY-MM-DD')
+  const time = birthTime.format('HH:mm')
+  const setBirthDate = (d: Dayjs) => setInputs(prev => ({ ...prev, birthDate: d }))
+  const setBirthTime = (tt: Dayjs) => setInputs(prev => ({ ...prev, birthTime: tt }))
+  const setTimezone = (tz: string) => setInputs(prev => ({ ...prev, timezone: tz }))
+  const setLocationLabel = (loc: string) => setInputs(prev => ({ ...prev, locationLabel: loc }))
+  const [result, setResult] = useState<HdResult | null>(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [isRestoring, setIsRestoring] = useState(false)
+  const triggerCalcRef = useRef(false)
+
+  useEffect(() => {
+    const stored = readStoredData()
+    if (!stored) return
+    startTransition(() => {
+      setInputs({
+        birthDate: dayjs(stored.inputs.date),
+        birthTime: dayjs(`${stored.inputs.date} ${stored.inputs.time}`),
+        timezone: stored.inputs.tz,
+        locationLabel: stored.inputs.loc,
+      })
+      if (stored.hadResult && stored.cached) {
+        try {
+          setResult(deserializeHdResult(stored.cached))
+        } catch {
+          sessionStorage.removeItem('hd_result')
+        }
+      } else if (stored.hadResult && !stored.cached) {
+        setIsRestoring(true)
+        triggerCalcRef.current = true
+      }
+    })
+  }, [])
+
+  const calculate = useCallback(async () => {
+    setError('')
+    setLoading(true)
+    window.umami?.track('chart-calculate')
+    try {
+      const { computeHdResult } = await import('@/lib/computeHdResult')
+      const [r] = await Promise.all([
+        computeHdResult(date, time, timezone),
+        new Promise(res => setTimeout(res, 1000)),
+      ])
+      setResult(r as HdResult)
+      sessionStorage.setItem('hd_inputs', JSON.stringify({ date, time, tz: timezone, loc: locationLabel }))
+      sessionStorage.setItem('hd_had_result', 'true')
+      sessionStorage.setItem('hd_result', serializeHdResult(r as HdResult))
+    } catch (err) {
+      console.error('[calculate]', err)
+      setError(t('home.calculationError'))
+    } finally {
+      setLoading(false)
+      setIsRestoring(false)
+    }
+  }, [date, time, timezone, locationLabel, t])
+
+  useEffect(() => {
+    if (!triggerCalcRef.current) return
+    triggerCalcRef.current = false
+    calculate()
+  }, [calculate])
+
+  return (
+    <>
+      <div className="hd-print-hide py-3.5 px-5 border border-[var(--ink)] bg-[var(--paper-deep)] flex items-end gap-5 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch">
+        <h4 className="font-sans text-[12px] md:text-base font-semibold uppercase tracking-[0.18em] text-[var(--ink)] m-0 p-0 border-none whitespace-nowrap self-end pb-1.5">
+          {t('home.inputLabel')}
+        </h4>
+        <div className="flex gap-2 flex-wrap items-end flex-1">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="birth-date" className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.dateLabel')}</label>
+            <DateSelect id="birth-date" value={birthDate} onChange={setBirthDate} minDate={dayjs('1900-01-01')} maxDate={dayjs('2040-12-31')} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.timeLabel')}</label>
+            <TimeSelect value={birthTime} onChange={setBirthTime} />
+          </div>
+          <LocationPicker
+            value={locationLabel}
+            onSelect={(tz, label) => { setTimezone(tz); setLocationLabel(label) }}
+          />
+          <button
+            className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-[var(--paper)] bg-[var(--ink)] border border-[var(--ink)] px-4 py-1.5 cursor-pointer whitespace-nowrap transition-colors duration-[120ms] hover:bg-[var(--crimson)] hover:border-[var(--crimson)] disabled:opacity-45 disabled:cursor-not-allowed"
+            onClick={calculate}
+            disabled={loading}
+          >
+            {loading ? (isRestoring ? t('home.loading') : t('home.calculating')) : t('home.generate')}
+          </button>
+          {error && (
+            <div className="font-mono text-[12px] md:text-base text-[var(--crimson)] mt-2 py-1.5 px-2 border border-[var(--crimson)] tracking-[0.02em]">
+              {error}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {result && (
+        <div className="relative">
+          {loading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-(--paper)/70 backdrop-blur-[2px]">
+              <LoadingSpinner />
+            </div>
+          )}
+          <ChartView
+            result={result}
+            date={date}
+            time={time}
+            locationLabel={locationLabel}
+            timezone={timezone}
+            onSaved={() => router.push('/account?section=humandesign')}
+          />
+        </div>
+      )}
+    </>
+  )
+}
