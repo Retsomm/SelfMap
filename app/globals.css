@@ -53,9 +53,50 @@ body {
 
 .hd-chart-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 5fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 52px minmax(0, 5fr) 52px minmax(0, 1fr);
   gap: 16px;
   align-items: stretch;
+}
+
+/* ───────── Four-Arrow Variable Columns ───────── */
+
+.hd-arrows-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 28px;
+}
+
+.hd-arrows-col--left  { color: #c8553d; }
+.hd-arrows-col--right { color: var(--ink); }
+
+.hd-arrow-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.hd-arrow-shape {
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.hd-arrow-shape--left  { clip-path: polygon(100% 0, 100% 100%, 0 50%); }
+.hd-arrow-shape--right { clip-path: polygon(0 0, 100% 50%, 0 100%); }
+
+.hd-arrow-text {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.35;
+  word-break: break-all;
+  color: currentColor;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
 }
 
 .hd-col-mid {
@@ -571,6 +612,7 @@ body {
 @media (max-width: 760px) {
   .hd-chart-row { grid-template-columns: 1fr; }
   .hd-planets-side { display: none; }
+  .hd-arrows-col { display: none; }
 }
 @media (max-width: 640px) {
   .hd-index-strip {
