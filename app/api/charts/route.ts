@@ -17,17 +17,21 @@ export async function POST(req: NextRequest) {
     }
 
     const clerkUser = await currentUser()
+    const email = clerkUser?.emailAddresses[0]?.emailAddress || `clerk_${userId}@placeholder.local`
 
-    let user = await prisma.user.findUnique({ where: { clerkId: userId } })
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          clerkId: userId,
-          email: clerkUser?.emailAddresses[0]?.emailAddress ?? '',
-          name: clerkUser?.fullName ?? null,
-        },
-      })
-    }
+    const updateData: { email?: string; name?: string | null } = {}
+    if (!email.endsWith('@placeholder.local')) updateData.email = email
+    if (clerkUser?.fullName != null) updateData.name = clerkUser.fullName
+
+    const user = await prisma.user.upsert({
+      where: { clerkId: userId },
+      update: updateData,
+      create: {
+        clerkId: userId,
+        email,
+        name: clerkUser?.fullName ?? null,
+      },
+    })
 
     const chart = await prisma.chart.create({
       data: {
