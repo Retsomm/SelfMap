@@ -25,8 +25,8 @@ export async function generateMetadata({
   searchParams: Promise<{ topic?: string }>
 }): Promise<Metadata> {
   const { topic } = await searchParams
-  const activeTopic = topic ?? 'intro'
-  const topicMeta = HD_TOPICS.find(t => t.slug === activeTopic) ?? HD_TOPICS[0]
+  const topicMeta = HD_TOPICS.find(t => t.slug === topic) ?? HD_TOPICS[0]
+  const activeTopic = topicMeta.slug
   const description = TOPIC_DESCRIPTIONS[activeTopic] ?? `深入了解人類圖中的${topicMeta.label}。`
 
   return {

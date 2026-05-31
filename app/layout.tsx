@@ -29,7 +29,13 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400', '500', '600'],
 })
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://selfmap.app'
+let parsedSiteUrl: URL
+try {
+  parsedSiteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://selfmap.app')
+} catch {
+  parsedSiteUrl = new URL('https://selfmap.app')
+}
+const SITE_URL = parsedSiteUrl.origin
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -75,10 +81,6 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: SITE_URL,
-    languages: {
-      'zh-TW': SITE_URL,
-      'en': `${SITE_URL}`,
-    },
   },
 }
 
