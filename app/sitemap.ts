@@ -1,7 +1,19 @@
 import { MetadataRoute } from 'next'
 import { HD_TOPICS } from '@/lib/humanDesign/hd-topics'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://selfmap.app').replace(/\/+$/, '')
+const _rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL
+let _validatedOrigin = 'https://selfmap.app'
+if (_rawSiteUrl) {
+  try {
+    const parsed = new URL(_rawSiteUrl)
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      _validatedOrigin = parsed.origin
+    }
+  } catch {
+    // malformed URL — fall back to default
+  }
+}
+const SITE_URL = _validatedOrigin.replace(/\/+$/, '')
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const hdTopicUrls: MetadataRoute.Sitemap = HD_TOPICS.map(topic => ({
