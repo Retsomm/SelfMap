@@ -19,9 +19,13 @@ export async function POST(req: NextRequest) {
     const clerkUser = await currentUser()
     const email = clerkUser?.emailAddresses[0]?.emailAddress || `clerk_${userId}@placeholder.local`
 
+    const updateData: { email?: string; name?: string | null } = {}
+    if (!email.endsWith('@placeholder.local')) updateData.email = email
+    if (clerkUser?.fullName != null) updateData.name = clerkUser.fullName
+
     const user = await prisma.user.upsert({
       where: { clerkId: userId },
-      update: {},
+      update: updateData,
       create: {
         clerkId: userId,
         email,
