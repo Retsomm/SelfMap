@@ -206,6 +206,7 @@
     "chartSaved": "Chart saved",
     "saveFailed": "Save failed",
     "downloadFailed": "Download failed, please try again.",
+    "copyFailed": "Copy failed, please try again.",
     "annotations": {
       "head": "Head",
       "ajna": "Ajna",

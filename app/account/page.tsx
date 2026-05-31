@@ -164,6 +164,7 @@ export default function AccountPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const isDeletingRef = useRef(false)
+  const chartRequestIdRef = useRef(0)
 
   const handleDeleteChart = async (id: string) => {
     if (isDeletingRef.current) return
@@ -203,23 +204,31 @@ export default function AccountPage() {
       setChartComputing(true)
     })
 
+    const requestId = ++chartRequestIdRef.current
+
     if (chart.type === 'composite') {
-      const [dateA, dateB] = chart.birthDate.split('|')
-      const [timeA, timeB] = chart.birthTime.split('|')
-      const [tzA, tzB] = (chart.timezone ?? 'UTC|UTC').split('|')
+      const dateParts = chart.birthDate.split('|')
+      const timeParts = chart.birthTime.split('|')
+      const tzParts = (chart.timezone ?? 'UTC|UTC').split('|')
+      const dateA = dateParts.length === 2 && dateParts[0] && dateParts[1] ? dateParts[0] : chart.birthDate
+      const dateB = dateParts.length === 2 && dateParts[0] && dateParts[1] ? dateParts[1] : chart.birthDate
+      const timeA = timeParts.length === 2 && timeParts[0] && timeParts[1] ? timeParts[0] : chart.birthTime
+      const timeB = timeParts.length === 2 && timeParts[0] && timeParts[1] ? timeParts[1] : chart.birthTime
+      const tzA = tzParts.length === 2 && tzParts[0] && tzParts[1] ? tzParts[0] : 'UTC'
+      const tzB = tzParts.length === 2 && tzParts[0] && tzParts[1] ? tzParts[1] : 'UTC'
       Promise.all([
         computeHdResult(dateA, timeA, tzA),
         computeHdResult(dateB, timeB, tzB),
       ])
-        .then(([a, b]) => setCompositeResults({ a, b }))
-        .catch(err => toast.error(err instanceof Error ? err.message : t('account.calcFailed')))
-        .finally(() => setChartComputing(false))
+        .then(([a, b]) => { if (chartRequestIdRef.current === requestId) setCompositeResults({ a, b }) })
+        .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error(t('account.calcFailed')) } })
+        .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
     } else {
       const tz = chart.timezone ?? 'UTC'
       computeHdResult(chart.birthDate, chart.birthTime, tz)
-        .then(r => setChartResult(r))
-        .catch(err => toast.error(err instanceof Error ? err.message : t('account.calcFailed')))
-        .finally(() => setChartComputing(false))
+        .then(r => { if (chartRequestIdRef.current === requestId) setChartResult(r) })
+        .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error(t('account.calcFailed')) } })
+        .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
     }
   }, [activeChartId, charts, t])
 

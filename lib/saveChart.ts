@@ -44,6 +44,23 @@ export interface SaveCompositeChartParams {
 
 /** 將合盤存成單一 Chart 記錄，type='composite'，兩人資料以 '|' 分隔編碼。 */
 export const saveCompositeChart = async (p: SaveCompositeChartParams): Promise<void> => {
+  const requiredFields = [p.dateA, p.dateB, p.timeA, p.timeB, p.locationA, p.locationB, p.timezoneA, p.timezoneB]
+  if (requiredFields.some(f => !f)) throw new Error('合盤欄位不完整，無法儲存')
+
+  const authorityA = p.resultA.authority?.name
+  const authorityB = p.resultB.authority?.name
+  const profileA = p.resultA.profile?.profile
+  const profileB = p.resultB.profile?.profile
+  const definitionA = p.resultA.definition?.label
+  const definitionB = p.resultB.definition?.label
+  if (!authorityA || !authorityB || !profileA || !profileB || !definitionA || !definitionB) {
+    throw new Error('合盤計算結果不完整，無法儲存')
+  }
+
+  const centers = [...p.compositeDefinedCenterIds]
+  const channels = p.compositeDefinedChannels.map(ch => ch.id).filter(Boolean)
+  const gates = [...p.compositeAllGates].filter(g => typeof g === 'number')
+
   const res = await fetch('/api/charts', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -54,12 +71,12 @@ export const saveCompositeChart = async (p: SaveCompositeChartParams): Promise<v
       birthCity: `${p.locationA}|${p.locationB}`,
       timezone: `${p.timezoneA}|${p.timezoneB}`,
       type: 'composite',
-      authority: `${p.resultA.authority.name} / ${p.resultB.authority.name}`,
-      profile: `${p.resultA.profile.profile} / ${p.resultB.profile.profile}`,
-      definition: `${p.resultA.definition.label} / ${p.resultB.definition.label}`,
-      centers: [...p.compositeDefinedCenterIds],
-      channels: p.compositeDefinedChannels.map(ch => ch.id),
-      gates: [...p.compositeAllGates],
+      authority: `${authorityA} / ${authorityB}`,
+      profile: `${profileA} / ${profileB}`,
+      definition: `${definitionA} / ${definitionB}`,
+      centers,
+      channels,
+      gates,
     }),
   })
   const json = await res.json()

@@ -45,7 +45,6 @@ interface PlanetPanelProps {
 }
 
 const CompositePlanetPanel = ({ result, side, label }: PlanetPanelProps) => {
-  const { t } = useLang()
   const isLeft = side === 'left'
   const panelClass = isLeft ? 'composite-person-panel--a' : 'composite-person-panel--b'
   const rowClass = isLeft ? 'composite-planet-row--left' : 'composite-planet-row--right'
@@ -310,7 +309,7 @@ export default function CompositeView({
     navigator.clipboard.writeText(buildCompositeAiPrompt(resultA, resultB)).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    }).catch(() => setCopied(false))
+    }).catch(err => { console.error(err); toast.error(t('composite.copyFailed')) })
   }, [resultA, resultB])
 
   const handleSaveCharts = useCallback(async () => {
@@ -551,7 +550,10 @@ export default function CompositeView({
             ) : (
               <div className="flex flex-col gap-2">
                 {analysis.profileResonance.map(line => {
-                  const key = LINE_RESONANCE_KEYS[line - 1]
+                  const key = Number.isInteger(line) && line >= 1 && line <= LINE_RESONANCE_KEYS.length
+                    ? LINE_RESONANCE_KEYS[line - 1]
+                    : undefined
+                  if (!key) return null
                   return (
                     <div key={line} className="flex gap-3 items-start">
                       <span className="font-mono text-[11px] font-bold tracking-[0.06em] text-[var(--ink)] shrink-0 pt-0.5">

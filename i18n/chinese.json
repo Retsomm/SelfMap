@@ -206,6 +206,7 @@
     "chartSaved": "已儲存人類圖",
     "saveFailed": "儲存失敗",
     "downloadFailed": "下載失敗，請稍後再試。",
+    "copyFailed": "複製失敗，請稍後再試。",
     "annotations": {
       "head": "頂輪",
       "ajna": "邏輯中心",

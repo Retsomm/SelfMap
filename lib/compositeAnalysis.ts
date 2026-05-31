@@ -27,6 +27,8 @@ export interface CompositeAnalysis {
   profileResonance: number[]
 }
 
+const TOTAL_CENTER_COUNT = 9
+
 const resolveCompositeGraph = (gates: Set<number>) => {
   const definedChannels = CHANNEL_DEFS.filter(ch => gates.has(ch.gateA) && gates.has(ch.gateB))
   const definedCenterIds = new Set<CenterName>()
@@ -43,7 +45,7 @@ export const analyzeComposite = (a: HdResult, b: HdResult): CompositeAnalysis =>
     resolveCompositeGraph(compositeGates)
 
   const compositeDefinedCount = compositeDefinedCenterIds.size
-  const compositeOpenCount = 9 - compositeDefinedCount
+  const compositeOpenCount = TOTAL_CENTER_COUNT - compositeDefinedCount
 
   let integrationTheme: IntegrationTheme
   if (compositeOpenCount === 0) integrationTheme = '9+0'
