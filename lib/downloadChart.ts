@@ -47,7 +47,9 @@ export const downloadChart = async (el: HTMLElement): Promise<void> => {
       contentH + footerH / 2,
       { align: 'center', baseline: 'middle' },
     )
-    pdf.save('human-design.pdf')
+    const now = new Date()
+    const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`
+    pdf.save(`人類圖${ts}.pdf`)
   } catch (err) {
     console.error('[downloadChart]', err)
     throw new Error('Failed to export chart. Please try again or contact support.', { cause: err })

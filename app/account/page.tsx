@@ -3,6 +3,7 @@
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, useCallback, startTransition, useRef } from 'react'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 import ChartView from '@/components/humanDesign/ChartView'
@@ -11,6 +12,8 @@ import type { HdResult } from '@/lib/buildAiPrompt'
 import { useLang } from '@/i18n'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmModal } from '@/components/ConfirmModal'
+
+const CompositeView = dynamic(() => import('@/components/humanDesign/CompositeView'), { ssr: false })
 
 const PROVIDER_LABEL: Record<string, string> = {
   google: 'Google',
@@ -53,6 +56,7 @@ export default function AccountPage() {
 
   const [chartResult, setChartResult] = useState<HdResult | null>(null)
   const [chartComputing, setChartComputing] = useState(false)
+  const [compositeResults, setCompositeResults] = useState<{ a: HdResult; b: HdResult } | null>(null)
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace('/')
@@ -159,9 +163,12 @@ export default function AccountPage() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const isDeletingRef = useRef(false)
+  const chartRequestIdRef = useRef(0)
 
-  const handleDeleteChart = useCallback(async (id: string) => {
-    if (deletingId) return
+  const handleDeleteChart = async (id: string) => {
+    if (isDeletingRef.current) return
+    isDeletingRef.current = true
     setDeletingId(id)
     setConfirmDeleteId(null)
     window.umami?.track('account-delete-chart')
@@ -174,8 +181,11 @@ export default function AccountPage() {
         return next
       })
     } catch {}
-    finally { setDeletingId(null) }
-  }, [deletingId])
+    finally {
+      setDeletingId(null)
+      isDeletingRef.current = false
+    }
+  }
 
   useEffect(() => {
     if (activeSection === 'humandesign' && !chartsFetched && !chartsLoading) {
@@ -188,17 +198,39 @@ export default function AccountPage() {
     const chart = charts.find(c => c.id === activeChartId)
     if (!chart) return
 
-    const tz = chart.timezone ?? 'UTC'
     startTransition(() => {
       setChartResult(null)
+      setCompositeResults(null)
       setChartComputing(true)
     })
 
-    computeHdResult(chart.birthDate, chart.birthTime, tz)
-      .then(r => setChartResult(r))
-      .catch(err => toast.error(err instanceof Error ? err.message : t('account.calcFailed')))
-      .finally(() => setChartComputing(false))
-  }, [activeChartId, charts])
+    const requestId = ++chartRequestIdRef.current
+
+    if (chart.type === 'composite') {
+      const dateParts = chart.birthDate.split('|')
+      const timeParts = chart.birthTime.split('|')
+      const tzParts = (chart.timezone ?? 'UTC|UTC').split('|')
+      const dateA = dateParts.length === 2 && dateParts[0] && dateParts[1] ? dateParts[0] : chart.birthDate
+      const dateB = dateParts.length === 2 && dateParts[0] && dateParts[1] ? dateParts[1] : chart.birthDate
+      const timeA = timeParts.length === 2 && timeParts[0] && timeParts[1] ? timeParts[0] : chart.birthTime
+      const timeB = timeParts.length === 2 && timeParts[0] && timeParts[1] ? timeParts[1] : chart.birthTime
+      const tzA = tzParts.length === 2 && tzParts[0] && tzParts[1] ? tzParts[0] : 'UTC'
+      const tzB = tzParts.length === 2 && tzParts[0] && tzParts[1] ? tzParts[1] : 'UTC'
+      Promise.all([
+        computeHdResult(dateA, timeA, tzA),
+        computeHdResult(dateB, timeB, tzB),
+      ])
+        .then(([a, b]) => { if (chartRequestIdRef.current === requestId) setCompositeResults({ a, b }) })
+        .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error(t('account.calcFailed')) } })
+        .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
+    } else {
+      const tz = chart.timezone ?? 'UTC'
+      computeHdResult(chart.birthDate, chart.birthTime, tz)
+        .then(r => { if (chartRequestIdRef.current === requestId) setChartResult(r) })
+        .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error(t('account.calcFailed')) } })
+        .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
+    }
+  }, [activeChartId, charts, t])
 
   if (!isLoaded || !isSignedIn) {
     return (
@@ -533,15 +565,33 @@ export default function AccountPage() {
                   {chartComputing && (
                     <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) mb-6">{t('account.computing')}</div>
                   )}
-                  {chartResult && (
-                    <ChartView
-                      result={chartResult}
-                      date={activeChart.birthDate}
-                      time={activeChart.birthTime}
-                      locationLabel={activeChart.birthCity}
-                      timezone={activeChart.timezone ?? 'UTC'}
-                      hideSaveButton
-                    />
+                  {activeChart.type === 'composite' ? (
+                    compositeResults && (() => {
+                      const [cityA, cityB] = activeChart.birthCity.split('|')
+                      const [dateA, dateB] = activeChart.birthDate.split('|')
+                      const [timeA, timeB] = activeChart.birthTime.split('|')
+                      const [tzA, tzB] = (activeChart.timezone ?? 'UTC|UTC').split('|')
+                      return (
+                        <CompositeView
+                          resultA={compositeResults.a}
+                          resultB={compositeResults.b}
+                          dateA={dateA} timeA={timeA} locationA={cityA} timezoneA={tzA}
+                          dateB={dateB} timeB={timeB} locationB={cityB} timezoneB={tzB}
+                          hideSaveButton
+                        />
+                      )
+                    })()
+                  ) : (
+                    chartResult && (
+                      <ChartView
+                        result={chartResult}
+                        date={activeChart.birthDate}
+                        time={activeChart.birthTime}
+                        locationLabel={activeChart.birthCity}
+                        timezone={activeChart.timezone ?? 'UTC'}
+                        hideSaveButton
+                      />
+                    )
                   )}
                 </>
               )}

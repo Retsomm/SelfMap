@@ -96,3 +96,37 @@ ${planetRows}
 
 請從類型策略、人生角色、決策權威、輪迴交叉等角度綜合解讀，並給出實際生活中可應用的建議。`
 }
+
+/** 將兩份 HdResult 組合成可直接貼給 AI 的合盤解讀 prompt。 */
+export const buildCompositeAiPrompt = (a: HdResult, b: HdResult): string => {
+  const fmt = (r: HdResult, label: string) => {
+    const crossLabel =
+      (CROSS_TYPE_LABELS[r.incarnationCross.crossType] ?? r.incarnationCross.crossType) +
+      '之' + r.incarnationCross.crossName
+    const definedCenters = (Object.keys(CENTER_INFO) as CenterName[]).filter(id => r.definedCenterIds.has(id))
+    const channels =
+      r.definedChannels
+        .map(ch => `${ch.id}（${fmtCenterName(CENTER_INFO[ch.centerA].name)}—${fmtCenterName(CENTER_INFO[ch.centerB].name)}）`)
+        .join('、') || '無'
+    return `【${label}】
+類型：${r.type}（${TYPE_LABELS[r.type] ?? ''}）
+人生角色：${r.profile.profile}（${PROFILE_LABELS[r.profile.profile] ?? '—'}）
+決策權威：${r.authority.name}
+輪迴交叉：${crossLabel}
+已定義中心：${definedCenters.map(id => CENTER_INFO[id].name).join('、') || '無'}
+已定義通道：${channels}`
+  }
+
+  return `以下是兩人的 Human Design（人類圖）合盤資料，請根據這些資料進行深度的合盤關係解讀：
+
+${fmt(a, 'A 的人類圖')}
+
+${fmt(b, 'B 的人類圖')}
+
+請從以下角度進行合盤分析：
+1. 兩人類型與策略的互動模式
+2. 人生角色的共鳴與互補
+3. 決策權威的相處節奏
+4. 電磁、陪伴、妥協、支配等通道連結動力
+5. 整體能量場整合度，並給出實際相處建議。`
+}
