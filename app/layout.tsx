@@ -55,11 +55,20 @@ export const metadata: Metadata = {
     title: 'SelfMap — 免費人類圖計算器',
     description: '輸入出生日期、時間與地點，即時生成完整人類圖，包含類型、人生角色、內在權威等深度分析。',
     url: SITE_URL,
+    images: [
+      {
+        url: `${SITE_URL}/og.png`,
+        width: 1200,
+        height: 630,
+        alt: 'SelfMap — 免費人類圖計算器',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'SelfMap — 免費人類圖計算器',
     description: '輸入出生日期、時間與地點，即時生成完整人類圖，包含類型、人生角色、內在權威等深度分析。',
+    images: [`${SITE_URL}/og.png`],
   },
   robots: {
     index: true,
