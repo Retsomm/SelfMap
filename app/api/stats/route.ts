@@ -26,7 +26,7 @@ export async function GET() {
   }
 
   const data = await res.json()
-  const views = data?.pageviews?.value ?? 0
+  const views = data?.pageviews ?? 0
 
   // Shields.io endpoint 格式
   return NextResponse.json({
