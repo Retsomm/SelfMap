@@ -5,6 +5,8 @@ SelfMap 是一個精準的人類圖（Human Design）計算器，透過出生日
 <img width="464" height="638" alt="截圖 2026-05-29 晚上8 16 18" src="https://github.com/user-attachments/assets/f0c4c607-8671-40b6-8584-02bdde387ee1" />
 <img width="680" height="723" alt="截圖 2026-05-29 晚上8 17 19" src="https://github.com/user-attachments/assets/7241b4e9-1cb9-4dbc-9edf-c810cad664af" />
 
+![Views](https://img.shields.io/endpoint?url=https://self-map-xi.vercel.app/api/stats)
+
 ---
 
 ## 功能特色
