@@ -2,6 +2,8 @@
 
 SelfMap 是一個精準的人類圖（Human Design）計算器，透過出生日期、時間與地點，在瀏覽器端即時計算並視覺化呈現完整身體圖（Body Graph）。
 
+![Views](https://img.shields.io/endpoint?url=https://self-map-xi.vercel.app/api/stats)
+
 ---
 
 ## 功能特色
