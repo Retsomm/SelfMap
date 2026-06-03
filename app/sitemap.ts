@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { HD_TOPICS } from '@/lib/humanDesign/hd-topics'
 
 const _rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL
-let _validatedOrigin = 'https://selfmap.app'
+let _validatedOrigin = 'https://selfmap.tw'
 if (_rawSiteUrl) {
   try {
     const parsed = new URL(_rawSiteUrl)
