@@ -6,7 +6,13 @@ export default function SignInPage() {
       <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-(--ink-soft) mb-6 select-none">
         SelfMap · 身份驗證
       </p>
-      <SignIn />
+      {/* Apple 登入暫時隱藏，購買 Apple Developer 帳號後移除 appearance 設定即可恢復 */}
+      <SignIn appearance={{
+        elements: {
+          socialButtonsBlockButton__apple: { display: 'none' },
+          socialButtonsIconButton__apple: { display: 'none' },
+        },
+      }} />
     </div>
   )
 }
