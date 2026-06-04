@@ -263,6 +263,78 @@ const AU_ALIASES: Record<string, number> = {
   'newcastle': 4010,
 }
 
+// 中國大陸（Asia/Shanghai UTC+8，新疆 Asia/Urumqi UTC+6）
+const CN_LOCATIONS: GeoResult[] = [
+  // 直轄市
+  { id: 10001, name: '北京市', country: '中國', admin1: '北京市', timezone: 'Asia/Shanghai', latitude: 39.9042, longitude: 116.4074 },
+  { id: 10002, name: '上海市', country: '中國', admin1: '上海市', timezone: 'Asia/Shanghai', latitude: 31.2304, longitude: 121.4737 },
+  { id: 10003, name: '天津市', country: '中國', admin1: '天津市', timezone: 'Asia/Shanghai', latitude: 39.3434, longitude: 117.3616 },
+  { id: 10004, name: '重慶市', country: '中國', admin1: '重慶市', timezone: 'Asia/Shanghai', latitude: 29.5630, longitude: 106.5516 },
+  // 省
+  { id: 10005, name: '河北省', country: '中國', admin1: '石家莊', timezone: 'Asia/Shanghai', latitude: 38.0428, longitude: 114.5149 },
+  { id: 10006, name: '山西省', country: '中國', admin1: '太原', timezone: 'Asia/Shanghai', latitude: 37.8706, longitude: 112.5489 },
+  { id: 10007, name: '遼寧省', country: '中國', admin1: '瀋陽', timezone: 'Asia/Shanghai', latitude: 41.8057, longitude: 123.4315 },
+  { id: 10008, name: '吉林省', country: '中國', admin1: '長春', timezone: 'Asia/Shanghai', latitude: 43.8171, longitude: 125.3235 },
+  { id: 10009, name: '黑龍江省', country: '中國', admin1: '哈爾濱', timezone: 'Asia/Shanghai', latitude: 45.8038, longitude: 126.5349 },
+  { id: 10010, name: '江蘇省', country: '中國', admin1: '南京', timezone: 'Asia/Shanghai', latitude: 32.0603, longitude: 118.7969 },
+  { id: 10011, name: '浙江省', country: '中國', admin1: '杭州', timezone: 'Asia/Shanghai', latitude: 30.2741, longitude: 120.1551 },
+  { id: 10012, name: '安徽省', country: '中國', admin1: '合肥', timezone: 'Asia/Shanghai', latitude: 31.8206, longitude: 117.2272 },
+  { id: 10013, name: '福建省', country: '中國', admin1: '福州', timezone: 'Asia/Shanghai', latitude: 26.0745, longitude: 119.2965 },
+  { id: 10014, name: '江西省', country: '中國', admin1: '南昌', timezone: 'Asia/Shanghai', latitude: 28.6820, longitude: 115.8579 },
+  { id: 10015, name: '山東省', country: '中國', admin1: '濟南', timezone: 'Asia/Shanghai', latitude: 36.6512, longitude: 117.1201 },
+  { id: 10016, name: '河南省', country: '中國', admin1: '鄭州', timezone: 'Asia/Shanghai', latitude: 34.7466, longitude: 113.6253 },
+  { id: 10017, name: '湖北省', country: '中國', admin1: '武漢', timezone: 'Asia/Shanghai', latitude: 30.5928, longitude: 114.3055 },
+  { id: 10018, name: '湖南省', country: '中國', admin1: '長沙', timezone: 'Asia/Shanghai', latitude: 28.2282, longitude: 112.9388 },
+  { id: 10019, name: '廣東省', country: '中國', admin1: '廣州', timezone: 'Asia/Shanghai', latitude: 23.1291, longitude: 113.2644 },
+  { id: 10020, name: '海南省', country: '中國', admin1: '海口', timezone: 'Asia/Shanghai', latitude: 20.0440, longitude: 110.1999 },
+  { id: 10021, name: '四川省', country: '中國', admin1: '成都', timezone: 'Asia/Shanghai', latitude: 30.5728, longitude: 104.0668 },
+  { id: 10022, name: '貴州省', country: '中國', admin1: '貴陽', timezone: 'Asia/Shanghai', latitude: 26.5983, longitude: 106.7073 },
+  { id: 10023, name: '雲南省', country: '中國', admin1: '昆明', timezone: 'Asia/Shanghai', latitude: 25.0457, longitude: 102.7097 },
+  { id: 10024, name: '陝西省', country: '中國', admin1: '西安', timezone: 'Asia/Shanghai', latitude: 34.3416, longitude: 108.9398 },
+  { id: 10025, name: '甘肅省', country: '中國', admin1: '蘭州', timezone: 'Asia/Shanghai', latitude: 36.0617, longitude: 103.8318 },
+  { id: 10026, name: '青海省', country: '中國', admin1: '西寧', timezone: 'Asia/Shanghai', latitude: 36.6232, longitude: 101.7782 },
+  // 自治區
+  { id: 10027, name: '內蒙古自治區', country: '中國', admin1: '呼和浩特', timezone: 'Asia/Shanghai', latitude: 40.8427, longitude: 111.7490 },
+  { id: 10028, name: '廣西壯族自治區', country: '中國', admin1: '南寧', timezone: 'Asia/Shanghai', latitude: 22.8170, longitude: 108.3665 },
+  { id: 10029, name: '西藏自治區', country: '中國', admin1: '拉薩', timezone: 'Asia/Shanghai', latitude: 29.6520, longitude: 91.1721 },
+  { id: 10030, name: '寧夏回族自治區', country: '中國', admin1: '銀川', timezone: 'Asia/Shanghai', latitude: 38.4872, longitude: 106.2309 },
+  { id: 10031, name: '新疆維吾爾自治區', country: '中國', admin1: '烏魯木齊', timezone: 'Asia/Urumqi', latitude: 43.8256, longitude: 87.6168 },
+]
+
+const CN_ALIASES: Record<string, number> = {
+  '北京': 10001, '北京市': 10001, 'beijing': 10001, 'peking': 10001,
+  '上海': 10002, '上海市': 10002, 'shanghai': 10002,
+  '天津': 10003, '天津市': 10003, 'tianjin': 10003,
+  '重慶': 10004, '重庆': 10004, '重慶市': 10004, 'chongqing': 10004,
+  '河北': 10005, '石家莊': 10005, '石家庄': 10005, 'hebei': 10005, 'shijiazhuang': 10005,
+  '山西': 10006, '太原': 10006, 'shanxi': 10006, 'taiyuan': 10006,
+  '遼寧': 10007, '辽宁': 10007, '瀋陽': 10007, '沈阳': 10007, 'liaoning': 10007, 'shenyang': 10007,
+  '吉林': 10008, '長春': 10008, '长春': 10008, 'jilin': 10008, 'changchun': 10008,
+  '黑龍江': 10009, '黑龙江': 10009, '哈爾濱': 10009, '哈尔滨': 10009, 'heilongjiang': 10009, 'harbin': 10009,
+  '江蘇': 10010, '江苏': 10010, '南京': 10010, 'jiangsu': 10010, 'nanjing': 10010,
+  '浙江': 10011, '杭州': 10011, 'zhejiang': 10011, 'hangzhou': 10011,
+  '安徽': 10012, '合肥': 10012, 'anhui': 10012, 'hefei': 10012,
+  '福建': 10013, '福州': 10013, 'fujian': 10013, 'fuzhou': 10013,
+  '江西': 10014, '南昌': 10014, 'jiangxi': 10014, 'nanchang': 10014,
+  '山東': 10015, '山东': 10015, '濟南': 10015, '济南': 10015, 'shandong': 10015, 'jinan': 10015,
+  '河南': 10016, '鄭州': 10016, '郑州': 10016, 'henan': 10016, 'zhengzhou': 10016,
+  '湖北': 10017, '武漢': 10017, '武汉': 10017, 'hubei': 10017, 'wuhan': 10017,
+  '湖南': 10018, '長沙': 10018, '长沙': 10018, 'hunan': 10018, 'changsha': 10018,
+  '廣東': 10019, '广东': 10019, '廣州': 10019, '广州': 10019, 'guangdong': 10019, 'guangzhou': 10019,
+  '海南': 10020, '海口': 10020, 'hainan': 10020, 'haikou': 10020,
+  '四川': 10021, '成都': 10021, 'sichuan': 10021, 'chengdu': 10021,
+  '貴州': 10022, '贵州': 10022, '貴陽': 10022, '贵阳': 10022, 'guizhou': 10022, 'guiyang': 10022,
+  '雲南': 10023, '云南': 10023, '昆明': 10023, 'yunnan': 10023, 'kunming': 10023,
+  '陝西': 10024, '陕西': 10024, '西安': 10024, 'shaanxi': 10024, "xi'an": 10024, 'xian': 10024,
+  '甘肅': 10025, '甘肃': 10025, '蘭州': 10025, '兰州': 10025, 'gansu': 10025, 'lanzhou': 10025,
+  '青海': 10026, '西寧': 10026, '西宁': 10026, 'qinghai': 10026, 'xining': 10026,
+  '內蒙古': 10027, '内蒙古': 10027, '呼和浩特': 10027, 'inner mongolia': 10027, 'hohhot': 10027,
+  '廣西': 10028, '广西': 10028, '南寧': 10028, '南宁': 10028, 'guangxi': 10028, 'nanning': 10028,
+  '西藏': 10029, '拉薩': 10029, '拉萨': 10029, 'tibet': 10029, 'lhasa': 10029,
+  '寧夏': 10030, '宁夏': 10030, '銀川': 10030, '银川': 10030, 'ningxia': 10030, 'yinchuan': 10030,
+  '新疆': 10031, '烏魯木齊': 10031, '乌鲁木齐': 10031, 'xinjiang': 10031, 'urumqi': 10031,
+}
+
 // 加拿大（多時區）
 const CA_LOCATIONS: GeoResult[] = [
   { id: 3001, name: 'Toronto', country: 'Canada', admin1: 'Ontario', timezone: 'America/Toronto', latitude: 43.6532, longitude: -79.3832 },
@@ -289,8 +361,8 @@ const CA_ALIASES: Record<string, number> = {
   'victoria': 3010,
 }
 
-const ALL_STATIC = [...TW_LOCATIONS, ...JP_LOCATIONS, ...HK_LOCATIONS, ...MO_LOCATIONS, ...SG_LOCATIONS, ...MY_LOCATIONS, ...UK_LOCATIONS, ...US_LOCATIONS, ...AU_LOCATIONS, ...CA_LOCATIONS]
-const ALL_ALIASES: Record<string, number> = { ...TW_ALIASES, ...JP_ALIASES, ...HK_ALIASES, ...MO_ALIASES, ...SG_ALIASES, ...MY_ALIASES, ...UK_ALIASES, ...US_ALIASES, ...AU_ALIASES, ...CA_ALIASES }
+const ALL_STATIC = [...TW_LOCATIONS, ...JP_LOCATIONS, ...HK_LOCATIONS, ...MO_LOCATIONS, ...SG_LOCATIONS, ...MY_LOCATIONS, ...UK_LOCATIONS, ...US_LOCATIONS, ...AU_LOCATIONS, ...CA_LOCATIONS, ...CN_LOCATIONS]
+const ALL_ALIASES: Record<string, number> = { ...TW_ALIASES, ...JP_ALIASES, ...HK_ALIASES, ...MO_ALIASES, ...SG_ALIASES, ...MY_ALIASES, ...UK_ALIASES, ...US_ALIASES, ...AU_ALIASES, ...CA_ALIASES, ...CN_ALIASES }
 
 function searchStaticLocations(q: string): GeoResult[] {
   const trimmed = q.trim()
