@@ -1,0 +1,482 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
+import BodyGraph from '@/components/humanDesign/BodyGraph'
+import { CENTER_INFO, CHANNEL_DEFS, calculateCentersAndChannels } from '@/lib/humanDesign'
+import type { HdResult } from '@/lib/buildAiPrompt'
+import {
+  buildCombinedActivations,
+  type TransitResult,
+} from '@/lib/computeTransit'
+import { toActivations } from '@/lib/humanDesign'
+import type { CenterName, Activations, ChannelDef } from '@/lib/humanDesign/types'
+
+type ViewMode = 'separate' | 'combined'
+
+const CENTER_ORDER: CenterName[] = [
+  'head', 'ajna', 'throat', 'g', 'ego', 'sacral', 'solarPlexus', 'spleen', 'root',
+]
+
+const CENTER_ZH: Record<CenterName, string> = {
+  head:        '頭腦',
+  ajna:        '心智',
+  throat:      '喉嚨',
+  g:           'G',
+  ego:         '意志力',
+  sacral:      '薦骨',
+  solarPlexus: '情緒',
+  spleen:      '脾',
+  root:        '根部',
+}
+
+const PLANET_ROLES: Record<string, string> = {
+  太陽:   '整體能量主題',
+  地球:   '穩定扎根',
+  月亮:   '情緒底色',
+  北交點: '環境氛圍',
+  南交點: '環境氛圍',
+  水星:   '溝通與思考',
+  金星:   '關注與價值',
+  火星:   '行動與衝突',
+  木星:   '擴張背景',
+  土星:   '結構背景',
+  天王星: '變革背景',
+  海王星: '靈感背景',
+  冥王星: '蛻變背景',
+}
+
+const buildTransitActivations = (transit: TransitResult): Activations => {
+  const out: Activations = {}
+  for (const g of transit.allGates) {
+    out[g] = { c: true, u: false }
+  }
+  return out
+}
+
+const formatTime = (iso: string): string => {
+  try {
+    return new Date(iso).toLocaleString('zh-TW', {
+      timeZone: 'Asia/Taipei',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return iso
+  }
+}
+
+// ── Shared UI ───────────────────────────────────────────────────────────────
+
+const SectionHeader = ({ children }: { children: ReactNode }) => (
+  <h3 className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-(--ink-soft) mb-3 pb-1.5 border-b border-dotted border-(--ink)/20">
+    {children}
+  </h3>
+)
+
+// ── 中心 ────────────────────────────────────────────────────────────────────
+
+const CentersSection = ({ personal, transit }: { personal: HdResult; transit: TransitResult }) => {
+  const openActivatedCenters = CENTER_ORDER.filter(
+    cId => !personal.definedCenterIds.has(cId) && transit.definedCenterIds.has(cId),
+  )
+
+  return (
+    <section>
+      <SectionHeader>中心</SectionHeader>
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+        {CENTER_ORDER.map(cId => {
+          const inPersonal = personal.definedCenterIds.has(cId)
+          const inTransit = transit.definedCenterIds.has(cId)
+          const openActivated = !inPersonal && inTransit
+
+          return (
+            <div
+              key={cId}
+              className={[
+                'flex flex-col gap-1.5 px-3 py-2.5 border',
+                openActivated
+                  ? 'border-[#d04830]/50 bg-[#d04830]/5'
+                  : inPersonal
+                  ? 'border-(--ink)/40 bg-(--ink)/5'
+                  : 'border-(--ink)/15',
+              ].join(' ')}
+            >
+              <span className="font-mono text-[14px] md:text-base tracking-[0.08em] text-(--ink)">
+                {CENTER_ZH[cId]}
+              </span>
+              <div className="flex gap-1 flex-wrap">
+                {inPersonal && (
+                  <span className="font-mono text-[12px] md:text-sm tracking-[0.05em] uppercase bg-(--ink) text-(--paper) px-1.5 py-0.5">
+                    個人
+                  </span>
+                )}
+                {inTransit && (
+                  <span className="font-mono text-[12px] md:text-sm tracking-[0.05em] uppercase bg-[#d04830] text-white px-1.5 py-0.5">
+                    流日
+                  </span>
+                )}
+                {!inPersonal && !inTransit && (
+                  <span className="font-mono text-[12px] md:text-sm tracking-[0.05em] uppercase text-(--ink)/40">
+                    開放
+                  </span>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {openActivatedCenters.length > 0 && (
+        <div className="px-4 py-3 border border-[#d04830]/30 bg-[#d04830]/4 mt-3">
+          <p className="font-mono text-[12px] md:text-base font-semibold text-[#d04830] tracking-[0.06em] mb-1">
+            今日被流日暫時啟動：{openActivatedCenters.map(cId => CENTER_INFO[cId].name).join('、')}
+          </p>
+          <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
+            以上原本開放的中心，今天因流日被暫時定義，可能帶來不熟悉的衝動或情緒底色。
+            這些能量不屬於你的設計，不需要跟隨它行動。
+          </p>
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ── 閘門 ────────────────────────────────────────────────────────────────────
+
+const GateRow = ({ gate, planets, shared }: { gate: number; planets: string[]; shared: boolean }) => (
+  <div className={[
+    'flex items-start gap-2 px-3 py-2 border',
+    shared ? 'border-(--ink)/25 bg-(--ink)/3' : 'border-(--ink)/10',
+  ].join(' ')}>
+    <span className={`font-mono text-[14px] md:text-base font-semibold w-8 shrink-0 mt-0.5 ${shared ? 'text-(--ink)' : 'text-[#d04830]'}`}>
+      {gate}
+    </span>
+    <div className="flex flex-col gap-1 flex-1 min-w-0">
+      {planets.map(p => (
+        <div key={p} className="flex items-center gap-1.5">
+          <span className="font-mono text-[13px] md:text-sm tracking-[0.06em] text-(--ink-soft) border border-(--ink)/15 px-1.5 py-0.5 whitespace-nowrap">
+            {p}
+          </span>
+          {PLANET_ROLES[p] && (
+            <span className="font-mono text-[13px] md:text-sm text-(--ink-soft)/70 tracking-[0.04em]">
+              {PLANET_ROLES[p]}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+    {shared && (
+      <span className="font-mono text-[12px] md:text-sm tracking-[0.04em] text-(--ink)/50 shrink-0 mt-0.5">共有</span>
+    )}
+  </div>
+)
+
+const GatesSection = ({ personal, transit }: { personal: HdResult; transit: TransitResult }) => {
+  const gatePlanets = useMemo(() => {
+    const map = new Map<number, string[]>()
+    for (const p of transit.planets) {
+      const arr = map.get(p.gate) ?? []
+      arr.push(p.planetName)
+      map.set(p.gate, arr)
+    }
+    return map
+  }, [transit])
+
+  const sharedGates = useMemo(
+    () => [...transit.allGates].filter(g => personal.allGates.has(g)).sort((a, b) => a - b),
+    [personal, transit],
+  )
+  const transitOnlyGates = useMemo(
+    () => [...transit.allGates].filter(g => !personal.allGates.has(g)).sort((a, b) => a - b),
+    [personal, transit],
+  )
+
+  return (
+    <section>
+      <SectionHeader>閘門</SectionHeader>
+      <div className="flex flex-col gap-4">
+        {sharedGates.length > 0 && (
+          <div>
+            <p className="font-mono text-[11px] md:text-sm tracking-[0.12em] uppercase text-(--ink-soft) mb-2">
+              個人圖 & 流日共有
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              {sharedGates.map(g => (
+                <GateRow key={g} gate={g} planets={gatePlanets.get(g) ?? []} shared />
+              ))}
+            </div>
+          </div>
+        )}
+        {transitOnlyGates.length > 0 && (
+          <div>
+            <p className="font-mono text-[11px] md:text-sm tracking-[0.12em] uppercase text-(--ink-soft) mb-2">
+              今日流日閘門
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              {transitOnlyGates.map(g => (
+                <GateRow key={g} gate={g} planets={gatePlanets.get(g) ?? []} shared={false} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+// ── 通道 ────────────────────────────────────────────────────────────────────
+
+const ChannelsSection = ({ personal, transit }: { personal: HdResult; transit: TransitResult }) => {
+  const newChannels = useMemo(
+    () => transit.definedChannels.filter(ch =>
+      !personal.allGates.has(ch.gateA) &&
+      !personal.allGates.has(ch.gateB) &&
+      !personal.definedChannels.some(pc => pc.id === ch.id)
+    ),
+    [personal, transit],
+  )
+
+  const completingChannels = useMemo(() => {
+    const results: Array<{ ch: ChannelDef; personalGate: number; transitGate: number }> = []
+    for (const ch of CHANNEL_DEFS) {
+      if (personal.definedChannels.some(pc => pc.id === ch.id)) continue
+      const aInPersonal = personal.allGates.has(ch.gateA)
+      const bInPersonal = personal.allGates.has(ch.gateB)
+      const aInTransit = transit.allGates.has(ch.gateA)
+      const bInTransit = transit.allGates.has(ch.gateB)
+      if (aInPersonal && !bInPersonal && bInTransit) {
+        results.push({ ch, personalGate: ch.gateA, transitGate: ch.gateB })
+      } else if (bInPersonal && !aInPersonal && aInTransit) {
+        results.push({ ch, personalGate: ch.gateB, transitGate: ch.gateA })
+      }
+    }
+    return results
+  }, [personal, transit])
+
+  const hasAny = newChannels.length > 0 || completingChannels.length > 0
+
+  return (
+    <section>
+      <SectionHeader>通道</SectionHeader>
+      {!hasAny ? (
+        <p className="font-mono text-[12px] md:text-base tracking-[0.06em] text-(--ink-soft) py-2">
+          今日流日未形成額外通道
+        </p>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {newChannels.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="font-mono text-[11px] md:text-sm tracking-[0.12em] uppercase text-(--ink-soft)">
+                全新通道（流日帶來）
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {newChannels.map(ch => (
+                  <div
+                    key={ch.id}
+                    className="flex items-center gap-3 px-4 py-2.5 border border-[#d04830]/30 bg-[#d04830]/4"
+                  >
+                    <span className="font-mono text-[14px] md:text-base font-semibold text-[#d04830]">{ch.id}</span>
+                    <span className="font-mono text-[12px] md:text-sm text-(--ink-soft)">閘門 {ch.gateA} · {ch.gateB}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
+                以上通道完全不屬於你原本的設計，你可能會想用這些頻率做事，但不適合據此做重要決定。
+              </p>
+            </div>
+          )}
+          {completingChannels.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="font-mono text-[11px] md:text-sm tracking-[0.12em] uppercase text-(--ink-soft)">
+                補完通道（個人 + 流日）
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {completingChannels.map(({ ch, personalGate, transitGate }) => (
+                  <div
+                    key={ch.id}
+                    className="flex items-center gap-3 px-4 py-2.5 border border-(--ink)/20"
+                  >
+                    <span className="font-mono text-[14px] md:text-base font-semibold text-(--ink)">{ch.id}</span>
+                    <span className="font-mono text-[12px] md:text-sm text-(--ink-soft)">
+                      <span className="text-(--ink) font-semibold">{personalGate}</span>（個人）
+                      {' + '}
+                      <span className="text-[#d04830] font-semibold">{transitGate}</span>（流日）
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
+                你有以上通道的其中一端，流日補上另一端，會短暫感受到完整通道的感覺，但能量散去後容易有失落感。
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ── Main ────────────────────────────────────────────────────────────────────
+
+interface TransitViewProps {
+  personal: HdResult
+  transit: TransitResult
+  onRefresh: () => void
+  refreshing: boolean
+}
+
+export default function TransitView({ personal, transit, onRefresh, refreshing }: TransitViewProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>('combined')
+
+  const personalActivations = useMemo(() => toActivations(personal.planets), [personal])
+  const transitActivations = useMemo(() => buildTransitActivations(transit), [transit])
+  const combinedActivations = useMemo(() => buildCombinedActivations(personal, transit), [personal, transit])
+  const combinedCenterIds = useMemo(() => {
+    const mergedGates = new Set([...personal.allGates, ...transit.allGates])
+    return calculateCentersAndChannels(mergedGates).definedCenterIds
+  }, [personal.allGates, transit.allGates])
+
+  return (
+    <div className="flex flex-col gap-6">
+
+      {/* Header: time + refresh */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <p className="font-mono text-[12px] md:text-base tracking-[0.1em] text-(--ink-soft)">
+          流日時間：{formatTime(transit.computedAt)}（台北時間）
+        </p>
+        <button
+          onClick={onRefresh}
+          disabled={refreshing}
+          className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) border border-(--ink) px-3 py-1 cursor-pointer transition-colors duration-[120ms] hover:bg-(--ink) hover:text-(--paper) disabled:opacity-45 disabled:cursor-not-allowed"
+        >
+          {refreshing ? '更新中…' : '↻ 更新流日'}
+        </button>
+      </div>
+
+      {/* View mode toggle */}
+      <div className="flex border-b border-(--ink)">
+        {(['separate', 'combined'] as ViewMode[]).map(mode => (
+          <button
+            key={mode}
+            onClick={() => setViewMode(mode)}
+            className={[
+              'font-mono text-[12px] md:text-base tracking-[0.14em] uppercase px-5 py-2 border-b-2 transition-colors duration-[120ms] cursor-pointer bg-transparent',
+              viewMode === mode
+                ? 'border-b-(--ink) text-(--ink) font-semibold'
+                : 'border-b-transparent text-(--ink-soft) hover:text-(--ink)',
+            ].join(' ')}
+          >
+            {mode === 'separate' ? '分開顯示' : '合併顯示'}
+          </button>
+        ))}
+      </div>
+
+      {/* Legend */}
+      {viewMode === 'combined' && (
+        <div className="flex flex-wrap gap-4 items-center px-1">
+          <span className="font-mono text-[12px] md:text-base text-(--ink-soft) uppercase tracking-[0.1em]">圖例</span>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded-sm bg-black" />
+            <span className="font-mono text-[12px] md:text-base text-(--ink)">個人圖</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded-sm bg-[#d04830]" />
+            <span className="font-mono text-[12px] md:text-base text-(--ink)">流日</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span
+              className="inline-block w-3 h-3 rounded-sm"
+              style={{ background: 'repeating-linear-gradient(45deg, #000 0 3px, #d04830 3px 6px)' }}
+            />
+            <span className="font-mono text-[12px] md:text-base text-(--ink)">共同激活</span>
+          </div>
+        </div>
+      )}
+
+      {/* Charts area */}
+      {viewMode === 'separate' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-2">
+            <p className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) text-center">
+              個人圖
+            </p>
+            <div className="hd-chart-frame">
+              <span className="hd-chart-corner tl" />
+              <span className="hd-chart-corner tr" />
+              <span className="hd-chart-corner bl" />
+              <span className="hd-chart-corner br" />
+              <BodyGraph
+                onSelect={() => {}}
+                showGates
+                showAnnotations={false}
+                showFace
+                showSilhouette
+                activations={personalActivations}
+                definedCenterIds={personal.definedCenterIds}
+                gateScale={0.85}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) text-center">
+              今日流日圖
+            </p>
+            <div className="hd-chart-frame">
+              <span className="hd-chart-corner tl" />
+              <span className="hd-chart-corner tr" />
+              <span className="hd-chart-corner bl" />
+              <span className="hd-chart-corner br" />
+              <BodyGraph
+                onSelect={() => {}}
+                showGates
+                showAnnotations={false}
+                showFace
+                showSilhouette
+                activations={transitActivations}
+                definedCenterIds={transit.definedCenterIds}
+                gateScale={0.85}
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="max-w-2xl mx-auto w-full">
+          <div className="hd-chart-frame">
+            <span className="hd-chart-corner tl" />
+            <span className="hd-chart-corner tr" />
+            <span className="hd-chart-corner bl" />
+            <span className="hd-chart-corner br" />
+            <BodyGraph
+              onSelect={() => {}}
+              showGates
+              showAnnotations
+              showFace
+              showSilhouette
+              activations={combinedActivations}
+              definedCenterIds={combinedCenterIds}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Three result sections */}
+      <CentersSection personal={personal} transit={transit} />
+      <GatesSection personal={personal} transit={transit} />
+      <ChannelsSection personal={personal} transit={transit} />
+
+      {/* Educational note */}
+      <div className="border border-(--ink)/20 bg-(--paper-deep) px-5 py-4">
+        <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
+          <span className="font-semibold text-(--ink)">關於流日的提醒：</span>
+          流日啟動的地方愈多，不代表運勢愈好。這些暫時被啟動的能量都不屬於你原本的設計，
+          容易讓你感覺被外在頻率推著走，甚至做出不適合自己的決策。
+          最重要的事，始終是回到自己的內在權威做決定。
+        </p>
+      </div>
+
+    </div>
+  )
+}

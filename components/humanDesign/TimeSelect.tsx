@@ -36,8 +36,8 @@ const setMinutePreserveHour = (valueObj: Dayjs, newMinute: number): Dayjs =>
 export default function TimeSelect({ value, onChange }: Props) {
   if (!value?.isValid?.()) {
     return (
-      <div className="flex items-center gap-0.5 h-[28px] opacity-40 pointer-events-none">
-        <span className="font-mono text-[12.5px] text-[var(--ink)]">--:--</span>
+      <div className="flex items-center gap-0.5 h-8 opacity-40 pointer-events-none">
+        <span className="font-mono text-[16px] text-(--ink)">--:--</span>
       </div>
     )
   }
@@ -46,12 +46,12 @@ export default function TimeSelect({ value, onChange }: Props) {
   const minute = value.minute()
 
   return (
-    <div className="flex items-center gap-0.5 h-[28px]">
+    <div className="flex items-center gap-0.5 h-8">
       <Select
         value={String(hour)}
         onValueChange={(v: string) => onChange(setHourPreserveMinute(value, Number(v)))}
       >
-        <SelectTrigger className="h-[28px] w-[52px]" aria-label="Hour">
+        <SelectTrigger className="h-8 w-16" aria-label="Hour">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -61,13 +61,13 @@ export default function TimeSelect({ value, onChange }: Props) {
         </SelectContent>
       </Select>
 
-      <span className="font-mono text-[12.5px] text-[var(--ink)] select-none">:</span>
+      <span className="font-mono text-[16px] text-(--ink) select-none">:</span>
 
       <Select
         value={String(minute)}
         onValueChange={(v: string) => onChange(setMinutePreserveHour(value, Number(v)))}
       >
-        <SelectTrigger className="h-[28px] w-[52px]" aria-label="Minute">
+        <SelectTrigger className="h-8 w-16" aria-label="Minute">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

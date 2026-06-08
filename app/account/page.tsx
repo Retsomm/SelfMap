@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 import ChartView from '@/components/humanDesign/ChartView'
+import BirthProfileManager from '@/components/humanDesign/BirthProfileManager'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
 import { useLang } from '@/i18n'
@@ -477,6 +478,8 @@ export default function AccountPage() {
                   </span>
                 </div>
               </div>
+
+              <BirthProfileManager />
             </div>
           )}
 

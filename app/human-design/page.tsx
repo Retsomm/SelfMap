@@ -16,7 +16,7 @@ const TOPIC_DESCRIPTIONS: Record<string, string> = {
   definition: '人類圖五大定義：單一定義、分裂定義、三分裂、四分裂、無定義，描述你的能量穩定性。',
   channel: '人類圖 36 條通道連結九大中心，只有兩端閘門都激活才形成通道並定義對應中心。',
   gate: '人類圖 64 個閘門對應易經 64 卦，每個閘門代表一種特定的能量特質與潛能。',
-  composite: '人類圖合盤分析：了解兩人之間的能量連結、電磁關係、陪伴關係與支配關係。',
+  composite: '人類圖合圖分析：了解兩人之間的能量連結、電磁關係、陪伴關係與支配關係。',
 }
 
 export async function generateMetadata({

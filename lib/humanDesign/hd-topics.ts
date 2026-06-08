@@ -7,5 +7,5 @@ export const HD_TOPICS = [
   { slug: 'definition', label: '五大定義',     file: '五大定義.md' },
   { slug: 'channel',    label: '通道',         file: '通道.md' },
   { slug: 'gate',       label: '閘門',         file: '閘門.md' },
-  { slug: 'composite',  label: '合盤說明',     file: '人類圖合盤分析指南.md' },
+  { slug: 'composite',  label: '合圖說明',     file: '人類圖合圖分析指南.md' },
 ] as const

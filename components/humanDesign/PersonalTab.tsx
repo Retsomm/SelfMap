@@ -10,6 +10,7 @@ import LocationPicker from '@/components/humanDesign/LocationPicker'
 import type { HdResult } from '@/lib/buildAiPrompt'
 import { useLang, type Lang } from '@/i18n'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { useBirthProfiles, type BirthProfile } from '@/lib/useBirthProfiles'
 
 const ChartView = dynamic(() => import('@/components/humanDesign/ChartView'), { ssr: false })
 
@@ -72,6 +73,7 @@ const getDefaultLocationLabel = (lang: Lang): string =>
 export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
   const { t } = useLang()
   const router = useRouter()
+  const { profiles, isSignedIn } = useBirthProfiles()
 
   const [inputs, setInputs] = useState<FormInputs>(() => ({
     ...DEFAULT_INPUTS,
@@ -89,6 +91,22 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
   const [loading, setLoading] = useState(false)
   const [isRestoring, setIsRestoring] = useState(false)
   const triggerCalcRef = useRef(false)
+  const hasAutoFilledRef = useRef(false)
+  const requestIdRef = useRef(0)
+
+  const fillFromProfile = (p: BirthProfile) => {
+    setInputs({
+      birthDate: dayjs(p.date),
+      birthTime: dayjs(`${p.date} ${p.time}`),
+      timezone: p.timezone,
+      locationLabel: p.location,
+    })
+    setResult(null)
+    setError('')
+    sessionStorage.removeItem('hd_inputs')
+    sessionStorage.removeItem('hd_had_result')
+    sessionStorage.removeItem('hd_result')
+  }
 
   useEffect(() => {
     const stored = readStoredData()
@@ -113,7 +131,19 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
     })
   }, [])
 
+  // Auto-fill from first profile if no session data
+  useEffect(() => {
+    if (hasAutoFilledRef.current) return
+    if (!isSignedIn || profiles.length === 0) return
+    const stored = readStoredData()
+    if (stored) return
+    hasAutoFilledRef.current = true
+    fillFromProfile(profiles[0])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn, profiles])
+
   const calculate = useCallback(async () => {
+    const requestId = ++requestIdRef.current
     setError('')
     setLoading(true)
     window.umami?.track('chart-calculate')
@@ -123,16 +153,20 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
         computeHdResult(date, time, timezone),
         new Promise(res => setTimeout(res, 1000)),
       ])
+      if (requestId !== requestIdRef.current) return
       setResult(r as HdResult)
       sessionStorage.setItem('hd_inputs', JSON.stringify({ date, time, tz: timezone, loc: locationLabel }))
       sessionStorage.setItem('hd_had_result', 'true')
       sessionStorage.setItem('hd_result', serializeHdResult(r as HdResult))
     } catch (err) {
+      if (requestId !== requestIdRef.current) return
       console.error('[calculate]', err)
       setError(t('home.calculationError'))
     } finally {
-      setLoading(false)
-      setIsRestoring(false)
+      if (requestId === requestIdRef.current) {
+        setLoading(false)
+        setIsRestoring(false)
+      }
     }
   }, [date, time, timezone, locationLabel, t])
 
@@ -144,11 +178,29 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
 
   return (
     <>
-      <div className="hd-print-hide py-3.5 px-5 border border-[var(--ink)] bg-[var(--paper-deep)] flex items-end gap-5 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch">
-        <h4 className="font-sans text-[12px] md:text-base font-semibold uppercase tracking-[0.18em] text-[var(--ink)] m-0 p-0 border-none whitespace-nowrap self-end pb-1.5">
-          {t('home.inputLabel')}
-        </h4>
-        <div className="flex gap-2 flex-wrap items-end flex-1">
+      <div className="hd-print-hide py-3.5 px-5 border border-(--ink) bg-(--paper-deep) flex flex-col gap-3">
+        {isSignedIn && profiles.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-mono text-[11px] tracking-[0.1em] uppercase text-(--ink-soft)">
+              {t('home.loadFromProfile')}:
+            </span>
+            {profiles.map(p => (
+              <button
+                key={p.id}
+                onClick={() => fillFromProfile(p)}
+                disabled={loading}
+                className="font-mono text-[11px] tracking-[0.08em] border border-(--ink-soft) px-2 py-0.5 text-(--ink-soft) hover:text-(--ink) hover:border-(--ink) transition-colors duration-120 cursor-pointer bg-transparent disabled:opacity-45 disabled:cursor-not-allowed"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="flex items-end gap-5 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch">
+          <h4 className="font-sans text-[12px] md:text-base font-semibold uppercase tracking-[0.18em] text-(--ink) m-0 p-0 border-none whitespace-nowrap self-end pb-1.5">
+            {t('home.inputLabel')}
+          </h4>
+          <div className="flex gap-2 flex-wrap items-end flex-1">
           <div className="flex flex-col gap-1">
             <label htmlFor="birth-date" className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.dateLabel')}</label>
             <DateSelect id="birth-date" value={birthDate} onChange={setBirthDate} minDate={dayjs('1900-01-01')} maxDate={dayjs('2040-12-31')} />
@@ -173,6 +225,7 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
               {error}
             </div>
           )}
+          </div>
         </div>
       </div>
 

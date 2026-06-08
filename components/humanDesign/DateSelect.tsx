@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { Dayjs } from 'dayjs'
 import dayjs from 'dayjs'
 import { Calendar } from '@/components/ui/calendar'
@@ -14,19 +15,20 @@ type Props = {
 }
 
 export default function DateSelect({ value, onChange, minDate, maxDate, id }: Props) {
+  const [open, setOpen] = useState(false)
   // Guard against invalid dayjs instances passed by the caller
   const safeValue = value?.isValid?.() ? value : dayjs()
   // Convert to native Date for DayPicker's selected / defaultMonth props
   const selected = safeValue.toDate()
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           id={id}
           type="button"
           aria-label={`Open date picker, selected date ${safeValue.format('YYYY/MM/DD')}`}
-          className="h-[28px] w-[130px] border border-[var(--ink)] bg-[var(--paper-deep)] px-2 font-mono text-[12.5px] text-[var(--ink)] text-left cursor-pointer outline-none focus:ring-1 focus:ring-[var(--ink)]"
+          className="h-8 w-32.5 border border-(--ink) bg-(--paper-deep) px-2 font-mono text-[16px] text-(--ink) text-left cursor-pointer outline-none focus:ring-1 focus:ring-(--ink)"
         >
           {safeValue.format('YYYY/MM/DD')}
         </button>
@@ -39,7 +41,7 @@ export default function DateSelect({ value, onChange, minDate, maxDate, id }: Pr
           captionLayout="dropdown"
           startMonth={new Date((minDate ?? dayjs().subtract(120, 'year')).year(), 0)}
           endMonth={new Date((maxDate ?? dayjs()).year(), 11)}
-          onSelect={date => { if (date) onChange(dayjs(date)) }}
+          onSelect={date => { if (date) { onChange(dayjs(date)); setOpen(false) } }}
           disabled={date => {
             if (minDate && dayjs(date).isBefore(minDate, 'day')) return true
             if (maxDate && dayjs(date).isAfter(maxDate, 'day')) return true

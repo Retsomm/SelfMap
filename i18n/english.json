@@ -30,7 +30,8 @@
     "compositeInputLabelB": "Person B Birth Data",
     "compositeCalculate": "Calculate Composite",
     "compositeCalculating": "Calculating…",
-    "compositeError": "An error occurred during calculation, please try again"
+    "compositeError": "An error occurred during calculation, please try again",
+    "loadFromProfile": "Quick fill"
   },
   "composite": {
     "title": "Composite Analysis",
@@ -163,7 +164,16 @@
     "imageTooLarge": "Image must be under 10MB",
     "avatarUpdated": "Avatar updated",
     "avatarUploadFailed": "Upload failed, please ensure avatar upload is enabled in Clerk",
-    "calcFailed": "Computation failed"
+    "calcFailed": "Computation failed",
+    "birthProfiles": "Birth Profiles",
+    "addBirthProfile": "+ Add",
+    "birthProfileLabelPlaceholder": "Label (e.g. Me, Mom)",
+    "birthProfileSaved": "Birth profile saved",
+    "birthProfileDeleted": "Deleted",
+    "birthProfileSaveFailed": "Save failed, please try again",
+    "birthProfileDeleteFailed": "Delete failed, please try again",
+    "noBirthProfiles": "No saved birth profiles",
+    "deleteProfileConfirmMessage": "Are you sure you want to delete this birth profile?"
   },
   "chart": {
     "gateIndex": "Gate Index",
