@@ -11,7 +11,9 @@ SelfMap 是一個精準的人類圖（Human Design）計算器，透過出生日
 - **即時人類圖計算** — 輸入出生資料後生成完整身體圖，計算所有 13 顆行星的 Personality 與 Design 位置
 - **互動式身體圖（BodyGraph）** — SVG 渲染 9 大能量中心、64 個閘門、36 條通道，點擊可展開詳細說明
 - **完整人類圖分析** — 類型（Type）、人生角色（Profile）、決策權威（Authority）、定義（Definition）、輪迴交叉（Incarnation Cross）、四箭頭（Variables）
-- **合盤分析（Composite）** — 兩人圖表合併檢視，分析關係連結動態
+- **合圖分析（Composite）** — 兩人圖表合併檢視，分析關係連結動態
+- **流日分析（Transit）** — 即時計算當下行星閘門位置，對照個人圖表查看能量流動
+- **出生資料管理** — 登入後可儲存多組常用出生資料，一鍵快速填入個人圖表或合圖分析
 - **儲存圖表** — 登入後可儲存多份人類圖至個人帳號
 - **圖表下載** — 匯出為 PNG/PDF 留存
 - **AI 提示詞** — 一鍵複製結構化提示詞，貼至任何 AI 進行深度解讀
@@ -89,10 +91,13 @@ selfmap/
 │   ├── humanDesign/          人類圖相關元件
 │   │   ├── BodyGraph.tsx     SVG 身體圖主體
 │   │   ├── ChartView.tsx     個人圖表詳情檢視
-│   │   ├── CompositeView.tsx 合盤雙人比對檢視
-│   │   ├── CompositeTab.tsx  合盤分頁選擇器
+│   │   ├── CompositeView.tsx 合圖雙人比對檢視
+│   │   ├── CompositeTab.tsx  合圖分頁（含自動填入出生資料）
+│   │   ├── TransitTab.tsx    流日分析分頁
+│   │   ├── TransitView.tsx   流日行星閘門視覺化
+│   │   ├── BirthProfileManager.tsx 出生資料管理（新增 / 編輯 / 刪除）
 │   │   ├── DetailDrawer.tsx  閘門 / 通道詳情抽屜
-│   │   ├── PersonalTab.tsx   個人資訊分頁
+│   │   ├── PersonalTab.tsx   個人資訊分頁（含自動填入出生資料）
 │   │   ├── LocationPicker.tsx 城市時區選擇器
 │   │   ├── DateSelect.tsx    日期選擇元件
 │   │   ├── TimeSelect.tsx    時間選擇元件
@@ -111,10 +116,12 @@ selfmap/
 │   └── SelfMapLogo.tsx       Logo 元件
 ├── lib/
 │   ├── computeHdResult.ts    人類圖主計算流程（整合入口）
-│   ├── compositeAnalysis.ts  合盤關係分析邏輯
+│   ├── computeTransit.ts     流日行星閘門計算（只取當下意識層）
+│   ├── useBirthProfiles.ts   出生資料管理 hook（Clerk unsafeMetadata 儲存）
+│   ├── compositeAnalysis.ts  合圖關係分析邏輯
 │   ├── buildAiPrompt.ts      AI 提示詞組合
 │   ├── swissEph.ts           Swiss Ephemeris WASM 封裝
-│   ├── saveChart.ts          圖表儲存（個人 / 合盤）
+│   ├── saveChart.ts          圖表儲存（個人 / 合圖）
 │   ├── downloadChart.ts      圖表下載（PNG / PDF）
 │   ├── clerkAppearance.ts    Clerk UI 主題設定
 │   ├── utils.ts              通用工具函式

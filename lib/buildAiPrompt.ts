@@ -97,7 +97,7 @@ ${planetRows}
 請從類型策略、人生角色、決策權威、輪迴交叉等角度綜合解讀，並給出實際生活中可應用的建議。`
 }
 
-/** 將兩份 HdResult 組合成可直接貼給 AI 的合盤解讀 prompt。 */
+/** 將兩份 HdResult 組合成可直接貼給 AI 的合圖解讀 prompt。 */
 export const buildCompositeAiPrompt = (a: HdResult, b: HdResult): string => {
   const fmt = (r: HdResult, label: string) => {
     const crossLabel =
@@ -117,13 +117,13 @@ export const buildCompositeAiPrompt = (a: HdResult, b: HdResult): string => {
 已定義通道：${channels}`
   }
 
-  return `以下是兩人的 Human Design（人類圖）合盤資料，請根據這些資料進行深度的合盤關係解讀：
+  return `以下是兩人的 Human Design（人類圖）合圖資料，請根據這些資料進行深度的合圖關係解讀：
 
 ${fmt(a, 'A 的人類圖')}
 
 ${fmt(b, 'B 的人類圖')}
 
-請從以下角度進行合盤分析：
+請從以下角度進行合圖分析：
 1. 兩人類型與策略的互動模式
 2. 人生角色的共鳴與互補
 3. 決策權威的相處節奏

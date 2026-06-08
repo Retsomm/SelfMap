@@ -26,7 +26,7 @@ export default function DateSelect({ value, onChange, minDate, maxDate, id }: Pr
           id={id}
           type="button"
           aria-label={`Open date picker, selected date ${safeValue.format('YYYY/MM/DD')}`}
-          className="h-[28px] w-[130px] border border-[var(--ink)] bg-[var(--paper-deep)] px-2 font-mono text-[12.5px] text-[var(--ink)] text-left cursor-pointer outline-none focus:ring-1 focus:ring-[var(--ink)]"
+          className="h-8 w-32.5 border border-(--ink) bg-(--paper-deep) px-2 font-mono text-[16px] text-(--ink) text-left cursor-pointer outline-none focus:ring-1 focus:ring-(--ink)"
         >
           {safeValue.format('YYYY/MM/DD')}
         </button>

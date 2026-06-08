@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import TimeSelect from '@/components/humanDesign/TimeSelect'
@@ -10,6 +10,7 @@ import LocationPicker from '@/components/humanDesign/LocationPicker'
 import type { HdResult } from '@/lib/buildAiPrompt'
 import { useLang, type Lang } from '@/i18n'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { useBirthProfiles, type BirthProfile } from '@/lib/useBirthProfiles'
 
 const CompositeView = dynamic(() => import('@/components/humanDesign/CompositeView'), { ssr: false })
 
@@ -29,9 +30,18 @@ const DEFAULT_INPUTS = {
 const getDefaultLocationLabel = (lang: Lang): string =>
   lang === 'en' ? 'Taipei, Taiwan' : '台北, 台灣'
 
+const profileToInputs = (p: BirthProfile): FormInputs => ({
+  birthDate: dayjs(p.date),
+  birthTime: dayjs(`${p.date} ${p.time}`),
+  timezone: p.timezone,
+  locationLabel: p.location,
+})
+
 export default function CompositeTab({ initialLang }: { initialLang: Lang }) {
   const { t } = useLang()
   const router = useRouter()
+  const { profiles, isSignedIn } = useBirthProfiles()
+  const hasAutoFilledRef = useRef(false)
 
   const [inputsA, setInputsA] = useState<FormInputs>(() => ({
     ...DEFAULT_INPUTS,
@@ -43,6 +53,16 @@ export default function CompositeTab({ initialLang }: { initialLang: Lang }) {
     birthTime: dayjs('1995-06-15 08:00'),
     locationLabel: getDefaultLocationLabel(initialLang),
   }))
+
+  // Auto-fill from saved profiles on mount
+  useEffect(() => {
+    if (hasAutoFilledRef.current) return
+    if (!isSignedIn || profiles.length === 0) return
+    hasAutoFilledRef.current = true
+    setInputsA(profileToInputs(profiles[0]))
+    if (profiles.length >= 2) setInputsB(profileToInputs(profiles[1]))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn, profiles])
   const [compositeResultA, setCompositeResultA] = useState<HdResult | null>(null)
   const [compositeResultB, setCompositeResultB] = useState<HdResult | null>(null)
   const [compositeLoading, setCompositeLoading] = useState(false)
@@ -80,6 +100,8 @@ export default function CompositeTab({ initialLang }: { initialLang: Lang }) {
         accentColor="#c8553d"
         inputs={inputsA}
         onInputsChange={setInputsA}
+        profiles={profiles}
+        isSignedIn={isSignedIn}
       />
 
       <CompositePersonForm
@@ -87,6 +109,8 @@ export default function CompositeTab({ initialLang }: { initialLang: Lang }) {
         accentColor="var(--ink)"
         inputs={inputsB}
         onInputsChange={setInputsB}
+        profiles={profiles}
+        isSignedIn={isSignedIn}
       />
 
       <div className="hd-print-hide flex items-center gap-4 flex-wrap">
@@ -137,9 +161,11 @@ interface CompositePersonFormProps {
   accentColor: string
   inputs: FormInputs
   onInputsChange: (inputs: FormInputs) => void
+  profiles: BirthProfile[]
+  isSignedIn: boolean
 }
 
-function CompositePersonForm({ label, accentColor, inputs, onInputsChange }: CompositePersonFormProps) {
+function CompositePersonForm({ label, accentColor, inputs, onInputsChange, profiles, isSignedIn }: CompositePersonFormProps) {
   const { t } = useLang()
   const { birthDate, birthTime, locationLabel } = inputs
 
@@ -147,27 +173,54 @@ function CompositePersonForm({ label, accentColor, inputs, onInputsChange }: Com
   const setBirthTime = (tt: Dayjs) => onInputsChange({ ...inputs, birthTime: tt })
   const handleLocation = (tz: string, loc: string) => onInputsChange({ ...inputs, timezone: tz, locationLabel: loc })
 
+  const fillFromProfile = (p: BirthProfile) => {
+    onInputsChange({
+      birthDate: dayjs(p.date),
+      birthTime: dayjs(`${p.date} ${p.time}`),
+      timezone: p.timezone,
+      locationLabel: p.location,
+    })
+  }
+
   return (
     <div
-      className="hd-print-hide py-3.5 px-5 border border-[var(--ink)] bg-[var(--paper-deep)] border-l-4 flex items-end gap-5 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch"
+      className="hd-print-hide py-3.5 px-5 border border-(--ink) bg-(--paper-deep) border-l-4 flex flex-col gap-3"
       style={{ borderLeftColor: accentColor }}
     >
-      <h4
-        className="font-sans text-[12px] md:text-base font-semibold uppercase tracking-[0.18em] m-0 p-0 border-none whitespace-nowrap self-end pb-1.5"
-        style={{ color: accentColor }}
-      >
-        {label}
-      </h4>
-      <div className="flex gap-2 flex-wrap items-end flex-1">
-        <div className="flex flex-col gap-1">
-          <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.dateLabel')}</label>
-          <DateSelect value={birthDate} onChange={setBirthDate} minDate={dayjs('1900-01-01')} maxDate={dayjs('2040-12-31')} />
+      {isSignedIn && profiles.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-mono text-[11px] tracking-[0.1em] uppercase text-(--ink-soft)">
+            {t('home.loadFromProfile')}:
+          </span>
+          {profiles.map(p => (
+            <button
+              key={p.id}
+              onClick={() => fillFromProfile(p)}
+              className="font-mono text-[11px] tracking-[0.08em] border border-(--ink-soft) px-2 py-0.5 text-(--ink-soft) hover:text-(--ink) hover:border-(--ink) transition-colors duration-120 cursor-pointer bg-transparent"
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.timeLabel')}</label>
-          <TimeSelect value={birthTime} onChange={setBirthTime} />
+      )}
+      <div className="flex items-end gap-5 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch">
+        <h4
+          className="font-sans text-[12px] md:text-base font-semibold uppercase tracking-[0.18em] m-0 p-0 border-none whitespace-nowrap self-end pb-1.5"
+          style={{ color: accentColor }}
+        >
+          {label}
+        </h4>
+        <div className="flex gap-2 flex-wrap items-end flex-1">
+          <div className="flex flex-col gap-1">
+            <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-(--ink-soft)">{t('home.dateLabel')}</label>
+            <DateSelect value={birthDate} onChange={setBirthDate} minDate={dayjs('1900-01-01')} maxDate={dayjs('2040-12-31')} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-(--ink-soft)">{t('home.timeLabel')}</label>
+            <TimeSelect value={birthTime} onChange={setBirthTime} />
+          </div>
+          <LocationPicker value={locationLabel} onSelect={handleLocation} />
         </div>
-        <LocationPicker value={locationLabel} onSelect={handleLocation} />
       </div>
     </div>
   )

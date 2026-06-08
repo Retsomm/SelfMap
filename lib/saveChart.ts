@@ -42,10 +42,10 @@ export interface SaveCompositeChartParams {
   compositeAllGates: Set<number>
 }
 
-/** 將合盤存成單一 Chart 記錄，type='composite'，兩人資料以 '|' 分隔編碼。 */
+/** 將合圖存成單一 Chart 記錄，type='composite'，兩人資料以 '|' 分隔編碼。 */
 export const saveCompositeChart = async (p: SaveCompositeChartParams): Promise<void> => {
   const requiredFields = [p.dateA, p.dateB, p.timeA, p.timeB, p.locationA, p.locationB, p.timezoneA, p.timezoneB]
-  if (requiredFields.some(f => !f)) throw new Error('合盤欄位不完整，無法儲存')
+  if (requiredFields.some(f => !f)) throw new Error('合圖欄位不完整，無法儲存')
 
   const authorityA = p.resultA.authority?.name
   const authorityB = p.resultB.authority?.name
@@ -54,7 +54,7 @@ export const saveCompositeChart = async (p: SaveCompositeChartParams): Promise<v
   const definitionA = p.resultA.definition?.label
   const definitionB = p.resultB.definition?.label
   if (!authorityA || !authorityB || !profileA || !profileB || !definitionA || !definitionB) {
-    throw new Error('合盤計算結果不完整，無法儲存')
+    throw new Error('合圖計算結果不完整，無法儲存')
   }
 
   const centers = [...p.compositeDefinedCenterIds]

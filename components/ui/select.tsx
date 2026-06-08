@@ -13,7 +13,7 @@ const triggerBaseClasses = [
   // layout & border
   'flex items-center justify-between gap-1 border border-[var(--ink)]',
   // background & typography
-  'bg-[var(--paper-deep)] px-2 font-mono text-[12.5px] text-[var(--ink)]',
+  'bg-[var(--paper-deep)] px-2 font-mono text-[16px] text-[var(--ink)]',
   // interaction
   'cursor-pointer outline-none whitespace-nowrap',
   // focus & disabled states
@@ -105,7 +105,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex w-full cursor-default select-none items-center py-1 pl-7 pr-2 font-mono text-[12.5px] text-[var(--ink)] outline-none',
+      'relative flex w-full cursor-default select-none items-center py-1 pl-7 pr-2 font-mono text-[16px] text-(--ink) outline-none',
       'focus:bg-[var(--tan-2)] focus:text-[var(--ink)]',
       'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className
