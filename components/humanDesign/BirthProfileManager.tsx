@@ -49,11 +49,14 @@ function ProfileFormModal({ title, initial, saving, onSave, onCancel }: ProfileF
     >
       <div
         ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profileDialogTitle"
         tabIndex={-1}
         className="bg-(--paper) border border-(--ink) px-7 py-6 w-full max-w-md mx-4 shadow-xl outline-none flex flex-col gap-5"
         onClick={e => e.stopPropagation()}
       >
-        <h2 className="font-mono text-[13px] tracking-widest uppercase text-(--ink)">
+        <h2 id="profileDialogTitle" className="font-mono text-[13px] tracking-widest uppercase text-(--ink)">
           {title}
         </h2>
 
@@ -202,7 +205,7 @@ export default function BirthProfileManager() {
       setConfirmDeleteId(null)
       toast.success(t('account.birthProfileDeleted'))
     } catch {
-      toast.error(t('account.birthProfileSaveFailed'))
+      toast.error(t('account.birthProfileDeleteFailed'))
     } finally {
       setDeleting(false)
     }

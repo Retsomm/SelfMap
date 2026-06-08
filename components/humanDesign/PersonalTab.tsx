@@ -92,6 +92,7 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
   const [isRestoring, setIsRestoring] = useState(false)
   const triggerCalcRef = useRef(false)
   const hasAutoFilledRef = useRef(false)
+  const requestIdRef = useRef(0)
 
   const fillFromProfile = (p: BirthProfile) => {
     setInputs({
@@ -101,6 +102,7 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
       locationLabel: p.location,
     })
     setResult(null)
+    setError('')
     sessionStorage.removeItem('hd_inputs')
     sessionStorage.removeItem('hd_had_result')
     sessionStorage.removeItem('hd_result')
@@ -141,6 +143,7 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
   }, [isSignedIn, profiles])
 
   const calculate = useCallback(async () => {
+    const requestId = ++requestIdRef.current
     setError('')
     setLoading(true)
     window.umami?.track('chart-calculate')
@@ -150,16 +153,20 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
         computeHdResult(date, time, timezone),
         new Promise(res => setTimeout(res, 1000)),
       ])
+      if (requestId !== requestIdRef.current) return
       setResult(r as HdResult)
       sessionStorage.setItem('hd_inputs', JSON.stringify({ date, time, tz: timezone, loc: locationLabel }))
       sessionStorage.setItem('hd_had_result', 'true')
       sessionStorage.setItem('hd_result', serializeHdResult(r as HdResult))
     } catch (err) {
+      if (requestId !== requestIdRef.current) return
       console.error('[calculate]', err)
       setError(t('home.calculationError'))
     } finally {
-      setLoading(false)
-      setIsRestoring(false)
+      if (requestId === requestIdRef.current) {
+        setLoading(false)
+        setIsRestoring(false)
+      }
     }
   }, [date, time, timezone, locationLabel, t])
 
@@ -181,7 +188,8 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
               <button
                 key={p.id}
                 onClick={() => fillFromProfile(p)}
-                className="font-mono text-[11px] tracking-[0.08em] border border-(--ink-soft) px-2 py-0.5 text-(--ink-soft) hover:text-(--ink) hover:border-(--ink) transition-colors duration-120 cursor-pointer bg-transparent"
+                disabled={loading}
+                className="font-mono text-[11px] tracking-[0.08em] border border-(--ink-soft) px-2 py-0.5 text-(--ink-soft) hover:text-(--ink) hover:border-(--ink) transition-colors duration-120 cursor-pointer bg-transparent disabled:opacity-45 disabled:cursor-not-allowed"
               >
                 {p.label}
               </button>

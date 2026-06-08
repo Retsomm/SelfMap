@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import BodyGraph from '@/components/humanDesign/BodyGraph'
-import { CENTER_INFO, CHANNEL_DEFS } from '@/lib/humanDesign'
+import { CENTER_INFO, CHANNEL_DEFS, calculateCentersAndChannels } from '@/lib/humanDesign'
 import type { HdResult } from '@/lib/buildAiPrompt'
 import {
   buildCombinedActivations,
@@ -71,7 +71,7 @@ const formatTime = (iso: string): string => {
 // ── Shared UI ───────────────────────────────────────────────────────────────
 
 const SectionHeader = ({ children }: { children: ReactNode }) => (
-  <h3 className="font-mono text-[12px] md:text-sm tracking-[0.18em] uppercase text-(--ink-soft) mb-3 pb-1.5 border-b border-dotted border-(--ink)/20">
+  <h3 className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-(--ink-soft) mb-3 pb-1.5 border-b border-dotted border-(--ink)/20">
     {children}
   </h3>
 )
@@ -104,22 +104,22 @@ const CentersSection = ({ personal, transit }: { personal: HdResult; transit: Tr
                   : 'border-(--ink)/15',
               ].join(' ')}
             >
-              <span className="font-mono text-[11px] tracking-[0.08em] text-(--ink)">
+              <span className="font-mono text-[14px] md:text-base tracking-[0.08em] text-(--ink)">
                 {CENTER_ZH[cId]}
               </span>
               <div className="flex gap-1 flex-wrap">
                 {inPersonal && (
-                  <span className="font-mono text-[9px] tracking-[0.05em] uppercase bg-(--ink) text-(--paper) px-1.5 py-0.5">
+                  <span className="font-mono text-[12px] md:text-sm tracking-[0.05em] uppercase bg-(--ink) text-(--paper) px-1.5 py-0.5">
                     個人
                   </span>
                 )}
                 {inTransit && (
-                  <span className="font-mono text-[9px] tracking-[0.05em] uppercase bg-[#d04830] text-white px-1.5 py-0.5">
+                  <span className="font-mono text-[12px] md:text-sm tracking-[0.05em] uppercase bg-[#d04830] text-white px-1.5 py-0.5">
                     流日
                   </span>
                 )}
                 {!inPersonal && !inTransit && (
-                  <span className="font-mono text-[9px] tracking-[0.05em] uppercase text-(--ink)/30">
+                  <span className="font-mono text-[12px] md:text-sm tracking-[0.05em] uppercase text-(--ink)/40">
                     開放
                   </span>
                 )}
@@ -131,10 +131,10 @@ const CentersSection = ({ personal, transit }: { personal: HdResult; transit: Tr
 
       {openActivatedCenters.length > 0 && (
         <div className="px-4 py-3 border border-[#d04830]/30 bg-[#d04830]/4 mt-3">
-          <p className="font-mono text-[11px] md:text-sm font-semibold text-[#d04830] tracking-[0.06em] mb-1">
+          <p className="font-mono text-[12px] md:text-base font-semibold text-[#d04830] tracking-[0.06em] mb-1">
             今日被流日暫時啟動：{openActivatedCenters.map(cId => CENTER_INFO[cId].name).join('、')}
           </p>
-          <p className="font-mono text-[11px] md:text-sm leading-relaxed text-(--ink-soft)">
+          <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
             以上原本開放的中心，今天因流日被暫時定義，可能帶來不熟悉的衝動或情緒底色。
             這些能量不屬於你的設計，不需要跟隨它行動。
           </p>
@@ -151,17 +151,17 @@ const GateRow = ({ gate, planets, shared }: { gate: number; planets: string[]; s
     'flex items-start gap-2 px-3 py-2 border',
     shared ? 'border-(--ink)/25 bg-(--ink)/3' : 'border-(--ink)/10',
   ].join(' ')}>
-    <span className={`font-mono text-[13px] font-semibold w-7 shrink-0 mt-0.5 ${shared ? 'text-(--ink)' : 'text-[#d04830]'}`}>
+    <span className={`font-mono text-[14px] md:text-base font-semibold w-8 shrink-0 mt-0.5 ${shared ? 'text-(--ink)' : 'text-[#d04830]'}`}>
       {gate}
     </span>
     <div className="flex flex-col gap-1 flex-1 min-w-0">
       {planets.map(p => (
         <div key={p} className="flex items-center gap-1.5">
-          <span className="font-mono text-[10px] tracking-[0.06em] text-(--ink-soft) border border-(--ink)/15 px-1.5 py-0.5 whitespace-nowrap">
+          <span className="font-mono text-[13px] md:text-sm tracking-[0.06em] text-(--ink-soft) border border-(--ink)/15 px-1.5 py-0.5 whitespace-nowrap">
             {p}
           </span>
           {PLANET_ROLES[p] && (
-            <span className="font-mono text-[10px] text-(--ink-soft)/60 tracking-[0.04em]">
+            <span className="font-mono text-[13px] md:text-sm text-(--ink-soft)/70 tracking-[0.04em]">
               {PLANET_ROLES[p]}
             </span>
           )}
@@ -169,7 +169,7 @@ const GateRow = ({ gate, planets, shared }: { gate: number; planets: string[]; s
       ))}
     </div>
     {shared && (
-      <span className="font-mono text-[9px] tracking-[0.04em] text-(--ink)/50 shrink-0 mt-0.5">共有</span>
+      <span className="font-mono text-[12px] md:text-sm tracking-[0.04em] text-(--ink)/50 shrink-0 mt-0.5">共有</span>
     )}
   </div>
 )
@@ -200,7 +200,7 @@ const GatesSection = ({ personal, transit }: { personal: HdResult; transit: Tran
       <div className="flex flex-col gap-4">
         {sharedGates.length > 0 && (
           <div>
-            <p className="font-mono text-[10px] md:text-xs tracking-[0.12em] uppercase text-(--ink-soft) mb-2">
+            <p className="font-mono text-[11px] md:text-sm tracking-[0.12em] uppercase text-(--ink-soft) mb-2">
               個人圖 & 流日共有
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -212,7 +212,7 @@ const GatesSection = ({ personal, transit }: { personal: HdResult; transit: Tran
         )}
         {transitOnlyGates.length > 0 && (
           <div>
-            <p className="font-mono text-[10px] md:text-xs tracking-[0.12em] uppercase text-(--ink-soft) mb-2">
+            <p className="font-mono text-[11px] md:text-sm tracking-[0.12em] uppercase text-(--ink-soft) mb-2">
               今日流日閘門
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -262,14 +262,14 @@ const ChannelsSection = ({ personal, transit }: { personal: HdResult; transit: T
     <section>
       <SectionHeader>通道</SectionHeader>
       {!hasAny ? (
-        <p className="font-mono text-[12px] md:text-sm tracking-[0.06em] text-(--ink-soft) py-2">
+        <p className="font-mono text-[12px] md:text-base tracking-[0.06em] text-(--ink-soft) py-2">
           今日流日未形成額外通道
         </p>
       ) : (
         <div className="flex flex-col gap-4">
           {newChannels.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="font-mono text-[10px] md:text-xs tracking-[0.12em] uppercase text-(--ink-soft)">
+              <p className="font-mono text-[11px] md:text-sm tracking-[0.12em] uppercase text-(--ink-soft)">
                 全新通道（流日帶來）
               </p>
               <div className="flex flex-col gap-1.5">
@@ -278,19 +278,19 @@ const ChannelsSection = ({ personal, transit }: { personal: HdResult; transit: T
                     key={ch.id}
                     className="flex items-center gap-3 px-4 py-2.5 border border-[#d04830]/30 bg-[#d04830]/4"
                   >
-                    <span className="font-mono text-[13px] font-semibold text-[#d04830]">{ch.id}</span>
-                    <span className="font-mono text-[11px] text-(--ink-soft)">閘門 {ch.gateA} · {ch.gateB}</span>
+                    <span className="font-mono text-[14px] md:text-base font-semibold text-[#d04830]">{ch.id}</span>
+                    <span className="font-mono text-[12px] md:text-sm text-(--ink-soft)">閘門 {ch.gateA} · {ch.gateB}</span>
                   </div>
                 ))}
               </div>
-              <p className="font-mono text-[11px] md:text-sm leading-relaxed text-(--ink-soft)">
+              <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
                 以上通道完全不屬於你原本的設計，你可能會想用這些頻率做事，但不適合據此做重要決定。
               </p>
             </div>
           )}
           {completingChannels.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="font-mono text-[10px] md:text-xs tracking-[0.12em] uppercase text-(--ink-soft)">
+              <p className="font-mono text-[11px] md:text-sm tracking-[0.12em] uppercase text-(--ink-soft)">
                 補完通道（個人 + 流日）
               </p>
               <div className="flex flex-col gap-1.5">
@@ -299,8 +299,8 @@ const ChannelsSection = ({ personal, transit }: { personal: HdResult; transit: T
                     key={ch.id}
                     className="flex items-center gap-3 px-4 py-2.5 border border-(--ink)/20"
                   >
-                    <span className="font-mono text-[13px] font-semibold text-(--ink)">{ch.id}</span>
-                    <span className="font-mono text-[11px] text-(--ink-soft)">
+                    <span className="font-mono text-[14px] md:text-base font-semibold text-(--ink)">{ch.id}</span>
+                    <span className="font-mono text-[12px] md:text-sm text-(--ink-soft)">
                       <span className="text-(--ink) font-semibold">{personalGate}</span>（個人）
                       {' + '}
                       <span className="text-[#d04830] font-semibold">{transitGate}</span>（流日）
@@ -308,7 +308,7 @@ const ChannelsSection = ({ personal, transit }: { personal: HdResult; transit: T
                   </div>
                 ))}
               </div>
-              <p className="font-mono text-[11px] md:text-sm leading-relaxed text-(--ink-soft)">
+              <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
                 你有以上通道的其中一端，流日補上另一端，會短暫感受到完整通道的感覺，但能量散去後容易有失落感。
               </p>
             </div>
@@ -334,23 +334,23 @@ export default function TransitView({ personal, transit, onRefresh, refreshing }
   const personalActivations = useMemo(() => toActivations(personal.planets), [personal])
   const transitActivations = useMemo(() => buildTransitActivations(transit), [transit])
   const combinedActivations = useMemo(() => buildCombinedActivations(personal, transit), [personal, transit])
-  const combinedCenterIds = useMemo(
-    () => new Set([...personal.definedCenterIds, ...transit.definedCenterIds]) as Set<CenterName>,
-    [personal, transit],
-  )
+  const combinedCenterIds = useMemo(() => {
+    const mergedGates = new Set([...personal.allGates, ...transit.allGates])
+    return calculateCentersAndChannels(mergedGates).definedCenterIds
+  }, [personal.allGates, transit.allGates])
 
   return (
     <div className="flex flex-col gap-6">
 
       {/* Header: time + refresh */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="font-mono text-[12px] md:text-sm tracking-[0.1em] text-(--ink-soft)">
+        <p className="font-mono text-[12px] md:text-base tracking-[0.1em] text-(--ink-soft)">
           流日時間：{formatTime(transit.computedAt)}（台北時間）
         </p>
         <button
           onClick={onRefresh}
           disabled={refreshing}
-          className="font-mono text-[11px] md:text-sm tracking-[0.12em] uppercase text-(--ink) border border-(--ink) px-3 py-1 cursor-pointer transition-colors duration-[120ms] hover:bg-(--ink) hover:text-(--paper) disabled:opacity-45 disabled:cursor-not-allowed"
+          className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) border border-(--ink) px-3 py-1 cursor-pointer transition-colors duration-[120ms] hover:bg-(--ink) hover:text-(--paper) disabled:opacity-45 disabled:cursor-not-allowed"
         >
           {refreshing ? '更新中…' : '↻ 更新流日'}
         </button>
@@ -363,7 +363,7 @@ export default function TransitView({ personal, transit, onRefresh, refreshing }
             key={mode}
             onClick={() => setViewMode(mode)}
             className={[
-              'font-mono text-[12px] md:text-sm tracking-[0.14em] uppercase px-5 py-2 border-b-2 transition-colors duration-[120ms] cursor-pointer bg-transparent',
+              'font-mono text-[12px] md:text-base tracking-[0.14em] uppercase px-5 py-2 border-b-2 transition-colors duration-[120ms] cursor-pointer bg-transparent',
               viewMode === mode
                 ? 'border-b-(--ink) text-(--ink) font-semibold'
                 : 'border-b-transparent text-(--ink-soft) hover:text-(--ink)',
@@ -377,21 +377,21 @@ export default function TransitView({ personal, transit, onRefresh, refreshing }
       {/* Legend */}
       {viewMode === 'combined' && (
         <div className="flex flex-wrap gap-4 items-center px-1">
-          <span className="font-mono text-[11px] md:text-sm text-(--ink-soft) uppercase tracking-[0.1em]">圖例</span>
+          <span className="font-mono text-[12px] md:text-base text-(--ink-soft) uppercase tracking-[0.1em]">圖例</span>
           <div className="flex items-center gap-1.5">
             <span className="inline-block w-3 h-3 rounded-sm bg-black" />
-            <span className="font-mono text-[11px] md:text-sm text-(--ink)">個人圖</span>
+            <span className="font-mono text-[12px] md:text-base text-(--ink)">個人圖</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="inline-block w-3 h-3 rounded-sm bg-[#d04830]" />
-            <span className="font-mono text-[11px] md:text-sm text-(--ink)">流日</span>
+            <span className="font-mono text-[12px] md:text-base text-(--ink)">流日</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span
               className="inline-block w-3 h-3 rounded-sm"
               style={{ background: 'repeating-linear-gradient(45deg, #000 0 3px, #d04830 3px 6px)' }}
             />
-            <span className="font-mono text-[11px] md:text-sm text-(--ink)">共同激活</span>
+            <span className="font-mono text-[12px] md:text-base text-(--ink)">共同激活</span>
           </div>
         </div>
       )}
@@ -400,7 +400,7 @@ export default function TransitView({ personal, transit, onRefresh, refreshing }
       {viewMode === 'separate' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-2">
-            <p className="font-mono text-[11px] md:text-sm tracking-[0.14em] uppercase text-(--ink-soft) text-center">
+            <p className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) text-center">
               個人圖
             </p>
             <div className="hd-chart-frame">
@@ -421,7 +421,7 @@ export default function TransitView({ personal, transit, onRefresh, refreshing }
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <p className="font-mono text-[11px] md:text-sm tracking-[0.14em] uppercase text-(--ink-soft) text-center">
+            <p className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) text-center">
               今日流日圖
             </p>
             <div className="hd-chart-frame">
@@ -469,7 +469,7 @@ export default function TransitView({ personal, transit, onRefresh, refreshing }
 
       {/* Educational note */}
       <div className="border border-(--ink)/20 bg-(--paper-deep) px-5 py-4">
-        <p className="font-mono text-[11px] md:text-xs leading-relaxed text-(--ink-soft)">
+        <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
           <span className="font-semibold text-(--ink)">關於流日的提醒：</span>
           流日啟動的地方愈多，不代表運勢愈好。這些暫時被啟動的能量都不屬於你原本的設計，
           容易讓你感覺被外在頻率推著走，甚至做出不適合自己的決策。

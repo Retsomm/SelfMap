@@ -83,9 +83,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32', type: 'image/x-icon' },
       { url: '/icon-figure-rounded-60.png', sizes: '60x60', type: 'image/png' },
       { url: '/icon-figure-rounded-80.png', sizes: '80x80', type: 'image/png' },
     ],
+    shortcut: '/favicon.ico',
     apple: [{ url: '/icon-figure-rounded-180.png', sizes: '180x180', type: 'image/png' }],
   },
   alternates: {

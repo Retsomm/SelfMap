@@ -97,7 +97,7 @@ export default function TransitTab({ initialLang }: { initialLang: Lang }) {
     const cached = sessionStorage.getItem('hd_result')
     if (saved && cached) return
     hasAutoFilledRef.current = true
-    fillFromProfile(profiles[0])
+    startTransition(() => fillFromProfile(profiles[0]))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, profiles])
 
@@ -123,11 +123,13 @@ export default function TransitTab({ initialLang }: { initialLang: Lang }) {
   }, [date, time, timezone, locationLabel])
 
   const fetchTransit = useCallback(async () => {
+    setError('')
     setLoadingTransit(true)
     try {
       const { computeTransit } = await import('@/lib/computeTransit')
       const t = await computeTransit()
       setTransit(t)
+      setError('')
     } catch (err) {
       console.error('[transit compute]', err)
       setError('流日計算失敗，請稍後再試')
@@ -139,7 +141,7 @@ export default function TransitTab({ initialLang }: { initialLang: Lang }) {
   // 個人圖就緒後自動計算流日
   useEffect(() => {
     if (personal && !transit) {
-      fetchTransit()
+      startTransition(() => { void fetchTransit() })
     }
   }, [personal, transit, fetchTransit])
 
@@ -196,7 +198,7 @@ export default function TransitTab({ initialLang }: { initialLang: Lang }) {
               onClick={calculatePersonal}
               disabled={isLoading}
             >
-              {loadingPersonal ? '計算中…' : '生成流日分析'}
+              {loadingPersonal ? '計算中…' : '生成流日'}
             </button>
           </div>
           {error && (
@@ -206,18 +208,6 @@ export default function TransitTab({ initialLang }: { initialLang: Lang }) {
           )}
         </div>
       </div>
-
-      {/* 提示：未輸入資料時 */}
-      {!personal && !isLoading && (
-        <div className="py-10 text-center flex flex-col gap-3 items-center">
-          <p className="font-mono text-[13px] md:text-sm text-[var(--ink-soft)] tracking-[0.05em]">
-            輸入你的出生資料，即可看到今日流日與你的人類圖結合後的影響分析。
-          </p>
-          <p className="font-mono text-[11px] md:text-xs text-[var(--ink-soft)]/70 tracking-[0.05em]">
-            如果你已在「個人圖」分頁計算過，資料會自動載入。
-          </p>
-        </div>
-      )}
 
       {/* 載入中 */}
       {isLoading && (

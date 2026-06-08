@@ -171,6 +171,7 @@
     "birthProfileSaved": "Birth profile saved",
     "birthProfileDeleted": "Deleted",
     "birthProfileSaveFailed": "Save failed, please try again",
+    "birthProfileDeleteFailed": "Delete failed, please try again",
     "noBirthProfiles": "No saved birth profiles",
     "deleteProfileConfirmMessage": "Are you sure you want to delete this birth profile?"
   },

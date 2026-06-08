@@ -171,6 +171,7 @@
     "birthProfileSaved": "出生資料已儲存",
     "birthProfileDeleted": "已刪除",
     "birthProfileSaveFailed": "儲存失敗，請稍後再試",
+    "birthProfileDeleteFailed": "刪除失敗，請稍後再試",
     "noBirthProfiles": "尚無儲存的出生資料",
     "deleteProfileConfirmMessage": "確定要刪除這筆出生資料嗎？"
   },

@@ -99,7 +99,7 @@ export default function CompositeTab({ initialLang }: { initialLang: Lang }) {
         label={`${t('composite.personA')} — ${t('home.compositePersonA')}`}
         accentColor="#c8553d"
         inputs={inputsA}
-        onInputsChange={setInputsA}
+        onInputsChange={inputs => { setInputsA(inputs); setCompositeResultA(null); setCompositeResultB(null) }}
         profiles={profiles}
         isSignedIn={isSignedIn}
       />
@@ -108,7 +108,7 @@ export default function CompositeTab({ initialLang }: { initialLang: Lang }) {
         label={`${t('composite.personB')} — ${t('home.compositePersonB')}`}
         accentColor="var(--ink)"
         inputs={inputsB}
-        onInputsChange={setInputsB}
+        onInputsChange={inputs => { setInputsB(inputs); setCompositeResultA(null); setCompositeResultB(null) }}
         profiles={profiles}
         isSignedIn={isSignedIn}
       />

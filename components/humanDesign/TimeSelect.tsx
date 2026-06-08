@@ -51,7 +51,7 @@ export default function TimeSelect({ value, onChange }: Props) {
         value={String(hour)}
         onValueChange={(v: string) => onChange(setHourPreserveMinute(value, Number(v)))}
       >
-        <SelectTrigger className="h-8 w-13" aria-label="Hour">
+        <SelectTrigger className="h-8 w-16" aria-label="Hour">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -67,7 +67,7 @@ export default function TimeSelect({ value, onChange }: Props) {
         value={String(minute)}
         onValueChange={(v: string) => onChange(setMinutePreserveHour(value, Number(v)))}
       >
-        <SelectTrigger className="h-8 w-13" aria-label="Minute">
+        <SelectTrigger className="h-8 w-16" aria-label="Minute">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
