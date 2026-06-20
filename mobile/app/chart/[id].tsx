@@ -3,6 +3,7 @@ import { useLocalSearchParams } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -10,50 +11,68 @@ import {
   View,
 } from 'react-native'
 import { type Chart, type StoredPlanet, getChart } from '@/lib/api'
+import { HD_CHANNELS, HD_CENTERS_INFO, type ChartChannel } from '@/lib/hd-chart-data'
 import BodyGraph from '@/components/BodyGraph'
+import DetailBottomSheet, { type SheetTarget } from '@/components/DetailBottomSheet'
 
-// lib uses 'ego' and 'solarPlexus'; hd-chart-data uses 'heart' and 'solar'
+// ─── center id normalisation ─────────────────────────────────────────────────
+// lib uses 'ego' / 'solarPlexus'; hd-chart-data uses 'heart' / 'solar'
 const LIB_TO_CHART: Record<string, string> = {
   ego: 'heart',
   solarPlexus: 'solar',
 }
-
 function normalizeCenterId(id: string): string {
   return LIB_TO_CHART[id] ?? id
 }
 
-// lib channel ids: '1-8', '2-14'  hd-chart-data ids: 'c1-8', 'c2-14'
+// lib channel ids: '1-8', 'c2-14' → hd-chart-data ids: 'c1-8', 'c2-14'
 function normalizeChannelId(id: string): string {
   return id.startsWith('c') ? id : `c${id}`
 }
 
+// Lookup ChartChannel from a raw channel id string ('c1-8', '1-8', etc.)
+function findChannelById(rawId: string): ChartChannel | undefined {
+  const id = normalizeChannelId(rawId)
+  const found = HD_CHANNELS.find((ch) => ch.id === id)
+  if (found) return found
+  // try reversed gate order
+  const inner = id.slice(1)            // "64-47"
+  const parts = inner.split('-')
+  if (parts.length === 2) {
+    const reversed = `c${parts[1]}-${parts[0]}`
+    return HD_CHANNELS.find((ch) => ch.id === reversed)
+  }
+  return undefined
+}
+
+// ─── type metadata ────────────────────────────────────────────────────────────
 type TypeMeta = { strategy: string; signature: string; notSelf: string }
 
 const TYPE_META: Record<string, TypeMeta> = {
-  Manifestor: { strategy: '告知', signature: '和平', notSelf: '憤怒' },
-  Generator: { strategy: '等待回應', signature: '滿足', notSelf: '沮喪' },
-  'Manifesting Generator': { strategy: '等待回應，再告知', signature: '滿足', notSelf: '沮喪' },
-  Projector: { strategy: '等待邀請', signature: '成功', notSelf: '苦澀' },
-  Reflector: { strategy: '等待月循環（28 天）', signature: '驚喜', notSelf: '失望' },
+  Manifestor:             { strategy: '告知',               signature: '和平', notSelf: '憤怒' },
+  Generator:              { strategy: '等待回應',            signature: '滿足', notSelf: '沮喪' },
+  'Manifesting Generator':{ strategy: '等待回應，再告知',    signature: '滿足', notSelf: '沮喪' },
+  Projector:              { strategy: '等待邀請',            signature: '成功', notSelf: '苦澀' },
+  Reflector:              { strategy: '等待月循環（28 天）',  signature: '驚喜', notSelf: '失望' },
 }
 
 function getTypeMeta(type: string): TypeMeta {
   return (
     TYPE_META[type] ??
     Object.entries(TYPE_META).find(([k]) => type.includes(k))?.[1] ?? {
-      strategy: '-',
-      signature: '-',
-      notSelf: '-',
+      strategy: '-', signature: '-', notSelf: '-',
     }
   )
 }
 
+// ─── screen ──────────────────────────────────────────────────────────────────
 export default function ChartDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { getToken } = useAuth()
   const [chart, setChart] = useState<Chart | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [sheetTarget, setSheetTarget] = useState<SheetTarget | null>(null)
 
   useEffect(() => {
     ;(async () => {
@@ -90,38 +109,35 @@ export default function ChartDetailScreen() {
 
   const meta = getTypeMeta(chart.type)
 
-  // Map API data to BodyGraph props
   const definedCenterIds = new Set(chart.centers.map(normalizeCenterId))
   const definedChannelIds = new Set(chart.channels.map(normalizeChannelId))
 
-  // planets 可能是 null（舊圖表）
   const planets: StoredPlanet[] = chart.planets ?? []
 
-  // Build per-gate activation: c = Personality (黑), u = Design (紅)
-  // 優先用 planets 推導（最準確），fallback 到 personalityGates/designGates，再 fallback 到 gates
   const activations: Record<number, { c?: boolean; u?: boolean }> = {}
   if (planets.length > 0) {
     for (const p of planets) {
       activations[p.blackGate] = { ...activations[p.blackGate], c: true }
-      activations[p.redGate] = { ...activations[p.redGate], u: true }
+      activations[p.redGate]   = { ...activations[p.redGate],   u: true }
     }
   } else {
     const personalityGates: number[] = chart.personalityGates ?? []
-    const designGates: number[] = chart.designGates ?? []
+    const designGates: number[]      = chart.designGates ?? []
     if (personalityGates.length > 0 || designGates.length > 0) {
       for (const g of personalityGates) activations[g] = { ...activations[g], c: true }
-      for (const g of designGates) activations[g] = { ...activations[g], u: true }
+      for (const g of designGates)      activations[g] = { ...activations[g], u: true }
     } else {
-      // 最舊的圖表：只有合併的 gates，全顯示為黑
       for (const g of chart.gates) activations[g] = { c: true }
     }
   }
+
+  const open = (target: SheetTarget) => setSheetTarget(target)
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.inner}>
 
-        {/* Body Graph SVG */}
+        {/* Body Graph SVG — 純顯示，不觸發彈窗 */}
         <View style={styles.graphCard}>
           <Text style={styles.cardTitle}>Body Graph</Text>
           <View style={styles.graphContainer}>
@@ -144,25 +160,57 @@ export default function ChartDetailScreen() {
 
         {/* 類型 & 策略 */}
         <SectionCard title="類型">
-          <Row label="能量類型" value={chart.type} accent />
+          <Row
+            label="能量類型"
+            value={chart.type}
+            accent
+            tappable
+            onPress={() => open({ kind: 'type', typeKey: chart.type })}
+          />
           <Row label="策略" value={meta.strategy} />
           <Row label="簽名（成功徵兆）" value={meta.signature} accent />
           <Row label="非自我主題" value={meta.notSelf} dim />
         </SectionCard>
 
-        {/* 權威 & 輪廓 */}
+        {/* 設計 */}
         <SectionCard title="設計">
-          <Row label="內在權威" value={chart.authority} accent />
-          <Row label="人生角色（Profile）" value={chart.profile} />
-          <Row label="定義" value={chart.definition} />
+          <Row
+            label="內在權威"
+            value={chart.authority}
+            accent
+            tappable
+            onPress={() => open({ kind: 'authority', authorityKey: chart.authority })}
+          />
+          <Row
+            label="人生角色（Profile）"
+            value={chart.profile}
+            tappable
+            onPress={() => open({ kind: 'profile', profile: chart.profile })}
+          />
+          <Row
+            label="定義"
+            value={chart.definition}
+            tappable
+            onPress={() => open({ kind: 'definition', definitionKey: chart.definition })}
+          />
         </SectionCard>
 
         {/* 九大中心 */}
-        <SectionCard title="九大中心">
+        <SectionCard title="九大中心（已定義）">
           <View style={styles.tagRow}>
-            {chart.centers.map((c) => (
-              <Tag key={c} label={c} active />
-            ))}
+            {chart.centers.map((c) => {
+              const chartKey  = normalizeCenterId(c)
+              const info      = HD_CENTERS_INFO[chartKey]
+              const label     = info?.name.zh ?? c
+              return (
+                <Tag
+                  key={c}
+                  label={label}
+                  active
+                  onPress={() => open({ kind: 'center', id: chartKey })}
+                />
+              )
+            })}
           </View>
         </SectionCard>
 
@@ -170,9 +218,17 @@ export default function ChartDetailScreen() {
         {chart.channels.length > 0 && (
           <SectionCard title={`定義通道（${chart.channels.length}）`}>
             <View style={styles.tagRow}>
-              {chart.channels.map((ch) => (
-                <Tag key={ch} label={ch} />
-              ))}
+              {chart.channels.map((rawCh) => {
+                const ch = findChannelById(rawCh)
+                const label = ch ? `${ch.from}–${ch.to}` : rawCh
+                return (
+                  <Tag
+                    key={rawCh}
+                    label={label}
+                    onPress={ch ? () => open({ kind: 'channel', channel: ch }) : undefined}
+                  />
+                )
+              })}
             </View>
           </SectionCard>
         )}
@@ -180,7 +236,6 @@ export default function ChartDetailScreen() {
         {/* 行星對照 */}
         {planets.length > 0 && (
           <SectionCard title="行星閘門對照">
-            {/* 表頭 */}
             <View style={styles.planetHeader}>
               <Text style={[styles.planetCol, styles.planetHeaderText]}>行星</Text>
               <Text style={[styles.planetGateCol, styles.planetHeaderText, { color: '#555' }]}>● 意識（黑）</Text>
@@ -200,17 +255,28 @@ export default function ChartDetailScreen() {
         <SectionCard title={`激活閘門（${chart.gates.length}）`}>
           <View style={styles.gateGrid}>
             {chart.gates.map((g) => (
-              <View key={g} style={styles.gate}>
+              <Pressable
+                key={g}
+                style={({ pressed }) => [styles.gate, pressed && styles.gatePressed]}
+                onPress={() => open({ kind: 'gate', num: g })}
+              >
                 <Text style={styles.gateText}>{g}</Text>
-              </View>
+              </Pressable>
             ))}
           </View>
         </SectionCard>
 
       </ScrollView>
+
+      <DetailBottomSheet
+        target={sheetTarget}
+        onClose={() => setSheetTarget(null)}
+      />
     </SafeAreaView>
   )
 }
+
+// ─── shared components ────────────────────────────────────────────────────────
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -226,29 +292,50 @@ function Row({
   value,
   accent,
   dim,
+  tappable,
+  onPress,
 }: {
   label: string
   value: string
   accent?: boolean
   dim?: boolean
+  tappable?: boolean
+  onPress?: () => void
 }) {
-  return (
-    <View style={styles.row}>
+  const inner = (
+    <View style={[styles.row, tappable && styles.rowTappable]}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={[styles.rowValue, accent && styles.rowAccent, dim && styles.rowDim]}>
-        {value}
-      </Text>
+      <View style={styles.rowRight}>
+        <Text style={[styles.rowValue, accent && styles.rowAccent, dim && styles.rowDim]}>
+          {value}
+        </Text>
+        {tappable && <Text style={styles.rowChevron}>›</Text>}
+      </View>
     </View>
+  )
+  if (!onPress) return inner
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => pressed ? styles.rowPressedBg : undefined}>
+      {inner}
+    </Pressable>
   )
 }
 
-function Tag({ label, active }: { label: string; active?: boolean }) {
-  return (
-    <View style={[styles.tag, active && styles.tagActive]}>
+function Tag({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) {
+  const chip = (
+    <View style={[styles.tag, active && styles.tagActive, !!onPress && styles.tagTappable]}>
       <Text style={[styles.tagText, active && styles.tagTextActive]}>{label}</Text>
     </View>
   )
+  if (!onPress) return chip
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => pressed ? { opacity: 0.7 } : undefined}>
+      {chip}
+    </Pressable>
+  )
 }
+
+// ─── styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f0f1a' },
@@ -282,20 +369,28 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 12,
   },
-  cardBody: { rowGap: 8 },
+  cardBody: { rowGap: 4 },
 
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  rowTappable: { paddingVertical: 8 },
+  rowPressedBg: { backgroundColor: 'rgba(167,139,250,0.08)', borderRadius: 8 },
   rowLabel: { color: '#8888aa', fontSize: 14, flex: 1 },
+  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   rowValue: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '500',
-    flexShrink: 1,
     textAlign: 'right',
     marginLeft: 8,
   },
   rowAccent: { color: '#a78bfa', fontWeight: '700' },
   rowDim: { color: '#ff9966' },
+  rowChevron: { color: '#5555aa', fontSize: 18, lineHeight: 20 },
 
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 6 },
   tag: {
@@ -307,6 +402,7 @@ const styles = StyleSheet.create({
     borderColor: '#2a2a3e',
   },
   tagActive: { backgroundColor: '#2e1e4e', borderColor: '#5b2dba' },
+  tagTappable: { borderColor: '#3a2a6e' },
   tagText: { color: '#6666aa', fontSize: 13 },
   tagTextActive: { color: '#a78bfa', fontWeight: '600' },
 
@@ -321,6 +417,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2e2e4e',
   },
+  gatePressed: { backgroundColor: '#2e1e4e', borderColor: '#a78bfa' },
   gateText: { color: '#a78bfa', fontSize: 13, fontWeight: '600' },
 
   // planet table
