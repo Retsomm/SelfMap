@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/clerk-expo'
+import { useAuth } from '@clerk/expo'
 import { useLocalSearchParams } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
@@ -53,17 +53,21 @@ export default function ChartDetailScreen() {
   const { getToken } = useAuth()
   const [chart, setChart] = useState<Chart | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     ;(async () => {
       try {
         const token = await getToken()
-        if (!token) return
+        if (!token) { setError('未登入，請重新登入'); return }
         const data = await getCharts(token)
         const found = data.charts.find((c) => c.id === id)
-        setChart(found ?? null)
+        if (!found) setError('找不到圖表')
+        else setChart(found)
       } catch (err) {
         console.error(err)
+        const msg = err instanceof Error ? err.message : String(err)
+        setError(msg.includes('401') || msg.includes('Unauthorized') ? '認證失敗，請重新登入' : `載入失敗：${msg}`)
       } finally {
         setLoading(false)
       }
@@ -78,10 +82,10 @@ export default function ChartDetailScreen() {
     )
   }
 
-  if (!chart) {
+  if (error || !chart) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.error}>找不到圖表</Text>
+        <Text style={styles.error}>{error ?? '找不到圖表'}</Text>
       </SafeAreaView>
     )
   }

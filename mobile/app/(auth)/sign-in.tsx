@@ -1,8 +1,8 @@
-import { useOAuth } from '@clerk/clerk-expo'
+import { useOAuth } from '@clerk/expo'
 import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
 import { useRef } from 'react'
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { Alert, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native'
 
 export default function SignInScreen() {
   const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' })
@@ -22,6 +22,7 @@ export default function SignInScreen() {
       }
     } catch (err) {
       console.error('OAuth error', err)
+      Alert.alert('登入失敗', err instanceof Error ? err.message : '請稍後再試')
     } finally {
       isLoading.current = false
     }

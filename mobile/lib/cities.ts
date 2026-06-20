@@ -50,7 +50,7 @@ export const CITIES: City[] = [
   { name: 'Kuala Lumpur', display: '吉隆坡 Kuala Lumpur', country: 'MY', timezone: 'Asia/Kuala_Lumpur' },
   { name: 'Manila', display: '馬尼拉 Manila', country: 'PH', timezone: 'Asia/Manila' },
   { name: 'Ho Chi Minh City', display: '胡志明市 Ho Chi Minh City', country: 'VN', timezone: 'Asia/Ho_Chi_Minh' },
-  { name: 'Hanoi', display: '河內 Hanoi', country: 'VN', timezone: 'Asia/Bangkok' },
+  { name: 'Hanoi', display: '河內 Hanoi', country: 'VN', timezone: 'Asia/Ho_Chi_Minh' },
   // 南亞
   { name: 'Mumbai', display: 'Mumbai 孟買', country: 'IN', timezone: 'Asia/Kolkata' },
   { name: 'New Delhi', display: 'New Delhi 新德里', country: 'IN', timezone: 'Asia/Kolkata' },

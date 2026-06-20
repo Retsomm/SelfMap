@@ -1,9 +1,23 @@
-import { useAuth, useUser } from '@clerk/clerk-expo'
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { useAuth, useUser } from '@clerk/expo'
+import { useState } from 'react'
+import { Alert, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native'
 
 export default function ProfileScreen() {
   const { signOut } = useAuth()
   const { user } = useUser()
+  const [signingOut, setSigningOut] = useState(false)
+
+  async function handleSignOut() {
+    if (signingOut) return
+    setSigningOut(true)
+    try {
+      await signOut()
+    } catch (err) {
+      Alert.alert('登出失敗', err instanceof Error ? err.message : '請稍後再試')
+    } finally {
+      setSigningOut(false)
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -13,8 +27,8 @@ export default function ProfileScreen() {
           <Text style={styles.name}>{user?.fullName ?? user?.username ?? '使用者'}</Text>
           <Text style={styles.email}>{user?.emailAddresses[0]?.emailAddress}</Text>
         </View>
-        <Pressable style={styles.signOutBtn} onPress={() => signOut()}>
-          <Text style={styles.signOutText}>登出</Text>
+        <Pressable style={[styles.signOutBtn, signingOut && styles.btnDisabled]} onPress={handleSignOut} disabled={signingOut}>
+          <Text style={styles.signOutText}>{signingOut ? '登出中…' : '登出'}</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -42,4 +56,5 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
   },
   signOutText: { color: '#ff6b6b', fontSize: 15, fontWeight: '600' },
+  btnDisabled: { opacity: 0.5 },
 })

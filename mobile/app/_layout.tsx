@@ -1,4 +1,4 @@
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo'
+import { ClerkProvider, useAuth } from '@clerk/expo'
 import * as SecureStore from 'expo-secure-store'
 import * as WebBrowser from 'expo-web-browser'
 import { Stack, useRouter, useSegments } from 'expo-router'
@@ -18,7 +18,8 @@ const tokenCache = {
   },
 }
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ''
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+if (!publishableKey) throw new Error('Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in environment')
 
 function AuthGuard() {
   const { isLoaded, isSignedIn } = useAuth()

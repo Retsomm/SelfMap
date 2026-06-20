@@ -169,10 +169,10 @@ export default function BodyGraph({
           const pairKey = `${Math.min(ch.from, ch.to)}-${Math.max(ch.from, ch.to)}`
           if (INTEGRATION_PAIRS.has(pairKey)) return null
 
-          const defined = isChannelDefined(ch)
-          // 每條 channel 兩半段各自用 gate 的激活顏色（黑/紅/條紋/null）
-          const aFill = defined ? (activationFill(activations[ch.from]) ?? ACT_CONSCIOUS) : null
-          const bFill = defined ? (activationFill(activations[ch.to]) ?? ACT_CONSCIOUS) : null
+          // Two-gate rule: only render as defined when both gates have activation data
+          const defined = isChannelDefined(ch) && activations[ch.from] != null && activations[ch.to] != null
+          const aFill = defined ? activationFill(activations[ch.from]) : null
+          const bFill = defined ? activationFill(activations[ch.to]) : null
           const mx = (a[0] + b[0]) / 2
           const my = (a[1] + b[1]) / 2
 

@@ -1,5 +1,5 @@
 // Metro 會在 bundle 時替換 EXPO_PUBLIC_* 變數
-const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000'
+const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL
 
 export type StoredPlanet = {
   name: string
@@ -46,9 +46,12 @@ async function request<T>(
         ...init.headers,
       },
     })
-    const json = await res.json()
-    if (!res.ok) throw new Error(json?.error ?? `HTTP ${res.status}`)
-    return json as T
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`
+      try { msg = (await res.json())?.error ?? msg } catch { /* non-JSON body */ }
+      throw new Error(msg)
+    }
+    return (await res.json()) as T
   } finally {
     clearTimeout(timer)
   }

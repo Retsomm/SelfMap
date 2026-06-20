@@ -1,6 +1,6 @@
-import { useAuth } from '@clerk/clerk-expo'
-import { useRouter } from 'expo-router'
-import { useEffect, useRef, useState } from 'react'
+import { useAuth } from '@clerk/expo'
+import { useFocusEffect, useRouter } from 'expo-router'
+import { useCallback, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -46,7 +46,7 @@ export default function ChartsScreen() {
     }
   }
 
-  useEffect(() => { fetchCharts() }, [])
+  useFocusEffect(useCallback(() => { fetchCharts() }, []))
 
   function openActions(chart: Chart) {
     Alert.alert(chart.name ?? '未命名圖表', undefined, [

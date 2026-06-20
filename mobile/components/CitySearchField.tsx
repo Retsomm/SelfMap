@@ -23,7 +23,7 @@ export default function CitySearchField({ city, timezone, onSelect }: Props) {
   const handleChange = useCallback((text: string) => {
     setQuery(text)
     setResults(searchCities(text))
-    if (!text) onSelect('', '')
+    onSelect('', '')
   }, [onSelect])
 
   const handleSelect = useCallback((c: City) => {

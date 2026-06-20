@@ -47,7 +47,7 @@ export default function WheelPicker({ items, selectedIndex, onSelect, width = 80
         style={{ height: ITEM_H * VISIBLE }}
       >
         {items.map((item, i) => (
-          <View key={item} style={styles.item}>
+          <View key={i} style={styles.item}>
             <Text style={[styles.text, i === selectedIndex && styles.selected]}>
               {item}
             </Text>
