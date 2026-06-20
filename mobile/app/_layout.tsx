@@ -18,8 +18,7 @@ const tokenCache = {
   },
 }
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
-if (!publishableKey) throw new Error('Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in environment')
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ''
 
 function AuthGuard() {
   const { isLoaded, isSignedIn } = useAuth()

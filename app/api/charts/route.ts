@@ -1,6 +1,7 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { computeHdResultServer } from '@/lib/computeHdResultServer'
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,10 +11,36 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { birthDate, birthTime, birthCity, timezone, name, type, authority, profile, definition, centers, channels, gates } = body
+    let { birthDate, birthTime, birthCity, timezone, name, type, authority, profile, definition, centers, channels, gates } = body
 
-    if (!birthDate || !birthTime || !birthCity || !type || !authority || !profile || !definition) {
+    if (!birthDate || !birthTime || !birthCity) {
       return NextResponse.json({ error: '請填寫所有必填欄位' }, { status: 400 })
+    }
+
+    // mobile 只送出生資料 → server 端計算
+    let planets: object[] | undefined
+    let personalityGates: number[] | undefined
+    let designGates: number[] | undefined
+
+    if (!type || !authority || !profile || !definition) {
+      if (!timezone) return NextResponse.json({ error: '請提供時區' }, { status: 400 })
+      const result = await computeHdResultServer(birthDate, birthTime, timezone)
+      type = result.type
+      authority = result.authority.name
+      profile = result.profile.profile
+      definition = result.definition.label
+      centers = [...result.definedCenterIds]
+      channels = result.definedChannels.map((ch) => ch.id)
+      gates = [...result.allGates]
+      planets = result.planets.map((p) => ({
+        name: p.planetName,
+        blackGate: p.black.gate,
+        blackLine: p.black.line,
+        redGate: p.red.gate,
+        redLine: p.red.line,
+      }))
+      personalityGates = result.planets.map((p) => p.black.gate)
+      designGates = result.planets.map((p) => p.red.gate)
     }
 
     const clerkUser = await currentUser()
@@ -59,6 +86,7 @@ export async function POST(req: NextRequest) {
         centers: centers ?? [],
         channels: channels ?? [],
         gates: gates ?? [],
+        ...(planets ? { planets, personalityGates, designGates } : {}),
       },
     })
 

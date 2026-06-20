@@ -78,6 +78,11 @@ export function createChart(token: string, payload: CreateChartPayload) {
   })
 }
 
+// GET /api/charts/[id]
+export function getChart(token: string, id: string) {
+  return request<{ chart: Chart }>(`/api/charts/${id}`, { token })
+}
+
 // PATCH /api/charts/[id]
 export function renameChart(token: string, id: string, name: string) {
   return request<{ ok: true }>(`/api/charts/${id}`, {

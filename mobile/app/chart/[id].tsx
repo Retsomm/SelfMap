@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native'
-import { type Chart, type StoredPlanet, getCharts } from '@/lib/api'
+import { type Chart, type StoredPlanet, getChart } from '@/lib/api'
 import BodyGraph from '@/components/BodyGraph'
 
 // lib uses 'ego' and 'solarPlexus'; hd-chart-data uses 'heart' and 'solar'
@@ -60,10 +60,8 @@ export default function ChartDetailScreen() {
       try {
         const token = await getToken()
         if (!token) { setError('未登入，請重新登入'); return }
-        const data = await getCharts(token)
-        const found = data.charts.find((c) => c.id === id)
-        if (!found) setError('找不到圖表')
-        else setChart(found)
+        const data = await getChart(token, id)
+        setChart(data.chart)
       } catch (err) {
         console.error(err)
         const msg = err instanceof Error ? err.message : String(err)

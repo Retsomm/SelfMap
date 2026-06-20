@@ -54,7 +54,7 @@ export default function CreateScreen() {
       }
 
       const { chartId } = await createChart(token, payload)
-      router.replace(`/chart/${chartId}`)
+      router.push(`/chart/${chartId}`)
     } catch (err: unknown) {
       Alert.alert('建立失敗', err instanceof Error ? err.message : String(err))
     } finally {

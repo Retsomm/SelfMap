@@ -1,4 +1,21 @@
-import { initSwissEph } from '@/lib/swissEph'
+// Derive UTC offset (hours) from IANA timezone at a specific moment.
+// Uses Intl to handle DST correctly — e.g. "Asia/Taipei" → 8, "America/New_York" in summer → -4
+export function getOffsetFromTimezone(tz: string | undefined | null, at: Date): number {
+  if (!tz) return 0
+  try {
+    const parts = new Intl.DateTimeFormat('en', {
+      timeZone: tz,
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric',
+      hourCycle: 'h23',
+    }).formatToParts(at)
+    const get = (type: string) => parseInt(parts.find(p => p.type === type)?.value ?? '0')
+    const fakeUtc = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour') % 24, get('minute'), get('second'))
+    return Math.round((fakeUtc - at.getTime()) / 60000) / 60
+  } catch {
+    return 0
+  }
+}
 
 // 加 Z 強制當作 UTC 解析，避免瀏覽器套用本地時區導致偏移算兩次
 export const toUtcDate = (date: string, time: string, offsetHours: number): Date => {

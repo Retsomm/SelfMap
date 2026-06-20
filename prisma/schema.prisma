@@ -31,9 +31,12 @@ model Chart {
   authority   String
   profile     String
   definition  String
-  centers     Json
-  channels    Json
-  gates       Json
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  centers          Json
+  channels         Json
+  gates            Json
+  personalityGates Json?
+  designGates      Json?
+  planets          Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
