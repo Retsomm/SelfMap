@@ -11,7 +11,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    let { birthDate, birthTime, birthCity, timezone, name, type, authority, profile, definition, centers, channels, gates } = body
+    const { birthDate, birthTime, birthCity, timezone, name } = body
+    let { type, authority, profile, definition, centers, channels, gates } = body
 
     if (!birthDate || !birthTime || !birthCity) {
       return NextResponse.json({ error: '請填寫所有必填欄位' }, { status: 400 })

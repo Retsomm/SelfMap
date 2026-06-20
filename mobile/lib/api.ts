@@ -23,9 +23,9 @@ export type Chart = {
   centers: string[]
   channels: string[]
   gates: number[]
-  personalityGates: number[]
-  designGates: number[]
-  planets: StoredPlanet[]
+  personalityGates?: number[]
+  designGates?: number[]
+  planets?: StoredPlanet[]
   createdAt: string
 }
 

@@ -14,8 +14,7 @@ import {
   calculateDefinition,
   type PlanetRow,
 } from '@/lib/humanDesign'
-import { toUtcDate, getDesignJd } from '@/utils/ephemeris'
-import { getOffsetFromTimezone } from '@/utils/ephemeris'
+import { toUtcDate, getDesignJd, getOffsetFromTimezone } from '@/utils/ephemeris'
 import type { HdResult } from '@/lib/buildAiPrompt'
 
 // Swiss Ephemeris body numbers (from @swisseph/core)
