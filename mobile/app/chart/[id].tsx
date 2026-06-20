@@ -287,6 +287,8 @@ function SectionCard({ title, children }: { title: string; children: React.React
   )
 }
 
+// tappable controls visual appearance (chevron + highlight style); onPress wraps in Pressable.
+// A row can be tappable=true without onPress (looks interactive but isn't).
 function Row({
   label,
   value,
