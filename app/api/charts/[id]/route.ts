@@ -2,6 +2,29 @@ import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { id } = await params
+
+    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+    const chart = await prisma.chart.findFirst({ where: { id, userId: user.id } })
+    if (!chart) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    return NextResponse.json({ chart })
+  } catch (err) {
+    console.error('[GET /api/charts/[id]]', err)
+    return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 })
+  }
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

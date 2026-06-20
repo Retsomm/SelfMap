@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { computeHdResult } from '@/lib/computeHdResult'
+import { computeHdResultServer } from '@/lib/computeHdResultServer'
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '缺少必填欄位' }, { status: 400 })
     }
 
-    const result = await computeHdResult(birthDate, birthTime, timezone)
+    const result = await computeHdResultServer(birthDate, birthTime, timezone)
 
     return NextResponse.json({
       type: result.type,

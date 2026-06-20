@@ -1,4 +1,8 @@
-import { initSwissEph, Planet, LunarPoint } from '@/lib/swissEph'
+/**
+ * Server-side HD compute — uses initSwissEphServer (讀 WASM 檔案) 取代
+ * browser 版 initSwissEph (dynamic import + fetch)，避免 dev server ESM 衝突。
+ */
+import { initSwissEphServer } from '@/lib/swissEphServer'
 import {
   calculatePlanetGates,
   calculateProfile,
@@ -10,13 +14,23 @@ import {
   calculateDefinition,
   type PlanetRow,
 } from '@/lib/humanDesign'
-import { toUtcDate, getDesignJd } from '@/utils/ephemeris'
-import { getOffsetFromTimezone } from '@/utils/ephemeris'
+import { toUtcDate, getDesignJd, getOffsetFromTimezone } from '@/utils/ephemeris'
 import type { HdResult } from '@/lib/buildAiPrompt'
 
-let sweCache: Awaited<ReturnType<typeof initSwissEph>> | null = null
+// Swiss Ephemeris body numbers (from @swisseph/core)
+const SUN = 0
+const MOON = 1
+const MERCURY = 2
+const VENUS = 3
+const MARS = 4
+const JUPITER = 5
+const SATURN = 6
+const URANUS = 7
+const NEPTUNE = 8
+const PLUTO = 9
+const TRUE_NODE = 11
 
-export const computeHdResult = async (
+export const computeHdResultServer = async (
   date: string,
   time: string,
   timezone: string,
@@ -26,8 +40,7 @@ export const computeHdResult = async (
     throw new Error(`出生年份 ${year} 超出支援範圍（1900–2040）`)
   }
 
-  if (!sweCache) sweCache = await initSwissEph()
-  const swe = sweCache
+  const swe = await initSwissEphServer()
 
   const offset = getOffsetFromTimezone(timezone, new Date(`${date}T${time}:00`))
   const birthUtc = toUtcDate(date, time, offset)
@@ -35,28 +48,28 @@ export const computeHdResult = async (
   const designJd = getDesignJd(swe, jd)
   const designUtc = new Date((designJd - 2440587.5) * 86400 * 1000)
 
-  const lon = (body: Parameters<typeof swe.calculatePosition>[1], jdVal: number) =>
+  const lon = (body: number, jdVal: number) =>
     swe.calculatePosition(jdVal, body).longitude
 
-  const sunP = lon(Planet.Sun, jd)
-  const sunD = lon(Planet.Sun, designJd)
-  const nnP = lon(LunarPoint.TrueNode, jd)
-  const nnD = lon(LunarPoint.TrueNode, designJd)
+  const sunP = lon(SUN, jd)
+  const sunD = lon(SUN, designJd)
+  const nnP = lon(TRUE_NODE, jd)
+  const nnD = lon(TRUE_NODE, designJd)
 
   const rows: [string, number, number][] = [
-    ['太陽',   sunP,                         sunD],
-    ['地球',   (sunP + 180) % 360,           (sunD + 180) % 360],
-    ['月亮',   lon(Planet.Moon,    jd),      lon(Planet.Moon,    designJd)],
-    ['北交點', nnP,                           nnD],
-    ['南交點', (nnP + 180) % 360,            (nnD + 180) % 360],
-    ['水星',   lon(Planet.Mercury, jd),      lon(Planet.Mercury, designJd)],
-    ['金星',   lon(Planet.Venus,   jd),      lon(Planet.Venus,   designJd)],
-    ['火星',   lon(Planet.Mars,    jd),      lon(Planet.Mars,    designJd)],
-    ['木星',   lon(Planet.Jupiter, jd),      lon(Planet.Jupiter, designJd)],
-    ['土星',   lon(Planet.Saturn,  jd),      lon(Planet.Saturn,  designJd)],
-    ['天王星', lon(Planet.Uranus,  jd),      lon(Planet.Uranus,  designJd)],
-    ['海王星', lon(Planet.Neptune, jd),      lon(Planet.Neptune, designJd)],
-    ['冥王星', lon(Planet.Pluto,   jd),      lon(Planet.Pluto,   designJd)],
+    ['太陽',   sunP,                       sunD],
+    ['地球',   (sunP + 180) % 360,         (sunD + 180) % 360],
+    ['月亮',   lon(MOON,    jd),           lon(MOON,    designJd)],
+    ['北交點', nnP,                         nnD],
+    ['南交點', (nnP + 180) % 360,          (nnD + 180) % 360],
+    ['水星',   lon(MERCURY, jd),           lon(MERCURY, designJd)],
+    ['金星',   lon(VENUS,   jd),           lon(VENUS,   designJd)],
+    ['火星',   lon(MARS,    jd),           lon(MARS,    designJd)],
+    ['木星',   lon(JUPITER, jd),           lon(JUPITER, designJd)],
+    ['土星',   lon(SATURN,  jd),           lon(SATURN,  designJd)],
+    ['天王星', lon(URANUS,  jd),           lon(URANUS,  designJd)],
+    ['海王星', lon(NEPTUNE, jd),           lon(NEPTUNE, designJd)],
+    ['冥王星', lon(PLUTO,   jd),           lon(PLUTO,   designJd)],
   ]
 
   const planets: PlanetRow[] = rows.map(([name, pLon, dLon]) => ({

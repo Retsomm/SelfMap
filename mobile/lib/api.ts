@@ -23,9 +23,9 @@ export type Chart = {
   centers: string[]
   channels: string[]
   gates: number[]
-  personalityGates: number[]
-  designGates: number[]
-  planets: StoredPlanet[]
+  personalityGates?: number[]
+  designGates?: number[]
+  planets?: StoredPlanet[]
   createdAt: string
 }
 
@@ -76,6 +76,11 @@ export function createChart(token: string, payload: CreateChartPayload) {
     body: JSON.stringify(payload),
     token,
   })
+}
+
+// GET /api/charts/[id]
+export function getChart(token: string, id: string) {
+  return request<{ chart: Chart }>(`/api/charts/${id}`, { token })
 }
 
 // PATCH /api/charts/[id]

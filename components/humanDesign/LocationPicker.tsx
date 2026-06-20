@@ -45,26 +45,8 @@ interface Props {
   onSelect: (timezone: string, label: string) => void
 }
 
-// Derive UTC offset (hours) from IANA timezone at a specific moment.
-// Uses Intl to handle DST correctly — e.g. "Asia/Taipei" → 8, "America/New_York" in summer → -4
-export function getOffsetFromTimezone(tz: string | undefined | null, at: Date): number {
-  if (!tz) return 0
-  try {
-    // 用 formatToParts 取得目標時區的各時間部件，再與 UTC 比較算出偏移
-    // 這比 shortOffset 更可靠，避免舊版 Safari 不支援 shortOffset 導致回退到系統時區
-    const parts = new Intl.DateTimeFormat('en', {
-      timeZone: tz,
-      year: 'numeric', month: 'numeric', day: 'numeric',
-      hour: 'numeric', minute: 'numeric', second: 'numeric',
-      hourCycle: 'h23',
-    }).formatToParts(at)
-    const get = (type: string) => parseInt(parts.find(p => p.type === type)?.value ?? '0')
-    const fakeUtc = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour') % 24, get('minute'), get('second'))
-    return Math.round((fakeUtc - at.getTime()) / 60000) / 60
-  } catch {
-    return 0
-  }
-}
+export { getOffsetFromTimezone } from '@/utils/ephemeris'
+import { getOffsetFromTimezone } from '@/utils/ephemeris'
 
 // Format numeric offset (hours) to ±HH:MM string
 function formatOffset(offset: number): string {
