@@ -2,7 +2,6 @@ import { useAuth } from '@clerk/expo'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import {
-  Alert,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -31,15 +30,19 @@ export default function CreateScreen() {
   const [city, setCity] = useState('')
   const [timezone, setTimezone] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [fieldError, setFieldError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const birthDate = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`
   const birthTime = `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`
 
   async function handleSubmit() {
     if (!city || !timezone) {
-      Alert.alert('請選擇出生城市', '輸入城市名稱後從清單中選擇')
+      setFieldError('請輸入城市名稱並從清單中選擇')
       return
     }
+    setFieldError(null)
+    setSubmitError(null)
     setSubmitting(true)
     try {
       const token = await getToken()
@@ -56,7 +59,7 @@ export default function CreateScreen() {
       const { chartId } = await createChart(token, payload)
       router.push(`/chart/${chartId}`)
     } catch (err: unknown) {
-      Alert.alert('建立失敗', err instanceof Error ? err.message : String(err))
+      setSubmitError(err instanceof Error ? err.message : String(err))
     } finally {
       setSubmitting(false)
     }
@@ -95,9 +98,16 @@ export default function CreateScreen() {
           <CitySearchField
             city={city}
             timezone={timezone}
-            onSelect={(c, tz) => { setCity(c); setTimezone(tz) }}
+            onSelect={(c, tz) => { setCity(c); setTimezone(tz); setFieldError(null) }}
           />
+          {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}
         </Section>
+
+        {submitError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>建立失敗：{submitError}</Text>
+          </View>
+        ) : null}
 
         <Pressable
           style={[styles.button, submitting && styles.buttonDisabled]}
@@ -146,4 +156,12 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  errorText: { color: '#ff7070', fontSize: 13, marginTop: 4 },
+  errorBox: {
+    backgroundColor: '#2a1010',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#5a2020',
+  },
 })

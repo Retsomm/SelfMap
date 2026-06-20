@@ -26,7 +26,7 @@
 - [x] 時區自動帶入
 - [x] 圖表名稱（選填）
 - [x] 送出並導向圖表詳情頁（`POST /api/charts`）— server 端自動計算，mobile 只送出生資料；返回鍵正常顯示
-- [ ] 表單驗證錯誤提示優化（目前 Alert）
+- [x] 表單驗證錯誤提示優化（改用 inline 錯誤提示）
 
 ### 圖表詳情頁
 - [x] 出生資訊卡（日期、時間、城市）
@@ -38,7 +38,7 @@
 - [x] 定義通道列表
 - [x] 激活閘門格子（1–64）
 - [x] Body Graph SVG 視覺化（react-native-svg，含中心/通道/閘門/輪廓/臉）
-- [ ] 點擊中心/閘門/通道/整合迴路 → 底部彈窗詳細解讀（DetailBottomSheet）
+- [x] 下方卡片可點擊觸發彈窗（類型、權威、角色、定義、中心、通道、閘門）
 - [x] 圖表詳情頁改用 `GET /api/charts/[id]`（單筆 API 已新增）
 
 ---
@@ -56,8 +56,7 @@
 - [ ] 合圖結果頁面 UI
 
 ### 詳細解讀
-- [ ] 中心解讀抽屜（點擊 Body Graph 中心觸發）
-- [ ] 類型、權威、Profile、定義的詳細文字說明頁
+- [x] DetailBottomSheet：中心、閘門、通道、類型、權威、Profile、定義（點擊下方卡片項目觸發）
 
 ---
 
@@ -97,7 +96,7 @@
 
 - [ ] iOS 實機上 Picker 高度與樣式確認
 - [ ] Android Picker 行為測試
-- [ ] Body Graph SVG 套件選擇 → `react-native-svg@15.15.4`
+- [x] Body Graph SVG 套件選擇 → `react-native-svg@15.15.5`（已確認）
 - [x] WASM Swiss Ephemeris 是否可在 RN 環境執行（目前 server 端計算）→ **確認 server 端可正常執行**
 
 ---
@@ -128,6 +127,6 @@
 
 ## 下一步優先順序
 
-1. **表單驗證錯誤提示優化**：建立圖表頁的錯誤訊息改用 inline 提示取代 Alert
-2. **DetailBottomSheet**：點擊 Body Graph 中心/閘門顯示解讀
-3. **流日分析 Tab**
+1. **流日分析 Tab**
+2. **UI Design Token 統一**
+3. **合圖分析（Composite）**
