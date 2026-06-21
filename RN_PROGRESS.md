@@ -46,14 +46,14 @@
 ## 第二階段：延伸功能
 
 ### 流日分析（Transit）
-- [ ] 當前行星位置計算（`computeTransit`）
-- [ ] 流日 vs 個人圖對比顯示
-- [ ] 流日 Tab 頁面 UI
+- [x] 當前行星位置計算（`GET /api/transit`，server-side ephemeris）
+- [x] 流日 vs 個人圖對比顯示（`POST /api/transit/impact`）
+- [x] 流日 Tab 頁面 UI（三層影響分析：空白中心激活、全新通道、通道補全）
 
 ### 合圖分析（Composite）
-- [ ] 兩人資料輸入
-- [ ] 電磁連結、陪伴、妥協、支配關係計算
-- [ ] 合圖結果頁面 UI
+- [x] 兩人資料輸入（圖表 Picker Modal）
+- [x] 電磁連結、陪伴、妥協、支配關係計算（`POST /api/composite`）
+- [x] 合圖結果頁面 UI（整合主題、角色共鳴、連結動態分組）
 
 ### 詳細解讀
 - [x] DetailBottomSheet：中心、閘門、通道、類型、權威、Profile、定義（點擊下方卡片項目觸發）
@@ -81,7 +81,7 @@
 
 ## UI / 共用元件
 
-- [ ] 統一 Design Token（顏色、字型、間距）
+- [x] 統一 Design Token（`mobile/constants/tokens.ts`：Colors、Spacing、Radius、CardShadow）
 - [ ] 共用 `Card` 元件
 - [ ] 共用 `Header` 元件
 - [ ] 共用 `ConfirmModal` 元件
@@ -127,6 +127,7 @@
 
 ## 下一步優先順序
 
-1. **流日分析 Tab**
-2. **UI Design Token 統一**
-3. **合圖分析（Composite）**
+1. **實機測試流日 / 合圖功能**
+2. **共用 Card / Header / ConfirmModal 元件**（套用 tokens）
+3. **Bottom Tab Bar 圖示優化**（加入 `tabBarIcon`）
+4. **Loading / Skeleton 狀態統一**

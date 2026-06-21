@@ -24,8 +24,9 @@ import {
 } from '@/lib/hd-chart-data'
 
 export interface GateActivation {
-  c?: boolean  // Personality / conscious
-  u?: boolean  // Design / unconscious
+  c?: boolean  // Personality / conscious (黑)
+  u?: boolean  // Design / unconscious (紅)
+  t?: boolean  // Transit (橙)
 }
 
 export interface BodyGraphProps {
@@ -60,12 +61,14 @@ function perpFoot(
 }
 
 const STRIPE_FILL = 'url(#rb-stripes)'
+const ACT_TRANSIT = '#f97316'  // 橙色（流日）
 
 function activationFill(state: GateActivation | undefined): string | null {
   if (!state) return null
-  if (state.c && state.u) return STRIPE_FILL  // 黑/紅條紋
+  if (state.c && state.u) return STRIPE_FILL  // 黑/紅條紋（個人 Personality + Design）
   if (state.c) return ACT_CONSCIOUS           // 純黑（Personality）
   if (state.u) return ACT_UNCONSCIOUS         // 純紅（Design）
+  if (state.t) return ACT_TRANSIT             // 橙色（流日）
   return null
 }
 
