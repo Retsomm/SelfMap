@@ -12,6 +12,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return { error }
   }
 
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ErrorBoundary]', error, info)
+  }
+
   handleReset = () => this.setState({ error: null })
 
   render() {
@@ -19,7 +23,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
       return (
         <View style={styles.container}>
           <Text style={styles.title}>{this.props.fallbackTitle ?? '發生錯誤'}</Text>
-          <Text style={styles.message}>{this.state.error.message}</Text>
+          <Text style={styles.message}>發生未預期的錯誤，請點擊重試。</Text>
           <Pressable style={styles.btn} onPress={this.handleReset}>
             <Text style={styles.btnText}>重試</Text>
           </Pressable>

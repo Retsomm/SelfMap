@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/expo'
-import { useRouter } from 'expo-router'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useFocusEffect, useRouter } from 'expo-router'
+import { useCallback, useRef, useState } from 'react'
 import {
   Pressable,
   SafeAreaView,
@@ -54,7 +54,7 @@ function CreatePersonalView() {
     setSavedProfiles(await loadProfiles())
   }, [])
 
-  useEffect(() => { refreshProfiles() }, [refreshProfiles])
+  useFocusEffect(useCallback(() => { void refreshProfiles() }, [refreshProfiles]))
 
   const birthDate = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`
   const birthTime = `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`

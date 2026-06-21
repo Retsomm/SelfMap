@@ -11,11 +11,26 @@ export type BirthProfile = {
   timezone: string
 }
 
+function isValidProfile(obj: unknown): obj is BirthProfile {
+  if (!obj || typeof obj !== 'object') return false
+  const p = obj as Record<string, unknown>
+  return (
+    typeof p.id === 'string' &&
+    typeof p.label === 'string' &&
+    typeof p.city === 'string' &&
+    typeof p.timezone === 'string' &&
+    p.date !== null && typeof p.date === 'object' &&
+    p.time !== null && typeof p.time === 'object'
+  )
+}
+
 export async function loadProfiles(): Promise<BirthProfile[]> {
   const raw = await AsyncStorage.getItem(STORAGE_KEY)
   if (!raw) return []
   try {
-    return JSON.parse(raw) as BirthProfile[]
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(isValidProfile)
   } catch {
     return []
   }

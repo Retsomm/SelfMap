@@ -33,8 +33,12 @@ export default function ProfileScreen() {
   useEffect(() => { refreshProfiles() }, [refreshProfiles])
 
   async function handleSaveProfile(profile: BirthProfile) {
-    setSheetVisible(false)
-    setProfiles(await saveProfile(profile))
+    try {
+      setProfiles(await saveProfile(profile))
+      setSheetVisible(false)
+    } catch (err) {
+      Alert.alert('儲存失敗', err instanceof Error ? err.message : '請稍後再試')
+    }
   }
 
   function handleEditProfile(p: BirthProfile) {
@@ -52,7 +56,13 @@ export default function ProfileScreen() {
       { text: '取消', style: 'cancel' },
       {
         text: '刪除', style: 'destructive',
-        onPress: async () => setProfiles(await deleteProfile(p.id)),
+        onPress: async () => {
+          try {
+            setProfiles(await deleteProfile(p.id))
+          } catch (err) {
+            Alert.alert('刪除失敗', err instanceof Error ? err.message : '請稍後再試')
+          }
+        },
       },
     ])
   }

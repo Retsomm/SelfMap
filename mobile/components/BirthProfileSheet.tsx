@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 type Props = {
   visible: boolean
   initial?: BirthProfile | null
-  onSave: (profile: BirthProfile) => void
+  onSave: (profile: BirthProfile) => Promise<void>
   onCancel: () => void
 }
 
@@ -18,6 +18,7 @@ function profileToForm(p: BirthProfile): BirthFormData {
 export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props) {
   const [form, setForm] = useState<BirthFormData>(defaultBirthFormData)
   const [fieldError, setFieldError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (visible) {
@@ -26,19 +27,24 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
     }
   }, [visible, initial])
 
-  function handleSave() {
+  async function handleSave() {
     if (!form.city || !form.timezone) {
       setFieldError('請選擇城市')
       return
     }
-    onSave({
-      id: initial?.id ?? makeProfileId(),
-      label: form.name.trim() || '未命名',
-      date: form.date,
-      time: form.time,
-      city: form.city,
-      timezone: form.timezone,
-    })
+    setSaving(true)
+    try {
+      await onSave({
+        id: initial?.id ?? makeProfileId(),
+        label: form.name.trim() || '未命名',
+        date: form.date,
+        time: form.time,
+        city: form.city,
+        timezone: form.timezone,
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -49,8 +55,8 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
             <Text style={styles.cancelText}>取消</Text>
           </Pressable>
           <Text style={styles.title}>{initial ? '編輯出生資料' : '新增出生資料'}</Text>
-          <Pressable onPress={handleSave} style={styles.headerBtn}>
-            <Text style={styles.saveText}>儲存</Text>
+          <Pressable onPress={handleSave} style={styles.headerBtn} disabled={saving}>
+            <Text style={[styles.saveText, saving && styles.saveDisabled]}>儲存</Text>
           </Pressable>
         </View>
 
@@ -85,6 +91,7 @@ const styles = StyleSheet.create({
   headerBtn:  { minWidth: 48 },
   title:      { color: Colors.text, fontSize: 16, fontWeight: '700' },
   cancelText: { color: Colors.sub, fontSize: 15 },
-  saveText:   { color: Colors.accent, fontSize: 15, fontWeight: '600', textAlign: 'right' },
+  saveText:      { color: Colors.accent, fontSize: 15, fontWeight: '600', textAlign: 'right' },
+  saveDisabled:  { opacity: 0.4 },
   body:       { padding: Spacing.xl, gap: Spacing.lg, paddingBottom: 48 },
 })
