@@ -138,16 +138,7 @@ export async function POST(req: NextRequest) {
         chartKind: 'composite',
         meta: JSON.parse(JSON.stringify({
           ...meta,
-          compositeResult: {
-            integrationTheme:      composite.integrationTheme,
-            compositeDefinedCount: composite.compositeDefinedCount,
-            compositeOpenCount:    composite.compositeOpenCount,
-            profileResonance:      composite.profileResonance,
-            electromagnetic:       composite.electromagnetic,
-            companionship:         composite.companionship,
-            compromise:            composite.compromise,
-            dominance:             composite.dominance,
-          },
+          compositeResult,
         })),
       },
     })

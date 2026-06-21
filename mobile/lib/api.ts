@@ -1,6 +1,8 @@
 // Metro 會在 bundle 時替換 EXPO_PUBLIC_* 變數
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL
 
+export type ChartKind = 'personal' | 'composite' | 'transit'
+
 export type StoredPlanet = {
   name: string
   blackGate: number
@@ -26,11 +28,11 @@ export type Chart = {
   personalityGates?: number[]
   designGates?: number[]
   planets?: StoredPlanet[]
-  chartKind?: string | null
+  chartKind?: ChartKind | null
   meta?: {
     // 合圖
-    personA?: { name: string | null; birthDate: string; birthCity: string; type: string; profile: string; authority?: string; authorityTip?: string }
-    personB?: { name: string | null; birthDate: string; birthCity: string; type: string; profile: string; authority?: string; authorityTip?: string }
+    personA?: { name: string | null; birthDate: string; birthTime?: string; birthCity: string; timezone?: string; type: string; profile: string; authority?: string; authorityTip?: string }
+    personB?: { name: string | null; birthDate: string; birthTime?: string; birthCity: string; timezone?: string; type: string; profile: string; authority?: string; authorityTip?: string }
     compositeResult?: {
       integrationTheme: string
       compositeDefinedCount: number
@@ -95,7 +97,7 @@ export type CreateChartPayload = {
   birthCity: string
   timezone: string
   name?: string
-  chartKind?: 'personal' | 'composite' | 'transit'
+  chartKind?: ChartKind
 }
 export function createChart(token: string, payload: CreateChartPayload) {
   return request<{ chartId: string }>('/api/charts', {
