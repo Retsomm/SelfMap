@@ -15,19 +15,17 @@ import { DatePicker, TimePicker } from '@/components/DateTimePicker'
 import CitySearchField from '@/components/CitySearchField'
 import TransitView from '@/components/TransitView'
 import CompositeView from '@/components/CompositeView'
-
-const T = {
-  bg: '#0f0f1a', surface: '#1e1e2e', border: '#2a2a3e',
-  accent: '#a78bfa', text: '#ffffff', sub: '#8888aa', muted: '#555577',
-}
+import { ScreenHeader } from '@/components/ScreenHeader'
+import { SubTabBar } from '@/components/SubTabBar'
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const TODAY = new Date()
 type SubTab = 'personal' | 'composite' | 'transit'
-const SUB_TABS: { id: SubTab; label: string }[] = [
+const SUB_TABS = [
   { id: 'personal',  label: '個人' },
   { id: 'composite', label: '合圖' },
   { id: 'transit',   label: '流日' },
-]
+] as const satisfies readonly { id: SubTab; label: string }[]
 
 // ─── Create personal chart form ───────────────────────────────────────────────
 
@@ -80,7 +78,7 @@ function CreatePersonalView() {
           value={name}
           onChangeText={setName}
           placeholder="例如：我的本命盤"
-          placeholderTextColor={T.muted}
+          placeholderTextColor={Colors.muted}
         />
       </Section>
 
@@ -136,27 +134,11 @@ export default function CreateScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.heading}>建立圖表</Text>
-      </View>
+      <ScreenHeader title="建立圖表" />
 
-      {/* Sub-tab bar */}
-      <View style={styles.subTabBar}>
-        {SUB_TABS.map(tab => (
-          <Pressable
-            key={tab.id}
-            style={[styles.subTabItem, subTab === tab.id && styles.subTabItemActive]}
-            onPress={() => setSubTab(tab.id)}
-          >
-            <Text style={[styles.subTabText, subTab === tab.id && styles.subTabTextActive]}>
-              {tab.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <SubTabBar tabs={SUB_TABS} active={subTab} onSelect={setSubTab} />
 
-      {/* Content — 全部保持掛載只切換 display，避免切 sub-tab 時重新 mount + fetch */}
+      {/* 全部保持掛載只切換 display，避免切 sub-tab 時重新 mount + fetch */}
       <View style={{ flex: 1 }}>
         <View style={{ flex: 1, display: subTab === 'personal' ? 'flex' : 'none' }}>
           <CreatePersonalView />
@@ -173,27 +155,16 @@ export default function CreateScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
-  header: {
-    paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: T.border,
-  },
-  heading: { fontSize: 22, fontWeight: '700', color: T.text },
+  container: { flex: 1, backgroundColor: Colors.bg },
 
-  subTabBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: T.border },
-  subTabItem: { flex: 1, alignItems: 'center', paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  subTabItemActive: { borderBottomColor: T.accent },
-  subTabText:       { fontSize: 14, fontWeight: '500', color: T.muted },
-  subTabTextActive: { color: T.accent, fontWeight: '700' },
-
-  inner:       { padding: 24, gap: 20, paddingBottom: 48 },
-  section:     { gap: 8 },
-  sectionLabel:{ fontSize: 14, color: T.sub, fontWeight: '600' },
-  previewText: { fontSize: 16, color: T.accent, fontWeight: '600', textAlign: 'center' },
-  textInput:   { backgroundColor: T.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, color: T.text, fontSize: 15, borderWidth: 1, borderColor: T.border },
-  button:      { backgroundColor: T.accent, paddingVertical: 14, borderRadius: 12, alignItems: 'center', marginTop: 8 },
+  inner:        { padding: Spacing.xl, gap: 20, paddingBottom: 48 },
+  section:      { gap: Spacing.sm },
+  sectionLabel: { fontSize: 14, color: Colors.sub, fontWeight: '600' },
+  previewText:  { fontSize: 16, color: Colors.accent, fontWeight: '600', textAlign: 'center' },
+  textInput:    { backgroundColor: Colors.surface, borderRadius: Radius.md, paddingHorizontal: 14, paddingVertical: Spacing.md, color: Colors.text, fontSize: 15, borderWidth: 1, borderColor: Colors.border },
+  button:       { backgroundColor: Colors.accent, paddingVertical: 14, borderRadius: Radius.lg, alignItems: 'center', marginTop: Spacing.sm },
   buttonDisabled: { opacity: 0.5 },
-  buttonText:  { color: T.bg, fontSize: 16, fontWeight: '600' },
-  errorText:   { color: '#ff7070', fontSize: 13, marginTop: 4 },
-  errorBox:    { backgroundColor: '#2a1010', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#5a2020' },
+  buttonText:   { color: Colors.bg, fontSize: 16, fontWeight: '600' },
+  errorText:    { color: '#ff7070', fontSize: 13, marginTop: Spacing.xs },
+  errorBox:     { backgroundColor: Colors.errorBg, borderRadius: Radius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.errorBorder },
 })

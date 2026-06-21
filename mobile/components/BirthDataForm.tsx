@@ -1,6 +1,3 @@
-/**
- * 可重用出生資料表單 — 受控元件，由父層管理狀態。
- */
 import {
   StyleSheet,
   Text,
@@ -9,11 +6,7 @@ import {
 } from 'react-native'
 import { DatePicker, TimePicker } from '@/components/DateTimePicker'
 import CitySearchField from '@/components/CitySearchField'
-
-const T = {
-  surface: '#1e1e2e', border: '#2a2a3e',
-  accent: '#a78bfa', text: '#ffffff', sub: '#8888aa', muted: '#555577',
-}
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const TODAY = new Date()
 
@@ -62,7 +55,7 @@ export default function BirthDataForm({
           value={value.name}
           onChangeText={name => onChange({ ...value, name })}
           placeholder={namePlaceholder}
-          placeholderTextColor={T.muted}
+          placeholderTextColor={Colors.muted}
         />
       </View>
 
@@ -95,10 +88,10 @@ export default function BirthDataForm({
 }
 
 const s = StyleSheet.create({
-  root:        { gap: 16 },
-  section:     { gap: 8 },
-  label:       { fontSize: 14, color: T.sub, fontWeight: '600' },
-  previewText: { fontSize: 16, color: T.accent, fontWeight: '600', textAlign: 'center' },
-  textInput:   { backgroundColor: T.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, color: T.text, fontSize: 15, borderWidth: 1, borderColor: T.border },
-  errorText:   { color: '#ff7070', fontSize: 13, marginTop: 4 },
+  root:        { gap: Spacing.lg },
+  section:     { gap: Spacing.sm },
+  label:       { fontSize: 14, color: Colors.sub, fontWeight: '600' },
+  previewText: { fontSize: 16, color: Colors.accent, fontWeight: '600', textAlign: 'center' },
+  textInput:   { backgroundColor: Colors.surface, borderRadius: Radius.md, paddingHorizontal: 14, paddingVertical: Spacing.md, color: Colors.text, fontSize: 15, borderWidth: 1, borderColor: Colors.border },
+  errorText:   { color: '#ff7070', fontSize: 13, marginTop: Spacing.xs },
 })

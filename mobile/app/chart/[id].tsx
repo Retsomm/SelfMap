@@ -2,7 +2,6 @@ import { useAuth } from '@clerk/expo'
 import { useLocalSearchParams } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
-  ActivityIndicator,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -19,6 +18,8 @@ import DetailBottomSheet, { type SheetTarget } from '@/components/DetailBottomSh
 import { SectionCard, Row, Tag } from '@/components/chart/ChartPrimitives'
 import TransitAnalysis from '@/components/chart/TransitAnalysis'
 import CompositeInfo from '@/components/chart/CompositeInfo'
+import { LoadingView, ErrorView } from '@/components/StateViews'
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 export default function ChartDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -45,21 +46,8 @@ export default function ChartDetailScreen() {
     })()
   }, [id])
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator color="#a78bfa" style={{ flex: 1 }} />
-      </SafeAreaView>
-    )
-  }
-
-  if (error || !chart) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.error}>{error ?? '找不到圖表'}</Text>
-      </SafeAreaView>
-    )
-  }
+  if (loading) return <SafeAreaView style={styles.container}><LoadingView /></SafeAreaView>
+  if (error || !chart) return <SafeAreaView style={styles.container}><ErrorView message={error ?? '找不到圖表'} /></SafeAreaView>
 
   const typeMeta          = getTypeMeta(chart.type)
   const transitSnapshot   = chart.chartKind === 'transit' ? chart.meta?.transitSnapshot : undefined
@@ -111,16 +99,16 @@ export default function ChartDetailScreen() {
             <View style={styles.legend}>
               <View style={[styles.legendDot, { backgroundColor: '#1a1a1a' }]} />
               <Text style={styles.legendText}>個人意識</Text>
-              <View style={[styles.legendDot, { backgroundColor: '#c04020' }]} />
+              <View style={[styles.legendDot, { backgroundColor: Colors.designRed }]} />
               <Text style={styles.legendText}>個人潛意識</Text>
-              <View style={[styles.legendDot, { backgroundColor: '#f97316' }]} />
+              <View style={[styles.legendDot, { backgroundColor: Colors.transit }]} />
               <Text style={styles.legendText}>流日</Text>
             </View>
           ) : isComposite ? (
             <View style={styles.legend}>
               <View style={[styles.legendDot, { backgroundColor: '#1a1a1a' }]} />
               <Text style={styles.legendText}>人物 A</Text>
-              <View style={[styles.legendDot, { backgroundColor: '#c04020' }]} />
+              <View style={[styles.legendDot, { backgroundColor: Colors.designRed }]} />
               <Text style={styles.legendText}>人物 B</Text>
             </View>
           ) : null}
@@ -147,7 +135,7 @@ export default function ChartDetailScreen() {
         {/* 流日分析（transit 專屬） */}
         {transitSnapshot ? (
           <>
-            <View style={styles.card}>
+            <View style={styles.transitCard}>
               <Text style={styles.transitTime}>
                 流日計算時間：{new Date(transitSnapshot.computedAt).toLocaleString('zh-TW', { hour12: false, timeZone: 'Asia/Taipei' })}
               </Text>
@@ -211,7 +199,7 @@ export default function ChartDetailScreen() {
                 <View style={styles.planetHeader}>
                   <Text style={[styles.planetCol, styles.planetHeaderText]}>行星</Text>
                   <Text style={[styles.planetGateCol, styles.planetHeaderText, { color: '#555' }]}>● 意識（黑）</Text>
-                  <Text style={[styles.planetGateCol, styles.planetHeaderText, { color: '#c04020' }]}>● 潛意識（紅）</Text>
+                  <Text style={[styles.planetGateCol, styles.planetHeaderText, { color: Colors.designRed }]}>● 潛意識（紅）</Text>
                 </View>
                 {planets.map((p, i) => (
                   <View key={i} style={[styles.planetRow, i % 2 === 1 && styles.planetRowAlt]}>
@@ -250,37 +238,32 @@ export default function ChartDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f0f1a' },
-  inner:     { padding: 16, paddingBottom: 40, rowGap: 12 },
-  error:     { color: '#ff6b6b', textAlign: 'center', marginTop: 80, fontSize: 16 },
+  container: { flex: 1, backgroundColor: Colors.bg },
+  inner:     { padding: Spacing.lg, paddingBottom: Spacing.xxl, rowGap: Spacing.md },
 
-  graphCard: { backgroundColor: '#1e1e2e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a3e' },
-  graphTitle: { color: '#8888aa', fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+  graphCard:      { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
+  graphTitle:     { color: Colors.sub, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.md },
   graphContainer: { width: '100%', aspectRatio: 700 / 1030 },
-  legend:     { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
-  legendDot:  { width: 10, height: 10, borderRadius: 5 },
-  legendText: { fontSize: 11, color: '#8888aa', marginRight: 8 },
+  legend:         { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: Spacing.md },
+  legendDot:      { width: 10, height: 10, borderRadius: 5 },
+  legendText:     { fontSize: 11, color: Colors.sub, marginRight: Spacing.sm },
 
-  // transit time card
-  card:        { backgroundColor: '#1e1e2e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a3e', justifyContent: 'center' },
-  transitTime: { fontSize: 12, color: '#f97316' },
+  transitCard: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border, justifyContent: 'center' },
+  transitTime: { fontSize: 12, color: Colors.transit },
 
-  // tag row (centers / channels)
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 6 },
 
-  // gate grid
-  gateGrid:    { flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, rowGap: 8 },
-  gate:        { backgroundColor: '#14142a', borderRadius: 8, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#2e2e4e' },
-  gatePressed: { backgroundColor: '#2e1e4e', borderColor: '#a78bfa' },
-  gateText:    { color: '#a78bfa', fontSize: 13, fontWeight: '600' },
+  gateGrid:    { flexDirection: 'row', flexWrap: 'wrap', columnGap: Spacing.sm, rowGap: Spacing.sm },
+  gate:        { backgroundColor: Colors.gateBg, borderRadius: Radius.sm, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Colors.gateBorder },
+  gatePressed: { backgroundColor: Colors.accentD, borderColor: Colors.accent },
+  gateText:    { color: Colors.accent, fontSize: 13, fontWeight: '600' },
 
-  // planet table
-  planetHeader:     { flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: '#2a2a3e', marginBottom: 4 },
-  planetHeaderText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, color: '#8888aa' },
+  planetHeader:     { flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: Colors.border, marginBottom: Spacing.xs },
+  planetHeaderText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, color: Colors.sub },
   planetRow:        { flexDirection: 'row', paddingVertical: 5 },
-  planetRowAlt:     { backgroundColor: '#17172a', marginHorizontal: -16, paddingHorizontal: 16, borderRadius: 6 },
+  planetRowAlt:     { backgroundColor: '#17172a', marginHorizontal: -Spacing.lg, paddingHorizontal: Spacing.lg, borderRadius: 6 },
   planetCol:        { flex: 1.2, fontSize: 13, color: '#ccc' },
   planetGateCol:    { flex: 1, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
   planetBlack:      { color: '#e0e0e0' },
-  planetRed:        { color: '#e05030' },
+  planetRed:        { color: Colors.planetRedText },
 })
