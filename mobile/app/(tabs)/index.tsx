@@ -107,7 +107,7 @@ function ChartList({
       renderItem={({ item }) => (
         <Pressable
           style={({ pressed }) => [styles.card, pressed && tappable && styles.cardPressed]}
-          onPress={tappable ? () => router.push(`/chart/${item.id}` as any) : undefined}
+          onPress={tappable ? () => router.push({ pathname: '/chart/[id]', params: { id: item.id } }) : undefined}
           onLongPress={() => Alert.alert(item.name ?? '未命名圖表', undefined, [
             { text: '重新命名', onPress: () => onRename(item) },
             { text: '刪除圖表', style: 'destructive', onPress: () => onDelete(item) },

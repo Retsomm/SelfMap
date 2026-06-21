@@ -29,8 +29,18 @@ export type Chart = {
   chartKind?: string | null
   meta?: {
     // 合圖
-    personA?: { name: string | null; birthDate: string; birthCity: string; type: string; profile: string }
-    personB?: { name: string | null; birthDate: string; birthCity: string; type: string; profile: string }
+    personA?: { name: string | null; birthDate: string; birthCity: string; type: string; profile: string; authority?: string; authorityTip?: string }
+    personB?: { name: string | null; birthDate: string; birthCity: string; type: string; profile: string; authority?: string; authorityTip?: string }
+    compositeResult?: {
+      integrationTheme: string
+      compositeDefinedCount: number
+      compositeOpenCount: number
+      profileResonance: number[]
+      electromagnetic: ConnectionDynamic[]
+      companionship: ConnectionDynamic[]
+      compromise: ConnectionDynamic[]
+      dominance: ConnectionDynamic[]
+    }
     // 流日
     transitSnapshot?: {
       computedAt: string
@@ -224,6 +234,8 @@ export function getTransitImpact(token: string, chartId: string) {
 export type ConnectionDynamic = {
   channelId: string
   type: string
+  centerA: string
+  centerB: string
   aGates: number[]
   bGates: number[]
 }

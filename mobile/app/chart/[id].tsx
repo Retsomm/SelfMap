@@ -162,7 +162,7 @@ function TransitAnalysis({
           <>
             <Text style={tStyles.subTitle}>個人圖 &amp; 流日共有</Text>
             {sharedGates.map(p => (
-              <View key={p.gate} style={tStyles.gateRow}>
+              <View key={`${p.gate}-${p.planetName}-${p.line}`} style={tStyles.gateRow}>
                 <Text style={tStyles.gateNum}>{p.gate}</Text>
                 <Text style={tStyles.gatePlanet}>{p.planetName}</Text>
                 <Text style={tStyles.gateName}>{HD_GATES[p.gate]?.name.zh ?? ''}</Text>
@@ -176,7 +176,7 @@ function TransitAnalysis({
           <>
             <Text style={[tStyles.subTitle, { marginTop: sharedGates.length > 0 ? 14 : 0 }]}>今日流日閘門</Text>
             {transitOnlyGates.map(p => (
-              <View key={p.gate} style={tStyles.gateRow}>
+              <View key={`${p.gate}-${p.planetName}-${p.line}`} style={tStyles.gateRow}>
                 <Text style={tStyles.gateNum}>{p.gate}</Text>
                 <Text style={tStyles.gatePlanet}>{p.planetName}</Text>
                 <Text style={tStyles.gateName}>{HD_GATES[p.gate]?.name.zh ?? ''}</Text>
@@ -335,6 +335,13 @@ export default function ChartDetailScreen() {
               <View style={[styles.legendDot, { backgroundColor: '#f97316' }]} />
               <Text style={styles.legendText}>流日</Text>
             </View>
+          ) : chart.chartKind === 'composite' ? (
+            <View style={styles.legend}>
+              <View style={[styles.legendDot, { backgroundColor: '#1a1a1a' }]} />
+              <Text style={styles.legendText}>人物 A</Text>
+              <View style={[styles.legendDot, { backgroundColor: '#c04020' }]} />
+              <Text style={styles.legendText}>人物 B</Text>
+            </View>
           ) : null}
           <View style={styles.graphContainer}>
             <BodyGraph
@@ -346,13 +353,15 @@ export default function ChartDetailScreen() {
           </View>
         </View>
 
-        {/* 出生資訊 */}
-        <SectionCard title="出生資訊">
-          <Row label="出生日期" value={chart.birthDate} />
-          <Row label="出生時間" value={chart.birthTime} />
-          <Row label="出生城市" value={chart.birthCity} />
-          {chart.timezone ? <Row label="時區" value={chart.timezone} /> : null}
-        </SectionCard>
+        {/* 出生資訊（合圖不顯示，改在 CompositeInfo 中顯示） */}
+        {chart.chartKind !== 'composite' && (
+          <SectionCard title="出生資訊">
+            <Row label="出生日期" value={chart.birthDate} />
+            <Row label="出生時間" value={chart.birthTime} />
+            <Row label="出生城市" value={chart.birthCity} />
+            {chart.timezone ? <Row label="時區" value={chart.timezone} /> : null}
+          </SectionCard>
+        )}
 
         {/* 流日分析報告（transit 圖表專屬） */}
         {transitSnapshot ? (
@@ -370,8 +379,13 @@ export default function ChartDetailScreen() {
           </>
         ) : null}
 
-        {/* 以下區塊只對非流日圖表顯示 */}
-        {!transitSnapshot && (
+        {/* 合圖專屬資訊 */}
+        {chart.chartKind === 'composite' && (
+          <CompositeInfo chart={chart} />
+        )}
+
+        {/* 以下區塊只對非流日、非合圖顯示 */}
+        {!transitSnapshot && chart.chartKind !== 'composite' && (
           <>
             {/* 類型 & 策略 */}
             <SectionCard title="類型">
@@ -450,8 +464,8 @@ export default function ChartDetailScreen() {
           </>
         )}
 
-        {/* 行星對照 & 激活閘門 — 只對非流日圖表顯示 */}
-        {!transitSnapshot && (
+        {/* 行星對照 & 激活閘門 — 只對非流日、非合圖顯示 */}
+        {!transitSnapshot && chart.chartKind !== 'composite' && (
           <>
             {planets.length > 0 && (
               <SectionCard title="行星閘門對照">
@@ -495,6 +509,291 @@ export default function ChartDetailScreen() {
     </SafeAreaView>
   )
 }
+
+// ─── composite components ─────────────────────────────────────────────────────
+
+const LIB_CENTER_ZH: Record<string, string> = {
+  head: '頭腦中心', ajna: '心智中心', throat: '喉嚨中心', g: 'G 中心',
+  ego: '意志力中心', heart: '意志力中心',
+  solarPlexus: '情緒中心', solar: '情緒中心',
+  spleen: '脾臟中心', sacral: '薦骨中心', root: '根部中心',
+}
+
+const INTEGRATION_THEME: Record<string, { label: string; love: string; work: string }> = {
+  '9+0': {
+    label: '全滿（9+0）— Nowhere to go',
+    love: '極度甜蜜與黏人。能量場完全自給自足，外人很難融入。兩人會深深沉浸在彼此的世界中，但也容易因為缺乏外在刺激而感到窒息或過度封閉。',
+    work: '過於封閉。團隊內部可能非常有默契，但極易忽略外部市場的變化或同事、客戶的客觀意見。',
+  },
+  '8+1': {
+    label: '8+1 — Have some fun',
+    love: '最舒服的互動模式。彼此有足夠的能量連結，同時留有「空白」作為陽光照進來的窗口。雙方擁有各自呼吸與消化的空間，關係健康且長久。',
+    work: '黃金搭檔。既有共同努力的交集，又有一起去體驗、探索外部世界的窗口。',
+  },
+  '7+2': {
+    label: '7+2 — Work to do',
+    love: '最舒服的互動模式之一。保有兩個空白中心，彼此連結同時仍有足夠的獨立呼吸空間，長期相處不易窒息。',
+    work: '黃金搭檔。既有共同努力的交集，又有兩扇開放的窗口迎接外在刺激與機會。',
+  },
+  '6+3+': {
+    label: '6+3+ — Better to be free',
+    love: '連結感較淡。兩人在一起時仍有太多未定因素，容易流於平淡或像朋友。通常需要藉由共同的興趣、小孩或外在媒介來維繫緊密感。',
+    work: '適合團隊合作。保持高度的獨立性與自由度，不會對彼此造成過度制約，適合鬆散型的專案合作或大團隊中的平行分工。',
+  },
+}
+
+const PROFILE_RESONANCE_DESC: Record<number, { title: string; desc: string }> = {
+  1: { title: '1 爻共鳴', desc: '兩人都需要足夠的安全感與底層研究，能深深理解彼此打基礎的必要。' },
+  2: { title: '2 爻共鳴', desc: '兩人都需要獨處與等待被呼喚的空間，彼此能體諒對方的隱士特質。' },
+  3: { title: '3 爻共鳴', desc: '兩人都能理解試錯與碰撞的學習過程，不會因為失敗而互相責備。' },
+  4: { title: '4 爻共鳴', desc: '兩人都重視人脈與穩定的社群，能在圈子建設上形成默契。' },
+  5: { title: '5 爻共鳴', desc: '兩人都帶有被投射的特質，需要互相留意實際的期待落差。' },
+  6: { title: '6 爻共鳴', desc: '兩人都有長遠的人生週期觀，能理解彼此不同階段的冷靜與退後。' },
+}
+
+const CONN_CFG: Record<string, { label: string; desc: string; accentColor: string; bgColor: string }> = {
+  electromagnetic: {
+    label: '電磁關係 (Electromagnetic)',
+    desc:  '互補吸引 — 一方有 A 閘門，另一方有 B 閘門，合力激活完整通道。最經典的「致命吸引力」，容易一見鍾情但也容易相愛相殺。',
+    accentColor: '#c8553d', bgColor: 'rgba(200,85,61,0.08)',
+  },
+  companionship: {
+    label: '陪伴關係 (Companionship)',
+    desc:  '默契安全 — 兩人擁有相同的閘門或通道，相處起來最不費力，如靈魂伴侶或老朋友。',
+    accentColor: '#6b9a3c', bgColor: 'rgba(107,154,60,0.10)',
+  },
+  compromise: {
+    label: '妥協關係 (Compromise)',
+    desc:  '關係摩擦源 — 一方擁有完整通道，另一方只有其中一個閘門，長期易累積委屈與不平衡感。',
+    accentColor: '#c8a820', bgColor: 'rgba(200,168,32,0.10)',
+  },
+  dominance: {
+    label: '支配關係 (Dominance)',
+    desc:  '單向引導 — 一方在某條通道有能量，另一方完全開放，空白的那方會單向受到能量制約。',
+    accentColor: '#6b7280', bgColor: 'rgba(43,31,20,0.05)',
+  },
+}
+
+const T_COMP = {
+  bg:       '#0f0f1a',
+  surface:  '#1e1e2e',
+  border:   '#2a2a3e',
+  text:     '#ffffff',
+  sub:      '#8888aa',
+  muted:    '#555577',
+  accent:   '#a78bfa',
+}
+
+function CompositeInfo({ chart }: { chart: import('@/lib/api').Chart }) {
+  const meta    = chart.meta
+  const personA = meta?.personA
+  const personB = meta?.personB
+  const result  = meta?.compositeResult
+  const theme   = result ? (INTEGRATION_THEME[result.integrationTheme] ?? INTEGRATION_THEME['6+3+']) : null
+
+  const nameA = personA?.name || 'A'
+  const nameB = personB?.name || 'B'
+
+  return (
+    <View style={cStyles.root}>
+
+      {/* ── 人物資訊 ─────────────────────────────── */}
+      <View style={cStyles.personRow}>
+        {[
+          { label: nameA, p: personA, color: '#c8553d' },
+          { label: nameB, p: personB, color: T_COMP.text },
+        ].map(({ label, p, color }) => (
+          <View key={label} style={cStyles.personCard}>
+            <Text style={[cStyles.personName, { color }]}>{label}</Text>
+            <Text style={cStyles.personSub}>{p?.birthDate ?? '—'}</Text>
+            <Text style={cStyles.personSub}>{p?.birthCity ?? '—'}</Text>
+            <Text style={cStyles.personMeta}>{p?.type ?? '—'} · {p?.profile ?? '—'}</Text>
+          </View>
+        ))}
+      </View>
+
+      {result && theme && (
+        <>
+          {/* ── 整合主題 ────────────────────────────── */}
+          <View style={cStyles.section}>
+            <Text style={cStyles.sectionLabel}>能量場整合主題</Text>
+            <View style={cStyles.card}>
+              <View style={cStyles.themeHeader}>
+                <Text style={cStyles.themeLabel}>{theme.label}</Text>
+                <Text style={cStyles.themeSub}>
+                  合圖定義 {result.compositeDefinedCount} / 9 中心 · 開放 {result.compositeOpenCount} 中心
+                </Text>
+              </View>
+              <View style={cStyles.themePair}>
+                <View style={cStyles.themeBlock}>
+                  <Text style={cStyles.themeBlockLabel}>戀愛關係</Text>
+                  <Text style={cStyles.themeBlockBody}>{theme.love}</Text>
+                </View>
+                <View style={[cStyles.themeBlock, { marginTop: 12 }]}>
+                  <Text style={cStyles.themeBlockLabel}>工作夥伴</Text>
+                  <Text style={cStyles.themeBlockBody}>{theme.work}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* ── 四種核心連結動力 ─────────────────────── */}
+          <View style={cStyles.section}>
+            <Text style={cStyles.sectionLabel}>四種核心連結動力</Text>
+            {(['electromagnetic', 'companionship', 'compromise', 'dominance'] as const).map(type => {
+              const items = result[type]
+              const cfg   = CONN_CFG[type]
+              return (
+                <View key={type} style={[cStyles.connGroup, { borderColor: cfg.accentColor + '55' }]}>
+                  <View style={[cStyles.connHeader, { backgroundColor: cfg.bgColor }]}>
+                    <Text style={[cStyles.connTitle, { color: cfg.accentColor }]}>{cfg.label}</Text>
+                    <Text style={cStyles.connDesc}>{cfg.desc}</Text>
+                  </View>
+                  {items.length === 0 ? (
+                    <Text style={cStyles.connEmpty}>無相關通道</Text>
+                  ) : items.map(conn => (
+                    <View key={conn.channelId} style={cStyles.connRow}>
+                      <View style={cStyles.connIdCol}>
+                        <Text style={cStyles.connId}>{conn.channelId}</Text>
+                        <Text style={cStyles.connCenters}>
+                          {LIB_CENTER_ZH[conn.centerA] ?? conn.centerA}—{LIB_CENTER_ZH[conn.centerB] ?? conn.centerB}
+                        </Text>
+                      </View>
+                      <View style={cStyles.connGateCol}>
+                        <Text style={[cStyles.connPersonLabel, { color: '#c8553d' }]}>{nameA}</Text>
+                        <Text style={cStyles.connGates}>{conn.aGates.length > 0 ? conn.aGates.join(', ') : '—'}</Text>
+                      </View>
+                      <View style={cStyles.connGateCol}>
+                        <Text style={cStyles.connPersonLabel}>{nameB}</Text>
+                        <Text style={cStyles.connGates}>{conn.bGates.length > 0 ? conn.bGates.join(', ') : '—'}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )
+            })}
+          </View>
+
+          {/* ── 合圖定義通道 ─────────────────────────── */}
+          {chart.channels.length > 0 && (
+            <View style={cStyles.section}>
+              <Text style={cStyles.sectionLabel}>合圖定義通道（{chart.channels.length}）</Text>
+              <View style={cStyles.card}>
+                <View style={cStyles.chipRow}>
+                  {chart.channels.map(rawCh => {
+                    const ch = findChannelById(rawCh)
+                    const id = ch ? `${ch.from}-${ch.to}` : rawCh.replace(/^c/, '')
+                    return (
+                      <View key={rawCh} style={cStyles.chip}>
+                        <Text style={cStyles.chipId}>{id}</Text>
+                      </View>
+                    )
+                  })}
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* ── 人生角色共鳴 ─────────────────────────── */}
+          <View style={cStyles.section}>
+            <Text style={cStyles.sectionLabel}>人生角色共鳴</Text>
+            <View style={cStyles.card}>
+              <View style={cStyles.profileRow}>
+                <Text style={[cStyles.profileLabel, { color: '#c8553d' }]}>{nameA} {personA?.profile}</Text>
+                <Text style={cStyles.profileLabel}>{nameB} {personB?.profile}</Text>
+              </View>
+              {result.profileResonance.length === 0 ? (
+                <Text style={cStyles.resonanceNone}>兩人人生角色沒有共同爻線，各自的觀點框架較為不同。</Text>
+              ) : result.profileResonance.map(line => {
+                const info = PROFILE_RESONANCE_DESC[line]
+                if (!info) return null
+                return (
+                  <View key={line} style={cStyles.resonanceRow}>
+                    <Text style={cStyles.resonanceTitle}>{info.title}</Text>
+                    <Text style={cStyles.resonanceDesc}>{info.desc}</Text>
+                  </View>
+                )
+              })}
+            </View>
+          </View>
+
+          {/* ── 策略與內在權威 ───────────────────────── */}
+          <View style={cStyles.section}>
+            <Text style={cStyles.sectionLabel}>策略與內在權威</Text>
+            {[
+              { label: `${nameA} 的權威`, p: personA, color: '#c8553d' },
+              { label: `${nameB} 的權威`, p: personB, color: T_COMP.text },
+            ].map(({ label, p, color }) => (
+              <View key={label} style={[cStyles.authorityCard, { borderLeftColor: color }]}>
+                <Text style={cStyles.authorityLabel}>{label}</Text>
+                <Text style={[cStyles.authorityName, { color }]}>{p?.authority ?? '—'}</Text>
+                {p?.authorityTip ? <Text style={cStyles.authorityTip}>{p.authorityTip}</Text> : null}
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+    </View>
+  )
+}
+
+const cStyles = StyleSheet.create({
+  root:              { gap: 16 },
+  section:           { gap: 8 },
+  sectionLabel:      { fontSize: 11, fontWeight: '600', color: T_COMP.muted, letterSpacing: 1.2, textTransform: 'uppercase' },
+
+  // Person header
+  personRow:         { flexDirection: 'row', gap: 10 },
+  personCard:        { flex: 1, backgroundColor: T_COMP.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: T_COMP.border },
+  personName:        { fontSize: 18, fontWeight: '700', marginBottom: 4 },
+  personSub:         { fontSize: 12, color: T_COMP.sub },
+  personMeta:        { fontSize: 12, color: T_COMP.muted, marginTop: 6 },
+
+  // Card
+  card:              { backgroundColor: T_COMP.surface, borderRadius: 12, borderWidth: 1, borderColor: T_COMP.border, overflow: 'hidden' },
+
+  // Integration theme
+  themeHeader:       { padding: 14, borderBottomWidth: 1, borderBottomColor: T_COMP.border },
+  themeLabel:        { fontSize: 16, fontWeight: '700', color: T_COMP.text, marginBottom: 4 },
+  themeSub:          { fontSize: 12, color: T_COMP.sub },
+  themePair:         { padding: 14 },
+  themeBlock:        {},
+  themeBlockLabel:   { fontSize: 10, fontWeight: '700', color: T_COMP.muted, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 },
+  themeBlockBody:    { fontSize: 13, color: T_COMP.text, lineHeight: 20 },
+
+  // Connection groups
+  connGroup:         { borderWidth: 1, borderRadius: 10, overflow: 'hidden', marginBottom: 8 },
+  connHeader:        { padding: 12, borderBottomWidth: 1, borderBottomColor: '#2a2a3e' },
+  connTitle:         { fontSize: 13, fontWeight: '700', marginBottom: 3 },
+  connDesc:          { fontSize: 12, color: T_COMP.sub, lineHeight: 18 },
+  connEmpty:         { padding: 12, fontSize: 12, color: T_COMP.muted },
+  connRow:           { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 8, paddingHorizontal: 12, borderTopWidth: 1, borderTopColor: '#1e1e2e', gap: 8 },
+  connIdCol:         { width: 80 },
+  connId:            { fontSize: 13, fontWeight: '700', color: T_COMP.text },
+  connCenters:       { fontSize: 10, color: T_COMP.muted, lineHeight: 14, marginTop: 2 },
+  connGateCol:       { flex: 1 },
+  connPersonLabel:   { fontSize: 11, fontWeight: '600', color: T_COMP.sub, marginBottom: 1 },
+  connGates:         { fontSize: 13, color: T_COMP.text },
+
+  // Composite channels
+  chipRow:           { flexDirection: 'row', flexWrap: 'wrap', gap: 6, padding: 12 },
+  chip:              { borderWidth: 1, borderColor: T_COMP.border, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4 },
+  chipId:            { fontSize: 12, color: T_COMP.accent, fontWeight: '600' },
+
+  // Profile resonance
+  profileRow:        { flexDirection: 'row', gap: 12, padding: 12, borderBottomWidth: 1, borderBottomColor: T_COMP.border },
+  profileLabel:      { fontSize: 14, fontWeight: '600', color: T_COMP.text },
+  resonanceNone:     { fontSize: 13, color: T_COMP.sub, lineHeight: 20, padding: 12 },
+  resonanceRow:      { paddingHorizontal: 12, paddingVertical: 8, borderTopWidth: 1, borderTopColor: T_COMP.border },
+  resonanceTitle:    { fontSize: 13, fontWeight: '700', color: T_COMP.text, marginBottom: 3 },
+  resonanceDesc:     { fontSize: 13, color: T_COMP.sub, lineHeight: 19 },
+
+  // Authority
+  authorityCard:     { backgroundColor: T_COMP.surface, borderRadius: 12, borderWidth: 1, borderColor: T_COMP.border, borderLeftWidth: 4, padding: 14, marginBottom: 8 },
+  authorityLabel:    { fontSize: 10, fontWeight: '700', color: T_COMP.muted, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 },
+  authorityName:     { fontSize: 16, fontWeight: '700', marginBottom: 6 },
+  authorityTip:      { fontSize: 13, color: T_COMP.sub, lineHeight: 19 },
+})
 
 // ─── shared components ────────────────────────────────────────────────────────
 

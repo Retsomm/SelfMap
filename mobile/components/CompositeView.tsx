@@ -17,6 +17,7 @@ import {
 } from '@/lib/api'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import BodyGraph from '@/components/BodyGraph'
+import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
 
 const T = {
   bg: '#0f0f1a', surface: '#1e1e2e', border: '#2a2a3e',
@@ -61,12 +62,6 @@ function buildBodyGraphProps(result: CreateCompositeResult) {
   return { definedCenterIds, definedChannelIds, activations }
 }
 
-function formToBirthDate(f: BirthFormData) {
-  return `${f.date.year}-${String(f.date.month).padStart(2, '0')}-${String(f.date.day).padStart(2, '0')}`
-}
-function formToBirthTime(f: BirthFormData) {
-  return `${String(f.time.hour).padStart(2, '0')}:${String(f.time.minute).padStart(2, '0')}`
-}
 
 export default function CompositeView() {
   const { getToken } = useAuth()
@@ -112,8 +107,8 @@ export default function CompositeView() {
 
       setResult(data)
       scrollRef.current?.scrollTo({ y: 0, animated: true })
-    } catch (e: any) {
-      setSubmitError(e.message)
+    } catch (e: unknown) {
+      setSubmitError(e instanceof Error ? e.message : '發生未知錯誤，請稍後再試')
     } finally {
       setSubmitting(false)
     }

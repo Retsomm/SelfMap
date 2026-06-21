@@ -80,22 +80,26 @@ export async function POST(req: NextRequest) {
 
     const meta = {
       personA: {
-        name:      personA.name   || null,
-        birthDate: personA.birthDate,
-        birthTime: personA.birthTime,
-        birthCity: personA.birthCity,
-        timezone:  personA.timezone,
-        type:      hdA.type,
-        profile:   hdA.profile.profile,
+        name:          personA.name   || null,
+        birthDate:     personA.birthDate,
+        birthTime:     personA.birthTime,
+        birthCity:     personA.birthCity,
+        timezone:      personA.timezone,
+        type:          hdA.type,
+        profile:       hdA.profile.profile,
+        authority:     hdA.authority.name,
+        authorityTip:  hdA.authority.tip,
       },
       personB: {
-        name:      personB.name   || null,
-        birthDate: personB.birthDate,
-        birthTime: personB.birthTime,
-        birthCity: personB.birthCity,
-        timezone:  personB.timezone,
-        type:      hdB.type,
-        profile:   hdB.profile.profile,
+        name:          personB.name   || null,
+        birthDate:     personB.birthDate,
+        birthTime:     personB.birthTime,
+        birthCity:     personB.birthCity,
+        timezone:      personB.timezone,
+        type:          hdB.type,
+        profile:       hdB.profile.profile,
+        authority:     hdB.authority.name,
+        authorityTip:  hdB.authority.tip,
       },
     }
 
@@ -112,12 +116,6 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { clerkId: userId } })
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-    const planetsA = hdA.planets.map(p => ({
-      name: p.planetName,
-      blackGate: p.black.gate, blackLine: p.black.line,
-      redGate: p.red.gate,    redLine: p.red.line,
-    }))
-
     const chart = await prisma.chart.create({
       data: {
         userId:    user.id,
@@ -126,18 +124,31 @@ export async function POST(req: NextRequest) {
         birthTime: personA.birthTime,
         birthCity: personA.birthCity,
         timezone:  personA.timezone,
-        type:      hdA.type,
-        authority: hdA.authority.name,
-        profile:   hdA.profile.profile,
-        definition:hdA.definition.label,
-        centers:   [...hdA.definedCenterIds],
-        channels:  hdA.definedChannels.map(ch => ch.id),
-        gates:     [...hdA.allGates],
-        planets:   planetsA,
-        personalityGates: hdA.planets.map(p => p.black.gate),
-        designGates:      hdA.planets.map(p => p.red.gate),
+        type:      '合圖',
+        authority: '合圖',
+        profile:   composite.profileResonance.length > 0
+                     ? composite.profileResonance.join('/')
+                     : '—',
+        definition: composite.integrationTheme,
+        centers:   [...composite.compositeDefinedCenterIds],
+        channels:  composite.compositeDefinedChannels.map(ch => ch.id),
+        gates:     [...new Set([...hdA.allGates, ...hdB.allGates])],
+        personalityGates: [...hdA.allGates],
+        designGates:      [...hdB.allGates],
         chartKind: 'composite',
-        meta,
+        meta: JSON.parse(JSON.stringify({
+          ...meta,
+          compositeResult: {
+            integrationTheme:      composite.integrationTheme,
+            compositeDefinedCount: composite.compositeDefinedCount,
+            compositeOpenCount:    composite.compositeOpenCount,
+            profileResonance:      composite.profileResonance,
+            electromagnetic:       composite.electromagnetic,
+            companionship:         composite.companionship,
+            compromise:            composite.compromise,
+            dominance:             composite.dominance,
+          },
+        })),
       },
     })
 
