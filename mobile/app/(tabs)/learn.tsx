@@ -48,12 +48,6 @@ export default function LearnScreen() {
           </Pressable>
         ))}
 
-        <View style={styles.aboutCard}>
-          <Text style={styles.aboutTitle}>關於 SelfMap</Text>
-          <Text style={styles.aboutBody}>
-            SelfMap 是人類圖的學習與探索工具，幫助你了解自己的設計藍圖，活出最真實的自己。人類圖整合了占星、易經、卡巴拉和印度脈輪系統，提供一套獨特的自我認識框架。
-          </Text>
-        </View>
       </ScrollView>
     </SafeAreaView>
   )
@@ -84,15 +78,4 @@ const styles = StyleSheet.create({
   cardSub:   { fontSize: 13, color: Colors.sub, lineHeight: 18 },
   arrow:     { fontSize: 22, color: Colors.muted },
 
-  aboutCard: {
-    marginTop: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    gap: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  aboutTitle: { fontSize: 14, fontWeight: '700', color: Colors.sub, textTransform: 'uppercase', letterSpacing: 0.8 },
-  aboutBody:  { fontSize: 14, color: Colors.muted, lineHeight: 22 },
 })
