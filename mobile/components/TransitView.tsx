@@ -72,7 +72,11 @@ export default function TransitView() {
   const [pickerVisible, setPickerVisible] = useState(false)
 
   const refreshProfiles = useCallback(async () => {
-    setSavedProfiles(await loadProfiles())
+    try {
+      setSavedProfiles(await loadProfiles())
+    } catch {
+      // keep existing profiles on failure; user will see stale list rather than empty
+    }
   }, [])
 
   useFocusEffect(useCallback(() => { void refreshProfiles() }, [refreshProfiles]))
@@ -127,7 +131,7 @@ export default function TransitView() {
         <>
         <View style={s.card}>
           {savedProfiles.length > 0 && !appliedProfile && (
-            <Pressable style={s.quickApplyBtn} onPress={() => setPickerVisible(true)}>
+            <Pressable style={s.quickApplyBtn} onPress={async () => { await refreshProfiles(); setPickerVisible(true) }}>
               <Text style={s.quickApplyText}>⚡ 快速套用出生資料</Text>
             </Pressable>
           )}

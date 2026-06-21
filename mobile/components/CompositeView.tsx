@@ -152,7 +152,7 @@ export default function CompositeView() {
             <View style={s.cardHeader}>
               <Text style={s.cardTitle}>人物 A</Text>
               {savedProfiles.length > 0 && !appliedA && (
-                <Pressable style={s.quickApplyBtn} onPress={() => setPickerTarget('A')}>
+                <Pressable style={s.quickApplyBtn} onPress={async () => { await refreshProfiles(); setPickerTarget('A') }}>
                   <Text style={s.quickApplyText}>⚡ 套用</Text>
                 </Pressable>
               )}
@@ -174,7 +174,7 @@ export default function CompositeView() {
             <View style={s.cardHeader}>
               <Text style={s.cardTitle}>人物 B</Text>
               {savedProfiles.length > 0 && !appliedB && (
-                <Pressable style={s.quickApplyBtn} onPress={() => setPickerTarget('B')}>
+                <Pressable style={s.quickApplyBtn} onPress={async () => { await refreshProfiles(); setPickerTarget('B') }}>
                   <Text style={s.quickApplyText}>⚡ 套用</Text>
                 </Pressable>
               )}
