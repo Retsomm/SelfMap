@@ -19,6 +19,9 @@ export function SubTabBar<T extends string>({
           key={tab.id}
           style={[styles.item, active === tab.id && styles.itemActive]}
           onPress={() => onSelect(tab.id)}
+          accessible
+          accessibilityRole="tab"
+          accessibilityState={{ selected: active === tab.id }}
         >
           <Text style={[styles.text, active === tab.id && styles.textActive]}>
             {tab.label}

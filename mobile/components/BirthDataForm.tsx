@@ -93,5 +93,5 @@ const s = StyleSheet.create({
   label:       { fontSize: 14, color: Colors.sub, fontWeight: '600' },
   previewText: { fontSize: 16, color: Colors.accent, fontWeight: '600', textAlign: 'center' },
   textInput:   { backgroundColor: Colors.surface, borderRadius: Radius.md, paddingHorizontal: 14, paddingVertical: Spacing.md, color: Colors.text, fontSize: 15, borderWidth: 1, borderColor: Colors.border },
-  errorText:   { color: '#ff7070', fontSize: 13, marginTop: Spacing.xs },
+  errorText:   { color: Colors.red, fontSize: 13, marginTop: Spacing.xs },
 })

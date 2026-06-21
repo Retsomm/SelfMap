@@ -46,7 +46,7 @@ export function InputModal({
             placeholderTextColor={Colors.muted}
             autoFocus
             returnKeyType="done"
-            onSubmitEditing={onConfirm}
+            onSubmitEditing={() => { if (!loading) onConfirm() }}
           />
           <View style={styles.btnRow}>
             <Pressable style={styles.cancelBtn} onPress={onCancel}>

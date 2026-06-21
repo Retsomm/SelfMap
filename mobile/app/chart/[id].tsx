@@ -29,25 +29,27 @@ export default function ChartDetailScreen() {
   const [error, setError] = useState<string | null>(null)
   const [sheetTarget, setSheetTarget] = useState<SheetTarget | null>(null)
 
-  useEffect(() => {
-    ;(async () => {
-      try {
-        const token = await getToken()
-        if (!token) { setError('未登入，請重新登入'); return }
-        const data = await getChart(token, id)
-        setChart(data.chart)
-      } catch (err) {
-        console.error(err)
-        const msg = err instanceof Error ? err.message : String(err)
-        setError(msg.includes('401') || msg.includes('Unauthorized') ? '認證失敗，請重新登入' : `載入失敗：${msg}`)
-      } finally {
-        setLoading(false)
-      }
-    })()
-  }, [id])
+  const loadChart = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const token = await getToken()
+      if (!token) { setError('未登入，請重新登入'); return }
+      const data = await getChart(token, id)
+      setChart(data.chart)
+    } catch (err) {
+      console.error(err)
+      const msg = err instanceof Error ? err.message : String(err)
+      setError(msg.includes('401') || msg.includes('Unauthorized') ? '認證失敗，請重新登入' : `載入失敗：${msg}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { loadChart() }, [id])
 
   if (loading) return <SafeAreaView style={styles.container}><LoadingView /></SafeAreaView>
-  if (error || !chart) return <SafeAreaView style={styles.container}><ErrorView message={error ?? '找不到圖表'} /></SafeAreaView>
+  if (error || !chart) return <SafeAreaView style={styles.container}><ErrorView message={error ?? '找不到圖表'} onRetry={loadChart} /></SafeAreaView>
 
   const typeMeta          = getTypeMeta(chart.type)
   const transitSnapshot   = chart.chartKind === 'transit' ? chart.meta?.transitSnapshot : undefined

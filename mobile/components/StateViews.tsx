@@ -1,8 +1,8 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
-import { Colors, Spacing } from '@/constants/tokens'
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 export function LoadingView() {
-  return <ActivityIndicator color={Colors.accent} style={styles.fill} />
+  return <ActivityIndicator color={Colors.accent} style={styles.centered} />
 }
 
 export function ErrorView({ message, onRetry }: { message: string; onRetry?: () => void }) {
@@ -19,9 +19,8 @@ export function ErrorView({ message, onRetry }: { message: string; onRetry?: () 
 }
 
 const styles = StyleSheet.create({
-  fill:    { flex: 1 },
   centered:{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.md, padding: Spacing.xl },
   message: { color: Colors.red, fontSize: 15, textAlign: 'center', lineHeight: 22 },
-  retryBtn:{ borderWidth: 1, borderColor: Colors.border, borderRadius: 8, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm },
+  retryBtn:{ borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm },
   retryText:{ color: Colors.sub, fontSize: 13 },
 })

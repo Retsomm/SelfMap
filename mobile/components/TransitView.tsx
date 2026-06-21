@@ -242,7 +242,7 @@ const s = StyleSheet.create({
   outlineBtnText: { color: Colors.sub, fontSize: 13 },
   disabled:       { opacity: 0.5 },
   errorBox:       { backgroundColor: Colors.errorBg, borderRadius: Radius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.errorBorder },
-  errorText:      { color: '#ff7070', fontSize: 13 },
+  errorText:      { color: Colors.red, fontSize: 13 },
   impactKind:     { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
   impactLabel:    { fontSize: 15, fontWeight: '700', color: Colors.text, marginTop: 2 },
 })
