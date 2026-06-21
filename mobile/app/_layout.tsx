@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { useEffect } from 'react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { Colors } from '@/constants/tokens'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -50,7 +51,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情', headerBackButtonDisplayMode: 'minimal' }} />
+          <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
         </Stack>
       </ErrorBoundary>
     </ClerkProvider>

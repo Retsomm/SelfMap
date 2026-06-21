@@ -18,6 +18,7 @@ import {
   HD_AUTHORITY_CONTENT,
   HD_DEFINITION_CONTENT,
 } from '@/lib/hd-summary-data'
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 export type SheetTarget =
   | { kind: 'center';     id: string }
@@ -191,7 +192,6 @@ function buildTypeContent(typeKey: string): SheetContent | null {
   }
 }
 
-// API stores Chinese labels; hd-summary-data uses English keys — reverse lookup
 const AUTHORITY_ZH_TO_KEY: Record<string, string> = {
   '情緒權威':     'Emotional',
   '薦骨權威':     'Sacral',
@@ -268,31 +268,31 @@ function centerZh(id: string) { return CENTER_ZH[id] ?? id }
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: Colors.overlay,
   },
   sheet: {
-    backgroundColor: '#1a1a2e',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
     maxHeight: '80%',
     paddingBottom: 40,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 24,
   },
   handle: {
     width: 36,
     height: 4,
-    backgroundColor: '#3a3a5e',
+    backgroundColor: Colors.border,
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: 10,
     marginBottom: 4,
   },
-  scroll: { flex: 0 },
-  scrollInner: { padding: 20, paddingTop: 8, gap: 16 },
+  scroll:      { flex: 0 },
+  scrollInner: { padding: Spacing.lg, paddingTop: Spacing.sm, gap: Spacing.lg },
 
   header: {
     flexDirection: 'row',
@@ -301,11 +301,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   headerText: { flex: 1, gap: 2 },
-  subtitle: { color: '#8888aa', fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
-  title: { color: '#fff', fontSize: 20, fontWeight: '700' },
+  subtitle: { color: Colors.sub, fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
+  title:    { color: Colors.text, fontSize: 20, fontWeight: '700' },
 
   closeBtn: {
-    backgroundColor: '#2e2e4e',
+    backgroundColor: Colors.gateBg,
     borderRadius: 20,
     width: 30,
     height: 30,
@@ -313,38 +313,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 12,
   },
-  closeBtnText: { color: '#8888aa', fontSize: 14, fontWeight: '600' },
+  closeBtnText: { color: Colors.sub, fontSize: 14, fontWeight: '600' },
 
-  section: { gap: 6 },
+  section:      { gap: 6 },
   sectionLabel: {
-    color: '#a78bfa',
+    color: Colors.accent,
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
-  sectionBody: { color: '#ccc', fontSize: 15, lineHeight: 23 },
+  sectionBody: { color: Colors.text, fontSize: 15, lineHeight: 23 },
 
   highlightGroup: { gap: 10 },
   highlightCard: {
-    backgroundColor: '#22223a',
-    borderRadius: 10,
+    backgroundColor: Colors.accentD,
+    borderRadius: Radius.md,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: '#a78bfa',
+    borderLeftColor: Colors.accent,
     gap: 4,
   },
-  highlightLabel: { color: '#a78bfa', fontSize: 12, fontWeight: '700' },
-  highlightBody: { color: '#ddd', fontSize: 14, lineHeight: 21 },
+  highlightLabel: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
+  highlightBody:  { color: Colors.text, fontSize: 14, lineHeight: 21 },
 
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tag: {
-    backgroundColor: '#2e1e4e',
-    borderRadius: 8,
+    backgroundColor: Colors.accentD,
+    borderRadius: Radius.sm,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: '#5b2dba',
+    borderColor: Colors.accent,
   },
-  tagText: { color: '#a78bfa', fontSize: 13, fontWeight: '600' },
+  tagText: { color: Colors.accent, fontSize: 13, fontWeight: '600' },
 })

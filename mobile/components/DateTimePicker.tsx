@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native'
 import WheelPicker from './WheelPicker'
+import { Colors, Radius } from '@/constants/tokens'
 
 // ── 日期 ──────────────────────────────────────────────
 
@@ -44,30 +45,15 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
     <View style={styles.row}>
       <View style={styles.col}>
         <Text style={styles.label}>年</Text>
-        <WheelPicker
-          items={YEARS}
-          selectedIndex={CURRENT_YEAR - value.year}
-          onSelect={setYear}
-          width={88}
-        />
+        <WheelPicker items={YEARS} selectedIndex={CURRENT_YEAR - value.year} onSelect={setYear} width={88} />
       </View>
       <View style={styles.col}>
         <Text style={styles.label}>月</Text>
-        <WheelPicker
-          items={MONTHS}
-          selectedIndex={value.month - 1}
-          onSelect={setMonth}
-          width={64}
-        />
+        <WheelPicker items={MONTHS} selectedIndex={value.month - 1} onSelect={setMonth} width={64} />
       </View>
       <View style={styles.col}>
         <Text style={styles.label}>日</Text>
-        <WheelPicker
-          items={days}
-          selectedIndex={value.day - 1}
-          onSelect={setDay}
-          width={64}
-        />
+        <WheelPicker items={days} selectedIndex={value.day - 1} onSelect={setDay} width={64} />
       </View>
     </View>
   )
@@ -90,22 +76,12 @@ export function TimePicker({ value, onChange }: TimePickerProps) {
     <View style={styles.row}>
       <View style={styles.col}>
         <Text style={styles.label}>時</Text>
-        <WheelPicker
-          items={HOURS}
-          selectedIndex={value.hour}
-          onSelect={(i) => onChange({ ...value, hour: i })}
-          width={80}
-        />
+        <WheelPicker items={HOURS} selectedIndex={value.hour} onSelect={(i) => onChange({ ...value, hour: i })} width={80} />
       </View>
       <Text style={styles.colon}>:</Text>
       <View style={styles.col}>
         <Text style={styles.label}>分</Text>
-        <WheelPicker
-          items={MINUTES}
-          selectedIndex={value.minute}
-          onSelect={(i) => onChange({ ...value, minute: i })}
-          width={80}
-        />
+        <WheelPicker items={MINUTES} selectedIndex={value.minute} onSelect={(i) => onChange({ ...value, minute: i })} width={80} />
       </View>
     </View>
   )
@@ -119,13 +95,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#1e1e2e',
-    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#2e2e4e',
+    borderColor: Colors.border,
   },
-  col: { alignItems: 'center', gap: 4 },
-  label: { fontSize: 12, color: '#555577', fontWeight: '600' },
-  colon: { fontSize: 24, color: '#555577', marginTop: 20 },
+  col:   { alignItems: 'center', gap: 4 },
+  label: { fontSize: 12, color: Colors.muted, fontWeight: '600' },
+  colon: { fontSize: 24, color: Colors.muted, marginTop: 20 },
 })

@@ -2,7 +2,8 @@
  * 合圖分析 View — 兩個出生資料表單，計算後存一筆並顯示合圖 Body Graph 與結果。
  */
 import { useAuth } from '@clerk/expo'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import { useFocusEffect } from 'expo-router'
 import {
   ActivityIndicator,
   Pressable,
@@ -24,10 +25,10 @@ import { type BirthProfile, loadProfiles } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const CONN_CFG = {
-  electromagnetic: { label: '電磁連結', color: Colors.em,    bg: '#1a1500', icon: '⚡', desc: '兩人各有通道一半，在一起時被完整激活，帶來強烈吸引力。' },
-  companionship:   { label: '陪伴連結', color: Colors.comp,  bg: '#0a1525', icon: '🤝', desc: '兩人同時擁有完整通道，帶來穩定陪伴感。' },
-  compromise:      { label: '妥協連結', color: Colors.compro,bg: '#15102a', icon: '⚖️', desc: '一方有完整通道，另一方只有一端，容易出現調整需求。' },
-  dominance:       { label: '支配連結', color: Colors.dom,   bg: '#111111', icon: '🎯', desc: '能量可能出現主導或覆蓋的動態。' },
+  electromagnetic: { label: '電磁連結', color: Colors.em,    bg: Colors.emDimBg,     icon: '⚡', desc: '兩人各有通道一半，在一起時被完整激活，帶來強烈吸引力。' },
+  companionship:   { label: '陪伴連結', color: Colors.comp,  bg: Colors.compDimBg,   icon: '🤝', desc: '兩人同時擁有完整通道，帶來穩定陪伴感。' },
+  compromise:      { label: '妥協連結', color: Colors.compro,bg: Colors.comproDimBg, icon: '⚖️', desc: '一方有完整通道，另一方只有一端，容易出現調整需求。' },
+  dominance:       { label: '支配連結', color: Colors.dom,   bg: Colors.domDimBg,    icon: '🎯', desc: '能量可能出現主導或覆蓋的動態。' },
 } as const
 
 const THEME_DESC: Record<string, string> = {
@@ -81,7 +82,7 @@ export default function CompositeView() {
     setSavedProfiles(await loadProfiles())
   }, [])
 
-  useEffect(() => { refreshProfiles() }, [refreshProfiles])
+  useFocusEffect(useCallback(() => { void refreshProfiles() }, [refreshProfiles]))
 
   function applyProfile(p: BirthProfile) {
     const patch = { date: p.date, time: p.time, city: p.city, timezone: p.timezone }
@@ -327,5 +328,5 @@ const s = StyleSheet.create({
   outlineBtnText: { color: Colors.sub, fontSize: 13 },
   disabled:       { opacity: 0.5 },
   errorBox:       { backgroundColor: Colors.errorBg, borderRadius: Radius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.errorBorder },
-  errorText:      { color: '#ff7070', fontSize: 13 },
+  errorText:      { color: Colors.red, fontSize: 13 },
 })

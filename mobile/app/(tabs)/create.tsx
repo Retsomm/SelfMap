@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   button:         { backgroundColor: Colors.accent, paddingVertical: 14, borderRadius: Radius.lg, alignItems: 'center', marginTop: Spacing.sm },
   buttonDisabled: { opacity: 0.5 },
   buttonText:     { color: Colors.bg, fontSize: 16, fontWeight: '600' },
-  errorText:      { color: '#ff7070', fontSize: 13, marginTop: Spacing.xs },
+  errorText:      { color: Colors.red, fontSize: 13, marginTop: Spacing.xs },
   errorBox:       { backgroundColor: Colors.errorBg, borderRadius: Radius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.errorBorder },
   quickApplyBtn:  { borderWidth: 1, borderColor: Colors.accent, borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center', backgroundColor: Colors.accentD },
   quickApplyText: { color: Colors.accent, fontSize: 14, fontWeight: '600' },

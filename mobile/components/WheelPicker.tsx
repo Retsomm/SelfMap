@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react'
 import { ScrollView, Text, View, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native'
+import { Colors } from '@/constants/tokens'
 
 const ITEM_H = 44
 const VISIBLE = 5  // 顯示 5 行，中間那行是選中的
@@ -33,7 +34,6 @@ export default function WheelPicker({ items, selectedIndex, onSelect, width = 80
 
   return (
     <View style={[styles.container, { width }]}>
-      {/* 上下兩條選取線 */}
       <View style={[styles.line, { top: ITEM_H * 2 }]} pointerEvents="none" />
       <View style={[styles.line, { top: ITEM_H * 3 - 1 }]} pointerEvents="none" />
 
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: '#3e3e5e',
+    backgroundColor: Colors.border,
     zIndex: 1,
   },
   item: {
@@ -73,6 +73,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  text: { fontSize: 18, color: '#555577' },
-  selected: { color: '#fff', fontWeight: '600', fontSize: 20 },
+  text:     { fontSize: 18, color: Colors.muted },
+  selected: { color: Colors.text, fontWeight: '600', fontSize: 20 },
 })

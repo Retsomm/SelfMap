@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import { type Chart } from '@/lib/api'
 import { CENTER_ORDER, HD_CHANNELS, HD_GATES } from '@/lib/hd-chart-data'
 import { normalizeCenterId } from '@/lib/hd-normalizers'
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const CENTER_SHORT_ZH: Record<string, string> = {
   head: '頭腦', ajna: '心智', throat: '喉嚨', g: 'G',
@@ -158,7 +159,7 @@ export default function TransitAnalysis({
       )}
 
       {/* 提醒 */}
-      <View style={[s.card, { borderLeftWidth: 3, borderLeftColor: '#f97316' }]}>
+      <View style={[s.card, { borderLeftWidth: 3, borderLeftColor: Colors.transit }]}>
         <Text style={t.reminderText}>
           關於流日的提醒：流日啟動的地方愈多，不代表運勢愈好。這些暫時被啟動的能量都不屬於你原本的設計，容易讓你感覺被外在頻率推著走，甚至做出不適合自己的決策。最重要的事，始終是回到自己的內在權威做決定。
         </Text>
@@ -167,17 +168,16 @@ export default function TransitAnalysis({
   )
 }
 
-// shared card style (mirrors ChartPrimitives / main screen card)
 const s = StyleSheet.create({
   card: {
-    backgroundColor: '#1e1e2e',
-    borderRadius: 14,
-    padding: 16,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: '#2a2a3e',
+    borderColor: Colors.border,
   },
   cardTitle: {
-    color: '#8888aa',
+    color: Colors.sub,
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -187,34 +187,41 @@ const s = StyleSheet.create({
 })
 
 const t = StyleSheet.create({
-  centerRow:    { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#1e1e2e' },
-  centerName:   { flex: 1, fontSize: 14, color: '#ccccdd' },
-  badges:       { flexDirection: 'row', gap: 6 },
-  badge:             { borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeOpen:         { backgroundColor: '#1a1a2e' },
-  badgeOpenText:     { fontSize: 11, color: '#555577' },
-  badgePersonal:     { backgroundColor: '#2e1e4e' },
-  badgePersonalText: { fontSize: 11, color: '#a78bfa', fontWeight: '600' },
-  badgeTransit:      { backgroundColor: '#2a1400' },
-  badgeTransitText:  { fontSize: 11, color: '#f97316', fontWeight: '600' },
+  centerRow:  { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  centerName: { flex: 1, fontSize: 14, color: Colors.text },
+  badges:     { flexDirection: 'row', gap: 6 },
+  badge:            { borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3 },
+  badgeOpen:        { backgroundColor: Colors.gateBg },
+  badgeOpenText:    { fontSize: 11, color: Colors.muted },
+  badgePersonal:    { backgroundColor: Colors.accentD },
+  badgePersonalText:{ fontSize: 11, color: Colors.accent, fontWeight: '600' },
+  badgeTransit:     { backgroundColor: Colors.transitChipBg },
+  badgeTransitText: { fontSize: 11, color: Colors.transit, fontWeight: '600' },
 
-  highlight:      { marginTop: 12, backgroundColor: '#1e1200', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#5a3000' },
-  highlightTitle: { fontSize: 13, fontWeight: '700', color: '#f97316', marginBottom: 6 },
-  highlightBody:  { fontSize: 13, color: '#cc9966', lineHeight: 20 },
+  highlight: {
+    marginTop: 12,
+    backgroundColor: Colors.transitHighlightBg,
+    borderRadius: Radius.md,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: Colors.transitHighlightBorder,
+  },
+  highlightTitle: { fontSize: 13, fontWeight: '700', color: Colors.transit, marginBottom: 6 },
+  highlightBody:  { fontSize: 13, color: Colors.transitWarmText, lineHeight: 20 },
 
-  subTitle: { fontSize: 11, fontWeight: '700', color: '#8888aa', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 },
+  subTitle: { fontSize: 11, fontWeight: '700', color: Colors.sub, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 },
 
-  gateRow:    { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: '#1e1e2e' },
-  gateNum:    { width: 30, fontSize: 14, fontWeight: '700', color: '#f97316' },
-  gatePlanet: { width: 60, fontSize: 13, color: '#8888aa' },
-  gateName:   { flex: 1, fontSize: 13, color: '#ccccdd' },
-  badgeShared:     { backgroundColor: '#1a2a1a', borderRadius: 5, paddingHorizontal: 7, paddingVertical: 2 },
-  badgeSharedText: { fontSize: 11, color: '#88cc88' },
+  gateRow:    { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  gateNum:    { width: 30, fontSize: 14, fontWeight: '700', color: Colors.transit },
+  gatePlanet: { width: 60, fontSize: 13, color: Colors.sub },
+  gateName:   { flex: 1, fontSize: 13, color: Colors.text },
+  badgeShared:     { backgroundColor: Colors.successBg, borderRadius: 5, paddingHorizontal: 7, paddingVertical: 2 },
+  badgeSharedText: { fontSize: 11, color: Colors.successText },
 
   channelRow:   { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, gap: 10 },
-  channelId:    { width: 54, fontSize: 13, fontWeight: '700', color: '#f97316' },
-  channelGates: { flex: 1, fontSize: 13, color: '#8888aa' },
-  channelNote:  { fontSize: 12, color: '#8888aa', lineHeight: 18, marginTop: 8, fontStyle: 'italic' },
+  channelId:    { width: 54, fontSize: 13, fontWeight: '700', color: Colors.transit },
+  channelGates: { flex: 1, fontSize: 13, color: Colors.sub },
+  channelNote:  { fontSize: 12, color: Colors.sub, lineHeight: 18, marginTop: 8, fontStyle: 'italic' },
 
-  reminderText: { fontSize: 13, color: '#8888aa', lineHeight: 20 },
+  reminderText: { fontSize: 13, color: Colors.sub, lineHeight: 20 },
 })

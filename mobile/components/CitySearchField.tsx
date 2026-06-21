@@ -8,6 +8,7 @@ import {
   FlatList,
 } from 'react-native'
 import { searchCities, type City } from '@/lib/cities'
+import { Colors, Radius } from '@/constants/tokens'
 
 type Props = {
   city: string
@@ -49,7 +50,7 @@ export default function CitySearchField({ city, timezone, onSelect }: Props) {
           onFocus={() => { setFocused(true); setResults(searchCities(query)) }}
           onBlur={() => setTimeout(() => setFocused(false), 150)}
           placeholder="輸入城市名稱…"
-          placeholderTextColor="#555577"
+          placeholderTextColor={Colors.muted}
           autoCapitalize="none"
           autoCorrect={false}
         />
@@ -89,32 +90,32 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1e1e2e',
-    borderRadius: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#2e2e4e',
+    borderColor: Colors.border,
   },
   input: {
     flex: 1,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: '#fff',
+    color: Colors.text,
     fontSize: 15,
   },
-  clear: { paddingHorizontal: 14, paddingVertical: 12 },
-  clearText: { color: '#555577', fontSize: 14 },
+  clear:     { paddingHorizontal: 14, paddingVertical: 12 },
+  clearText: { color: Colors.muted, fontSize: 14 },
   dropdown: {
-    backgroundColor: '#1e1e2e',
-    borderRadius: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#3e3e5e',
+    borderColor: Colors.border,
     marginTop: 4,
     maxHeight: 280,
   },
-  option: { paddingHorizontal: 14, paddingVertical: 12 },
-  optionCity: { color: '#fff', fontSize: 15 },
-  optionTz: { color: '#6666aa', fontSize: 12, marginTop: 2 },
-  sep: { height: 1, backgroundColor: '#2e2e4e', marginHorizontal: 14 },
-  tzBadge: { marginTop: 6, paddingHorizontal: 4 },
-  tzText: { color: '#a78bfa', fontSize: 12 },
+  option:     { paddingHorizontal: 14, paddingVertical: 12 },
+  optionCity: { color: Colors.text, fontSize: 15 },
+  optionTz:   { color: Colors.sub, fontSize: 12, marginTop: 2 },
+  sep:        { height: 1, backgroundColor: Colors.border, marginHorizontal: 14 },
+  tzBadge:    { marginTop: 6, paddingHorizontal: 4 },
+  tzText:     { color: Colors.accent, fontSize: 12 },
 })

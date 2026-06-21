@@ -99,7 +99,7 @@ export default function ChartDetailScreen() {
           <Text style={styles.graphTitle}>Body Graph</Text>
           {transitSnapshot ? (
             <View style={styles.legend}>
-              <View style={[styles.legendDot, { backgroundColor: '#1a1a1a' }]} />
+              <View style={[styles.legendDot, { backgroundColor: Colors.text }]} />
               <Text style={styles.legendText}>個人意識</Text>
               <View style={[styles.legendDot, { backgroundColor: Colors.designRed }]} />
               <Text style={styles.legendText}>個人潛意識</Text>
@@ -108,7 +108,7 @@ export default function ChartDetailScreen() {
             </View>
           ) : isComposite ? (
             <View style={styles.legend}>
-              <View style={[styles.legendDot, { backgroundColor: '#1a1a1a' }]} />
+              <View style={[styles.legendDot, { backgroundColor: Colors.text }]} />
               <Text style={styles.legendText}>人物 A</Text>
               <View style={[styles.legendDot, { backgroundColor: Colors.designRed }]} />
               <Text style={styles.legendText}>人物 B</Text>
@@ -200,7 +200,7 @@ export default function ChartDetailScreen() {
               <SectionCard title="行星閘門對照">
                 <View style={styles.planetHeader}>
                   <Text style={[styles.planetCol, styles.planetHeaderText]}>行星</Text>
-                  <Text style={[styles.planetGateCol, styles.planetHeaderText, { color: '#555' }]}>● 意識（黑）</Text>
+                  <Text style={[styles.planetGateCol, styles.planetHeaderText, { color: Colors.muted }]}>● 意識（黑）</Text>
                   <Text style={[styles.planetGateCol, styles.planetHeaderText, { color: Colors.designRed }]}>● 潛意識（紅）</Text>
                 </View>
                 {planets.map((p, i) => (
@@ -263,9 +263,9 @@ const styles = StyleSheet.create({
   planetHeader:     { flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: Colors.border, marginBottom: Spacing.xs },
   planetHeaderText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, color: Colors.sub },
   planetRow:        { flexDirection: 'row', paddingVertical: 5 },
-  planetRowAlt:     { backgroundColor: '#17172a', marginHorizontal: -Spacing.lg, paddingHorizontal: Spacing.lg, borderRadius: 6 },
-  planetCol:        { flex: 1.2, fontSize: 13, color: '#ccc' },
+  planetRowAlt:     { backgroundColor: Colors.altRowBg, marginHorizontal: -Spacing.lg, paddingHorizontal: Spacing.lg, borderRadius: 6 },
+  planetCol:        { flex: 1.2, fontSize: 13, color: Colors.sub },
   planetGateCol:    { flex: 1, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  planetBlack:      { color: '#e0e0e0' },
+  planetBlack:      { color: Colors.text },
   planetRed:        { color: Colors.planetRedText },
 })

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native'
 import { type Chart } from '@/lib/api'
 import { findChannelById } from '@/lib/hd-normalizers'
+import { Colors } from '@/constants/tokens'
 
 const LIB_CENTER_ZH: Record<string, string> = {
   head: '頭腦中心', ajna: '心智中心', throat: '喉嚨中心', g: 'G 中心',
@@ -64,15 +65,7 @@ const CONN_CFG: Record<string, { label: string; desc: string; accentColor: strin
   },
 }
 
-const C = {
-  bg:      '#0f0f1a',
-  surface: '#1e1e2e',
-  border:  '#2a2a3e',
-  text:    '#ffffff',
-  sub:     '#8888aa',
-  muted:   '#555577',
-  accent:  '#a78bfa',
-}
+const C = Colors
 
 export default function CompositeInfo({ chart }: { chart: Chart }) {
   const meta    = chart.meta
@@ -248,11 +241,11 @@ const c = StyleSheet.create({
   themeBlockBody:  { fontSize: 13, color: C.text, lineHeight: 20 },
 
   connGroup:       { borderWidth: 1, borderRadius: 10, overflow: 'hidden', marginBottom: 8 },
-  connHeader:      { padding: 12, borderBottomWidth: 1, borderBottomColor: '#2a2a3e' },
+  connHeader:      { padding: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
   connTitle:       { fontSize: 13, fontWeight: '700', marginBottom: 3 },
   connDesc:        { fontSize: 12, color: C.sub, lineHeight: 18 },
   connEmpty:       { padding: 12, fontSize: 12, color: C.muted },
-  connRow:         { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 8, paddingHorizontal: 12, borderTopWidth: 1, borderTopColor: '#1e1e2e', gap: 8 },
+  connRow:         { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 8, paddingHorizontal: 12, borderTopWidth: 1, borderTopColor: Colors.border, gap: 8 },
   connIdCol:       { width: 80 },
   connId:          { fontSize: 13, fontWeight: '700', color: C.text },
   connCenters:     { fontSize: 10, color: C.muted, lineHeight: 14, marginTop: 2 },

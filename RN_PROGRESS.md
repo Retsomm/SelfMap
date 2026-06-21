@@ -89,10 +89,10 @@
 - [x] 共用 `StateViews`（`components/StateViews.tsx`：`LoadingView` / `ErrorView`）
 - [x] 共用 `BirthProfilePickerModal` 元件（建立圖表三 tab 共用）
 - [x] 共用 `AppliedProfileCard` 元件（套用後摘要卡片）
-- [x] Bottom Tab Bar 圖示優化（已套用 emoji 圖示）
+- [x] Bottom Tab Bar 圖示優化（SVG 線條型圖示：菱形/圓加號/書本/人物輪廓）
 - [x] Loading / Skeleton 狀態統一（統一使用 `LoadingView` / `ErrorView`）
 - [x] 錯誤狀態頁（Error Boundary，包裝 root layout）
-- [ ] 深色模式支援
+- [x] 色系統一為網頁端 editorial warm palette（`--paper`/`--ink`/`--crimson`）— `constants/tokens.ts` 全面更新，所有元件同步套用
 
 ---
 
