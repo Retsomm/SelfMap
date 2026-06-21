@@ -2,7 +2,7 @@
  * 流日分析 View — 填入出生資料後計算個人圖 + 今日流日合成圖。
  */
 import { useAuth } from '@clerk/expo'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Pressable,
@@ -13,8 +13,11 @@ import {
 } from 'react-native'
 import { type CreateTransitResult, type ImpactLayer, createTransitChart } from '@/lib/api'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
+import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
+import { AppliedProfileCard } from '@/components/AppliedProfileCard'
 import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
 import BodyGraph from '@/components/BodyGraph'
+import { type BirthProfile, loadProfiles } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const PLANET_SYM: Record<string, string> = {
@@ -55,12 +58,30 @@ function buildCombinedBodyGraphProps(data: CreateTransitResult) {
 
 export default function TransitView() {
   const { getToken } = useAuth()
+  const scrollRef = useRef<ScrollView>(null)
 
   const [form, setForm]               = useState<BirthFormData>(defaultBirthFormData)
   const [fieldError, setFieldError]   = useState<string | null>(null)
   const [submitting, setSubmitting]   = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [result, setResult]           = useState<CreateTransitResult | null>(null)
+  const [appliedProfile, setAppliedProfile] = useState<BirthProfile | null>(null)
+
+  const [savedProfiles, setSavedProfiles] = useState<BirthProfile[]>([])
+  const [pickerVisible, setPickerVisible] = useState(false)
+
+  const refreshProfiles = useCallback(async () => {
+    setSavedProfiles(await loadProfiles())
+  }, [])
+
+  useEffect(() => { refreshProfiles() }, [refreshProfiles])
+
+  function applyProfile(p: BirthProfile) {
+    setForm(f => ({ ...f, date: p.date, time: p.time, city: p.city, timezone: p.timezone, name: f.name || p.label }))
+    setFieldError(null)
+    setAppliedProfile(p)
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80)
+  }
 
   const handleSubmit = async () => {
     if (!form.city || !form.timezone) {
@@ -96,20 +117,31 @@ export default function TransitView() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       contentContainerStyle={s.inner}
       keyboardShouldPersistTaps="handled"
       nestedScrollEnabled
     >
       {!result ? (
+        <>
         <View style={s.card}>
+          {savedProfiles.length > 0 && !appliedProfile && (
+            <Pressable style={s.quickApplyBtn} onPress={() => setPickerVisible(true)}>
+              <Text style={s.quickApplyText}>⚡ 快速套用出生資料</Text>
+            </Pressable>
+          )}
           <Text style={s.sectionLabel}>你的出生資料</Text>
-          <BirthDataForm
-            value={form}
-            onChange={setForm}
-            namePlaceholder="例如：本人"
-            fieldError={fieldError}
-            onClearError={() => setFieldError(null)}
-          />
+          {appliedProfile ? (
+            <AppliedProfileCard profile={appliedProfile} onClear={() => setAppliedProfile(null)} />
+          ) : (
+            <BirthDataForm
+              value={form}
+              onChange={setForm}
+              namePlaceholder="例如：本人"
+              fieldError={fieldError}
+              onClearError={() => setFieldError(null)}
+            />
+          )}
 
           {submitError ? (
             <View style={[s.errorBox, { marginTop: Spacing.md }]}>
@@ -128,6 +160,14 @@ export default function TransitView() {
             }
           </Pressable>
         </View>
+
+        <BirthProfilePickerModal
+          visible={pickerVisible}
+          profiles={savedProfiles}
+          onSelect={applyProfile}
+          onClose={() => setPickerVisible(false)}
+        />
+        </>
       ) : (
         <>
           <Text style={[s.muted, { textAlign: 'right' }]}>
@@ -236,6 +276,8 @@ const s = StyleSheet.create({
   planetName:     { flex: 1, fontSize: 14, color: Colors.text, marginLeft: Spacing.sm },
   gateChip:       { backgroundColor: Colors.accentD, borderRadius: 6, paddingHorizontal: Spacing.sm, paddingVertical: 3 },
   gateChipText:   { fontSize: 12, fontWeight: '600', color: Colors.accent },
+  quickApplyBtn:  { borderWidth: 1, borderColor: Colors.accent, borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center', backgroundColor: Colors.accentD, marginBottom: Spacing.md },
+  quickApplyText: { color: Colors.accent, fontSize: 14, fontWeight: '600' },
   primaryBtn:     { backgroundColor: Colors.accent, borderRadius: Radius.lg, padding: 14, alignItems: 'center' },
   primaryBtnText: { color: Colors.bg, fontWeight: '700', fontSize: 15 },
   outlineBtn:     { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm, padding: Spacing.md, alignItems: 'center' },

@@ -2,7 +2,7 @@
  * 合圖分析 View — 兩個出生資料表單，計算後存一筆並顯示合圖 Body Graph 與結果。
  */
 import { useAuth } from '@clerk/expo'
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Pressable,
@@ -16,8 +16,11 @@ import {
   createCompositeChart,
 } from '@/lib/api'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
+import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
+import { AppliedProfileCard } from '@/components/AppliedProfileCard'
 import BodyGraph from '@/components/BodyGraph'
 import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
+import { type BirthProfile, loadProfiles } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const CONN_CFG = {
@@ -68,6 +71,31 @@ export default function CompositeView() {
   const [result, setResult]       = useState<CreateCompositeResult | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const [savedProfiles, setSavedProfiles] = useState<BirthProfile[]>([])
+  const [pickerTarget, setPickerTarget] = useState<'A' | 'B' | null>(null)
+  const [appliedA, setAppliedA] = useState<BirthProfile | null>(null)
+  const [appliedB, setAppliedB] = useState<BirthProfile | null>(null)
+
+  const refreshProfiles = useCallback(async () => {
+    setSavedProfiles(await loadProfiles())
+  }, [])
+
+  useEffect(() => { refreshProfiles() }, [refreshProfiles])
+
+  function applyProfile(p: BirthProfile) {
+    const patch = { date: p.date, time: p.time, city: p.city, timezone: p.timezone }
+    if (pickerTarget === 'A') {
+      setFormA(f => ({ ...f, ...patch, name: f.name || p.label }))
+      setErrorA(null)
+      setAppliedA(p)
+    } else if (pickerTarget === 'B') {
+      setFormB(f => ({ ...f, ...patch, name: f.name || p.label }))
+      setErrorB(null)
+      setAppliedB(p)
+    }
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80)
+  }
 
   const calculate = async () => {
     let valid = true
@@ -120,25 +148,47 @@ export default function CompositeView() {
       {!result ? (
         <>
           <View style={s.card}>
-            <Text style={s.cardTitle}>人物 A</Text>
-            <BirthDataForm
-              value={formA}
-              onChange={setFormA}
-              namePlaceholder="例如：自己"
-              fieldError={errorA}
-              onClearError={() => setErrorA(null)}
-            />
+            <View style={s.cardHeader}>
+              <Text style={s.cardTitle}>人物 A</Text>
+              {savedProfiles.length > 0 && !appliedA && (
+                <Pressable style={s.quickApplyBtn} onPress={() => setPickerTarget('A')}>
+                  <Text style={s.quickApplyText}>⚡ 套用</Text>
+                </Pressable>
+              )}
+            </View>
+            {appliedA ? (
+              <AppliedProfileCard profile={appliedA} onClear={() => setAppliedA(null)} />
+            ) : (
+              <BirthDataForm
+                value={formA}
+                onChange={setFormA}
+                namePlaceholder="例如：自己"
+                fieldError={errorA}
+                onClearError={() => setErrorA(null)}
+              />
+            )}
           </View>
 
           <View style={s.card}>
-            <Text style={s.cardTitle}>人物 B</Text>
-            <BirthDataForm
-              value={formB}
-              onChange={setFormB}
-              namePlaceholder="例如：對方"
-              fieldError={errorB}
-              onClearError={() => setErrorB(null)}
-            />
+            <View style={s.cardHeader}>
+              <Text style={s.cardTitle}>人物 B</Text>
+              {savedProfiles.length > 0 && !appliedB && (
+                <Pressable style={s.quickApplyBtn} onPress={() => setPickerTarget('B')}>
+                  <Text style={s.quickApplyText}>⚡ 套用</Text>
+                </Pressable>
+              )}
+            </View>
+            {appliedB ? (
+              <AppliedProfileCard profile={appliedB} onClear={() => setAppliedB(null)} />
+            ) : (
+              <BirthDataForm
+                value={formB}
+                onChange={setFormB}
+                namePlaceholder="例如：對方"
+                fieldError={errorB}
+                onClearError={() => setErrorB(null)}
+              />
+            )}
           </View>
 
           {submitError ? (
@@ -157,6 +207,13 @@ export default function CompositeView() {
               : <Text style={s.primaryBtnText}>計算合圖</Text>
             }
           </Pressable>
+
+          <BirthProfilePickerModal
+            visible={pickerTarget !== null}
+            profiles={savedProfiles}
+            onSelect={applyProfile}
+            onClose={() => setPickerTarget(null)}
+          />
         </>
       ) : (
         <>
@@ -250,7 +307,10 @@ export default function CompositeView() {
 const s = StyleSheet.create({
   inner:          { padding: Spacing.lg, gap: Spacing.md, paddingBottom: 48 },
   card:           { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
-  cardTitle:      { fontSize: 13, fontWeight: '700', color: Colors.accent, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 14 },
+  cardHeader:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  cardTitle:      { fontSize: 13, fontWeight: '700', color: Colors.accent, letterSpacing: 0.5, textTransform: 'uppercase' },
+  quickApplyBtn:  { borderWidth: 1, borderColor: Colors.accent, borderRadius: Radius.sm, paddingHorizontal: Spacing.sm, paddingVertical: 4, backgroundColor: Colors.accentD },
+  quickApplyText: { color: Colors.accent, fontSize: 12, fontWeight: '600' },
   sectionLabel:   { fontSize: 11, fontWeight: '600', color: Colors.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 },
   muted:          { fontSize: 13, color: Colors.sub },
   graphContainer: { width: '100%', aspectRatio: 700 / 1030 },

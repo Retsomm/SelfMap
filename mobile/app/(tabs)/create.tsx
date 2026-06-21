@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/expo'
 import { useRouter } from 'expo-router'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Pressable,
   SafeAreaView,
@@ -17,7 +17,10 @@ import TransitView from '@/components/TransitView'
 import CompositeView from '@/components/CompositeView'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { SubTabBar } from '@/components/SubTabBar'
+import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
+import { AppliedProfileCard } from '@/components/AppliedProfileCard'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { type BirthProfile, loadProfiles } from '@/lib/birthProfiles'
 
 const TODAY = new Date()
 type SubTab = 'personal' | 'composite' | 'transit'
@@ -32,6 +35,7 @@ const SUB_TABS = [
 function CreatePersonalView() {
   const { getToken } = useAuth()
   const router = useRouter()
+  const scrollRef = useRef<ScrollView>(null)
 
   const [name, setName] = useState('')
   const [date, setDate] = useState({ year: TODAY.getFullYear() - 30, month: 1, day: 1 })
@@ -41,6 +45,16 @@ function CreatePersonalView() {
   const [submitting, setSubmitting] = useState(false)
   const [fieldError, setFieldError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [appliedProfile, setAppliedProfile] = useState<BirthProfile | null>(null)
+
+  const [savedProfiles, setSavedProfiles] = useState<BirthProfile[]>([])
+  const [pickerVisible, setPickerVisible] = useState(false)
+
+  const refreshProfiles = useCallback(async () => {
+    setSavedProfiles(await loadProfiles())
+  }, [])
+
+  useEffect(() => { refreshProfiles() }, [refreshProfiles])
 
   const birthDate = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`
   const birthTime = `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`
@@ -66,12 +80,30 @@ function CreatePersonalView() {
     }
   }
 
+  function applyProfile(p: BirthProfile) {
+    setDate(p.date)
+    setTime(p.time)
+    setCity(p.city)
+    setTimezone(p.timezone)
+    if (!name) setName(p.label)
+    setFieldError(null)
+    setAppliedProfile(p)
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80)
+  }
+
   return (
     <ScrollView
+      ref={scrollRef}
       contentContainerStyle={styles.inner}
       keyboardShouldPersistTaps="handled"
       nestedScrollEnabled
     >
+      {savedProfiles.length > 0 && !appliedProfile && (
+        <Pressable style={styles.quickApplyBtn} onPress={() => setPickerVisible(true)}>
+          <Text style={styles.quickApplyText}>⚡ 快速套用出生資料</Text>
+        </Pressable>
+      )}
+
       <Section label="圖表名稱（選填）">
         <TextInput
           style={styles.textInput}
@@ -82,24 +114,30 @@ function CreatePersonalView() {
         />
       </Section>
 
-      <Section label="出生日期">
-        <Text style={styles.previewText}>{birthDate}</Text>
-        <DatePicker value={date} onChange={setDate} />
-      </Section>
+      {appliedProfile ? (
+        <AppliedProfileCard profile={appliedProfile} onClear={() => setAppliedProfile(null)} />
+      ) : (
+        <>
+          <Section label="出生日期">
+            <Text style={styles.previewText}>{birthDate}</Text>
+            <DatePicker value={date} onChange={setDate} />
+          </Section>
 
-      <Section label="出生時間">
-        <Text style={styles.previewText}>{birthTime}</Text>
-        <TimePicker value={time} onChange={setTime} />
-      </Section>
+          <Section label="出生時間">
+            <Text style={styles.previewText}>{birthTime}</Text>
+            <TimePicker value={time} onChange={setTime} />
+          </Section>
 
-      <Section label="出生城市">
-        <CitySearchField
-          city={city}
-          timezone={timezone}
-          onSelect={(c, tz) => { setCity(c); setTimezone(tz); setFieldError(null) }}
-        />
-        {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}
-      </Section>
+          <Section label="出生城市">
+            <CitySearchField
+              city={city}
+              timezone={timezone}
+              onSelect={(c, tz) => { setCity(c); setTimezone(tz); setFieldError(null) }}
+            />
+            {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}
+          </Section>
+        </>
+      )}
 
       {submitError ? (
         <View style={styles.errorBox}>
@@ -114,6 +152,13 @@ function CreatePersonalView() {
       >
         <Text style={styles.buttonText}>{submitting ? '計算中…' : '建立圖表'}</Text>
       </Pressable>
+
+      <BirthProfilePickerModal
+        visible={pickerVisible}
+        profiles={savedProfiles}
+        onSelect={applyProfile}
+        onClose={() => setPickerVisible(false)}
+      />
     </ScrollView>
   )
 }
@@ -162,9 +207,11 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 14, color: Colors.sub, fontWeight: '600' },
   previewText:  { fontSize: 16, color: Colors.accent, fontWeight: '600', textAlign: 'center' },
   textInput:    { backgroundColor: Colors.surface, borderRadius: Radius.md, paddingHorizontal: 14, paddingVertical: Spacing.md, color: Colors.text, fontSize: 15, borderWidth: 1, borderColor: Colors.border },
-  button:       { backgroundColor: Colors.accent, paddingVertical: 14, borderRadius: Radius.lg, alignItems: 'center', marginTop: Spacing.sm },
+  button:         { backgroundColor: Colors.accent, paddingVertical: 14, borderRadius: Radius.lg, alignItems: 'center', marginTop: Spacing.sm },
   buttonDisabled: { opacity: 0.5 },
-  buttonText:   { color: Colors.bg, fontSize: 16, fontWeight: '600' },
-  errorText:    { color: '#ff7070', fontSize: 13, marginTop: Spacing.xs },
-  errorBox:     { backgroundColor: Colors.errorBg, borderRadius: Radius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.errorBorder },
+  buttonText:     { color: Colors.bg, fontSize: 16, fontWeight: '600' },
+  errorText:      { color: '#ff7070', fontSize: 13, marginTop: Spacing.xs },
+  errorBox:       { backgroundColor: Colors.errorBg, borderRadius: Radius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.errorBorder },
+  quickApplyBtn:  { borderWidth: 1, borderColor: Colors.accent, borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center', backgroundColor: Colors.accentD },
+  quickApplyText: { color: Colors.accent, fontSize: 14, fontWeight: '600' },
 })

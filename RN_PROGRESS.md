@@ -63,9 +63,9 @@
 ## 第三階段：補充功能
 
 ### 帳號設定
-- [ ] 用戶名編輯
+- [x] 用戶名編輯（`firstName` 更新）
 - [ ] 頭像上傳
-- [ ] 已連結 OAuth 帳號顯示
+- [x] 已連結 OAuth 帳號顯示（filter verified + 僅顯示支援的 provider）
 
 ### 教育內容
 - [ ] 9 大主題靜態內容頁（類型、中心、權威…）
@@ -74,7 +74,7 @@
 ### 其他
 - [ ] 圖表下載為圖片（`downloadChart`）
 - [ ] AI 解讀提示詞功能
-- [ ] 出生檔案快速填表（BirthProfileManager）
+- [x] 出生檔案快速填表（BirthProfileManager）— 新增於帳號頁，建立圖表三個 tab（個人/流日/合圖）均支援快速套用，套用後隱藏表單並自動捲至送出按鈕
 - [ ] 關於頁面
 
 ---
@@ -87,9 +87,11 @@
 - [x] 共用 `SubTabBar` 元件（`components/SubTabBar.tsx`）
 - [x] 共用 `InputModal` 元件（`components/InputModal.tsx`，用於重新命名操作）
 - [x] 共用 `StateViews`（`components/StateViews.tsx`：`LoadingView` / `ErrorView`）
+- [x] 共用 `BirthProfilePickerModal` 元件（建立圖表三 tab 共用）
+- [x] 共用 `AppliedProfileCard` 元件（套用後摘要卡片）
 - [x] Bottom Tab Bar 圖示優化（已套用 emoji 圖示）
 - [x] Loading / Skeleton 狀態統一（統一使用 `LoadingView` / `ErrorView`）
-- [ ] 錯誤狀態頁（Error Boundary）
+- [x] 錯誤狀態頁（Error Boundary，包裝 root layout）
 - [ ] 深色模式支援
 
 ---
