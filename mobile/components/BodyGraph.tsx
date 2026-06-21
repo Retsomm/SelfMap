@@ -60,15 +60,16 @@ function perpFoot(
   return [a[0] + t * dx, a[1] + t * dy]
 }
 
+// url() reference to the Defs pattern — works as fill on Circle, NOT as stroke on Line
 const STRIPE_FILL = 'url(#rb-stripes)'
 const ACT_TRANSIT = '#f97316'  // 橙色（流日）
 
 function activationFill(state: GateActivation | undefined): string | null {
   if (!state) return null
-  if (state.c && state.u) return STRIPE_FILL  // 黑/紅條紋（個人 Personality + Design）
-  if (state.c) return ACT_CONSCIOUS           // 純黑（Personality）
-  if (state.u) return ACT_UNCONSCIOUS         // 純紅（Design）
-  if (state.t) return ACT_TRANSIT             // 橙色（流日）
+  if (state.c && state.u) return STRIPE_FILL   // 黑紅條紋（Personality + Design）
+  if (state.c) return ACT_CONSCIOUS            // 純黑（Personality）
+  if (state.u) return ACT_UNCONSCIOUS          // 純紅（Design）
+  if (state.t) return ACT_TRANSIT              // 橙色（流日）
   return null
 }
 
@@ -79,13 +80,19 @@ function ChannelSegment({
   fill: string | null; strokeWidth: number
 }) {
   const w = strokeWidth
-  const inner = strokeWidth * 0.28
+  const inner = w * 0.28
+  if (fill === STRIPE_FILL) {
+    // react-native-svg 不支援 stroke="url(...)"，改用紅外黑內雙線近似條紋效果
+    return (
+      <G>
+        <Line x1={x1} y1={y1} x2={x2} y2={y2} stroke={ACT_UNCONSCIOUS} strokeWidth={w} strokeLinecap="round" />
+        <Line x1={x1} y1={y1} x2={x2} y2={y2} stroke={ACT_CONSCIOUS} strokeWidth={w * 0.45} strokeLinecap="round" />
+      </G>
+    )
+  }
   if (fill) {
     return (
-      <Line
-        x1={x1} y1={y1} x2={x2} y2={y2}
-        stroke={fill} strokeWidth={w} strokeLinecap="round"
-      />
+      <Line x1={x1} y1={y1} x2={x2} y2={y2} stroke={fill} strokeWidth={w} strokeLinecap="round" />
     )
   }
   return (
@@ -101,21 +108,12 @@ function ChannelSegment({
 export default function BodyGraph({
   definedCenterIds,
   activations = {},
-  definedChannelIds,
   onPressCenter,
   onPressGate,
   showGates = true,
 }: BodyGraphProps) {
   const isDefined = (k: string) =>
     !definedCenterIds || definedCenterIds.has(k)
-
-  // Check channel defined state from definedChannelIds
-  const isChannelDefined = (ch: ChartChannel) => {
-    if (!definedChannelIds) return false
-    const key = `c${Math.min(ch.from, ch.to)}-${Math.max(ch.from, ch.to)}`
-    const keyAlt = `c${ch.from}-${ch.to}`
-    return definedChannelIds.has(ch.id) || definedChannelIds.has(key) || definedChannelIds.has(keyAlt)
-  }
 
   // De-duplicate channel pairs
   const seenPairs = new Set<string>()
@@ -129,17 +127,12 @@ export default function BodyGraph({
   const SW = 10  // base stroke width
 
   return (
-    <Svg viewBox="0 -40 700 1030" width="100%" height="100%">
+    <Svg viewBox="55 -40 590 1030" width="100%" height="100%">
       <Defs>
-        <Pattern
-          id="rb-stripes"
-          patternUnits="userSpaceOnUse"
-          width="7"
-          height="7"
-          patternTransform="rotate(45)"
-        >
-          <Rect x={0} y={0} width={3.5} height={7} fill={ACT_CONSCIOUS} />
-          <Rect x={3.5} y={0} width={3.5} height={7} fill={ACT_UNCONSCIOUS} />
+        {/* #111111 代替 #000000：react-native-svg 某些版本會將純黑 #000000 視為透明 */}
+        <Pattern id="rb-stripes" patternUnits="userSpaceOnUse" width={8} height={8} patternTransform="rotate(45)">
+          <Rect key="a" x={0} y={0} width={4} height={8} fill="#111111" />
+          <Rect key="b" x={4} y={0} width={4} height={8} fill={ACT_UNCONSCIOUS} />
         </Pattern>
       </Defs>
 
@@ -172,10 +165,8 @@ export default function BodyGraph({
           const pairKey = `${Math.min(ch.from, ch.to)}-${Math.max(ch.from, ch.to)}`
           if (INTEGRATION_PAIRS.has(pairKey)) return null
 
-          // Two-gate rule: only render as defined when both gates have activation data
-          const defined = isChannelDefined(ch) && activations[ch.from] != null && activations[ch.to] != null
-          const aFill = defined ? activationFill(activations[ch.from]) : null
-          const bFill = defined ? activationFill(activations[ch.to]) : null
+          const aFill = activationFill(activations[ch.from])
+          const bFill = activationFill(activations[ch.to])
           const mx = (a[0] + b[0]) / 2
           const my = (a[1] + b[1]) / 2
 
@@ -273,16 +264,13 @@ export default function BodyGraph({
               const state = activations[gateNum]
               const actFill = activationFill(state)
               const isActivated = !!actFill
-
-              const circleFill = isActivated ? actFill! : HD_PALETTE.paper
-              // 條紋或純色激活時，文字用白色；未激活時用墨色
               const textFill = isActivated ? '#ffffff' : HD_PALETTE.ink
 
               return (
                 <G key={`${k}-${num}`} onPress={() => onPressGate?.(gateNum)}>
                   <Circle
                     cx={x} cy={y} r={7.5}
-                    fill={circleFill}
+                    fill={isActivated ? actFill! : HD_PALETTE.paper}
                     stroke={HD_PALETTE.ink}
                     strokeWidth={1.4}
                   />

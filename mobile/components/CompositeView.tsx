@@ -2,8 +2,7 @@
  * 合圖分析 View — 兩個出生資料表單，計算後存一筆並顯示合圖 Body Graph 與結果。
  */
 import { useAuth } from '@clerk/expo'
-import { useCallback, useRef, useState } from 'react'
-import { useFocusEffect } from 'expo-router'
+import { useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Pressable,
@@ -16,12 +15,14 @@ import {
   type CreateCompositeResult,
   createCompositeChart,
 } from '@/lib/api'
+import { buildCompositeBodyGraphProps } from '@/lib/hd-bodygraph-utils'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
 import { AppliedProfileCard } from '@/components/AppliedProfileCard'
 import BodyGraph from '@/components/BodyGraph'
 import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
-import { type BirthProfile, loadProfiles } from '@/lib/birthProfiles'
+import { type BirthProfile } from '@/lib/birthProfiles'
+import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const CONN_CFG = {
@@ -38,27 +39,7 @@ const THEME_DESC: Record<string, string> = {
   '6+3+': '你們合圖激活了 6 個或更少中心，容易被第三方影響。',
 }
 
-const LIB_TO_CHART: Record<string, string> = { ego: 'heart', solarPlexus: 'solar' }
-const normCenter  = (id: string) => LIB_TO_CHART[id] ?? id
-const normChannel = (id: string) => id.startsWith('c') ? id : `c${id}`
 
-function buildBodyGraphProps(result: CreateCompositeResult) {
-  const definedCenterIds  = new Set(result.compositeDefinedCenterIds.map(normCenter))
-  const definedChannelIds = new Set<string>([
-    ...result.electromagnetic.map(c => normChannel(c.channelId)),
-    ...result.companionship.map(c => normChannel(c.channelId)),
-    ...result.compromise.map(c => normChannel(c.channelId)),
-    ...result.dominance.map(c => normChannel(c.channelId)),
-  ])
-  const activations: Record<number, { c?: boolean; u?: boolean }> = {}
-  for (const type of ['electromagnetic', 'companionship', 'compromise', 'dominance'] as const) {
-    for (const conn of result[type]) {
-      for (const g of conn.aGates) activations[g] = { ...activations[g], c: true }
-      for (const g of conn.bGates) activations[g] = { ...activations[g], u: true }
-    }
-  }
-  return { definedCenterIds, definedChannelIds, activations }
-}
 
 
 export default function CompositeView() {
@@ -73,16 +54,10 @@ export default function CompositeView() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  const [savedProfiles, setSavedProfiles] = useState<BirthProfile[]>([])
   const [pickerTarget, setPickerTarget] = useState<'A' | 'B' | null>(null)
   const [appliedA, setAppliedA] = useState<BirthProfile | null>(null)
   const [appliedB, setAppliedB] = useState<BirthProfile | null>(null)
-
-  const refreshProfiles = useCallback(async () => {
-    setSavedProfiles(await loadProfiles())
-  }, [])
-
-  useFocusEffect(useCallback(() => { void refreshProfiles() }, [refreshProfiles]))
+  const { profiles: savedProfiles, refresh: refreshProfiles } = useBirthProfiles()
 
   function applyProfile(p: BirthProfile) {
     const patch = { date: p.date, time: p.time, city: p.city, timezone: p.timezone }
@@ -220,13 +195,15 @@ export default function CompositeView() {
         <>
           {/* 合圖 Body Graph */}
           {(() => {
-            const { definedCenterIds, definedChannelIds, activations } = buildBodyGraphProps(result)
+            const { definedCenterIds, definedChannelIds, activations } = buildCompositeBodyGraphProps(result)
             return (
-              <View style={s.card}>
-                <Text style={s.sectionLabel}>合圖 Body Graph</Text>
-                <Text style={[s.muted, { marginBottom: 10 }]}>
-                  黑色 = {result.personA.name ?? '人物 A'}　紅色 = {result.personB.name ?? '人物 B'}
-                </Text>
+              <View style={s.graphCard}>
+                <View style={s.graphCardHeader}>
+                  <Text style={s.sectionLabel}>合圖 Body Graph</Text>
+                  <Text style={s.muted}>
+                    黑色 = {result.personA.name ?? '人物 A'}　紅色 = {result.personB.name ?? '人物 B'}
+                  </Text>
+                </View>
                 <View style={s.graphContainer}>
                   <BodyGraph
                     definedCenterIds={definedCenterIds}
@@ -314,7 +291,9 @@ const s = StyleSheet.create({
   quickApplyText: { color: Colors.accent, fontSize: 12, fontWeight: '600' },
   sectionLabel:   { fontSize: 11, fontWeight: '600', color: Colors.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 },
   muted:          { fontSize: 13, color: Colors.sub },
-  graphContainer: { width: '100%', aspectRatio: 700 / 1030 },
+  graphCard:       { backgroundColor: Colors.surface, borderRadius: Radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border },
+  graphCardHeader: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm },
+  graphContainer:  { width: '100%', aspectRatio: 590 / 1030 },
   bigNum:         { fontSize: 36, fontWeight: '800', color: Colors.accent, marginBottom: 6 },
   statRow:        { flexDirection: 'row', gap: Spacing.sm },
   statBox:        { flex: 1, backgroundColor: Colors.bg, borderRadius: Radius.md, padding: Spacing.md, alignItems: 'center' },

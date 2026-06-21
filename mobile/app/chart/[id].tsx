@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native'
 import { type Chart, type StoredPlanet, getChart } from '@/lib/api'
-import { CENTER_ORDER, HD_CENTERS_INFO } from '@/lib/hd-chart-data'
+import { HD_CENTERS_INFO } from '@/lib/hd-chart-data'
 import { normalizeCenterId, normalizeChannelId, findChannelById } from '@/lib/hd-normalizers'
 import { getTypeMeta } from '@/lib/hd-type-meta'
 import BodyGraph from '@/components/BodyGraph'
@@ -96,24 +96,26 @@ export default function ChartDetailScreen() {
 
         {/* Body Graph */}
         <View style={styles.graphCard}>
-          <Text style={styles.graphTitle}>Body Graph</Text>
-          {transitSnapshot ? (
-            <View style={styles.legend}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.text }]} />
-              <Text style={styles.legendText}>個人意識</Text>
-              <View style={[styles.legendDot, { backgroundColor: Colors.designRed }]} />
-              <Text style={styles.legendText}>個人潛意識</Text>
-              <View style={[styles.legendDot, { backgroundColor: Colors.transit }]} />
-              <Text style={styles.legendText}>流日</Text>
-            </View>
-          ) : isComposite ? (
-            <View style={styles.legend}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.text }]} />
-              <Text style={styles.legendText}>人物 A</Text>
-              <View style={[styles.legendDot, { backgroundColor: Colors.designRed }]} />
-              <Text style={styles.legendText}>人物 B</Text>
-            </View>
-          ) : null}
+          <View style={styles.graphCardHeader}>
+            <Text style={styles.graphTitle}>Body Graph</Text>
+            {transitSnapshot ? (
+              <View style={styles.legend}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.text }]} />
+                <Text style={styles.legendText}>個人意識</Text>
+                <View style={[styles.legendDot, { backgroundColor: Colors.designRed }]} />
+                <Text style={styles.legendText}>個人潛意識</Text>
+                <View style={[styles.legendDot, { backgroundColor: Colors.transit }]} />
+                <Text style={styles.legendText}>流日</Text>
+              </View>
+            ) : isComposite ? (
+              <View style={styles.legend}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.text }]} />
+                <Text style={styles.legendText}>人物 A</Text>
+                <View style={[styles.legendDot, { backgroundColor: Colors.designRed }]} />
+                <Text style={styles.legendText}>人物 B</Text>
+              </View>
+            ) : null}
+          </View>
           <View style={styles.graphContainer}>
             <BodyGraph
               definedCenterIds={definedCenterIds}
@@ -243,12 +245,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   inner:     { padding: Spacing.lg, paddingBottom: Spacing.xxl, rowGap: Spacing.md },
 
-  graphCard:      { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
-  graphTitle:     { color: Colors.sub, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.md },
-  graphContainer: { width: '100%', aspectRatio: 700 / 1030 },
-  legend:         { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: Spacing.md },
-  legendDot:      { width: 10, height: 10, borderRadius: 5 },
-  legendText:     { fontSize: 11, color: Colors.sub, marginRight: Spacing.sm },
+  graphCard:       { backgroundColor: Colors.surface, borderRadius: Radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border },
+  graphCardHeader: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm },
+  graphTitle:      { color: Colors.sub, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.sm },
+  graphContainer:  { width: '100%', aspectRatio: 590 / 1030 },
+  legend:          { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  legendDot:       { width: 10, height: 10, borderRadius: 5 },
+  legendText:      { fontSize: 11, color: Colors.sub, marginRight: Spacing.sm },
 
   transitCard: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border, justifyContent: 'center' },
   transitTime: { fontSize: 12, color: Colors.transit },

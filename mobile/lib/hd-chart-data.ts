@@ -377,16 +377,3 @@ export const HD_CENTERS_INFO: Record<string, ChartCenter> = {
     keywords: { zh: ['壓力', '驅動', '節奏', '腎上腺'], en: ['Pressure', 'Drive', 'Rhythm', 'Adrenaline'] },
   },
 }
-
-// Legend items for the left column
-export const LEGEND_ITEMS = [
-  { id: 'head',   cls: 'tri-up',    color: '#d9c25e', cn: '頂輪',   en: 'Head',         code: 'I' },
-  { id: 'ajna',   cls: 'tri-down',  color: '#a8c065', cn: '邏輯',   en: 'Ajna',         code: 'II' },
-  { id: 'throat', cls: 'square',    color: '#b89968', cn: '喉嚨',   en: 'Throat',       code: 'III' },
-  { id: 'g',      cls: 'diamond',   color: '#d9c25e', cn: 'G 中心', en: 'Identity',     code: 'IV' },
-  { id: 'heart',  cls: 'tri-left',  color: '#c8553d', cn: '意志力', en: 'Will',         code: 'V' },
-  { id: 'spleen', cls: 'tri-right', color: '#b89968', cn: '直覺',   en: 'Spleen',       code: 'VI' },
-  { id: 'sacral', cls: 'square',    color: '#c8553d', cn: '薦骨',   en: 'Sacral',       code: 'VII' },
-  { id: 'solar',  cls: 'tri-left',  color: '#b89968', cn: '情緒',   en: 'Solar Plexus', code: 'VIII' },
-  { id: 'root',   cls: 'square',    color: '#b89968', cn: '根部',   en: 'Root',         code: 'IX' },
-]

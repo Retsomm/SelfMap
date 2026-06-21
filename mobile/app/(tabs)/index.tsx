@@ -81,6 +81,12 @@ function ChartList({
   if (loading) return <LoadingView />
   if (error) return <ErrorView message={error} onRetry={onRefresh} />
 
+  const showMenu = (item: Chart) => Alert.alert(item.name ?? '未命名圖表', undefined, [
+    { text: '重新命名', onPress: () => onRename(item) },
+    { text: '刪除圖表', style: 'destructive', onPress: () => onDelete(item) },
+    { text: '取消', style: 'cancel' },
+  ])
+
   return (
     <FlatList
       data={charts}
@@ -97,20 +103,12 @@ function ChartList({
         <Pressable
           style={({ pressed }) => [styles.card, pressed && tappable && styles.cardPressed]}
           onPress={tappable ? () => router.push({ pathname: '/chart/[id]', params: { id: item.id } }) : undefined}
-          onLongPress={() => Alert.alert(item.name ?? '未命名圖表', undefined, [
-            { text: '重新命名', onPress: () => onRename(item) },
-            { text: '刪除圖表', style: 'destructive', onPress: () => onDelete(item) },
-            { text: '取消', style: 'cancel' },
-          ])}
+          onLongPress={() => showMenu(item)}
           delayLongPress={400}
         >
           <View style={styles.cardTop}>
             <Text style={styles.cardName} numberOfLines={1}>{item.name ?? '未命名圖表'}</Text>
-            <Pressable hitSlop={12} onPress={() => Alert.alert(item.name ?? '未命名圖表', undefined, [
-              { text: '重新命名', onPress: () => onRename(item) },
-              { text: '刪除圖表', style: 'destructive', onPress: () => onDelete(item) },
-              { text: '取消', style: 'cancel' },
-            ])}>
+            <Pressable hitSlop={12} onPress={() => showMenu(item)}>
               <Text style={styles.cardMore}>•••</Text>
             </Pressable>
           </View>

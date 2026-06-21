@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/expo'
-import { useFocusEffect, useRouter } from 'expo-router'
-import { useCallback, useRef, useState } from 'react'
+import { useRouter } from 'expo-router'
+import { useRef, useState } from 'react'
 import {
   Pressable,
   SafeAreaView,
@@ -20,7 +20,8 @@ import { SubTabBar } from '@/components/SubTabBar'
 import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
 import { AppliedProfileCard } from '@/components/AppliedProfileCard'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
-import { type BirthProfile, loadProfiles } from '@/lib/birthProfiles'
+import { type BirthProfile } from '@/lib/birthProfiles'
+import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 
 const TODAY = new Date()
 type SubTab = 'personal' | 'composite' | 'transit'
@@ -46,15 +47,8 @@ function CreatePersonalView() {
   const [fieldError, setFieldError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [appliedProfile, setAppliedProfile] = useState<BirthProfile | null>(null)
-
-  const [savedProfiles, setSavedProfiles] = useState<BirthProfile[]>([])
   const [pickerVisible, setPickerVisible] = useState(false)
-
-  const refreshProfiles = useCallback(async () => {
-    setSavedProfiles(await loadProfiles())
-  }, [])
-
-  useFocusEffect(useCallback(() => { void refreshProfiles() }, [refreshProfiles]))
+  const { profiles: savedProfiles, refresh: refreshProfiles } = useBirthProfiles()
 
   const birthDate = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`
   const birthTime = `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`
@@ -99,7 +93,7 @@ function CreatePersonalView() {
       nestedScrollEnabled
     >
       {savedProfiles.length > 0 && !appliedProfile && (
-        <Pressable style={styles.quickApplyBtn} onPress={() => setPickerVisible(true)}>
+        <Pressable style={styles.quickApplyBtn} onPress={async () => { await refreshProfiles(); setPickerVisible(true) }}>
           <Text style={styles.quickApplyText}>⚡ 快速套用出生資料</Text>
         </Pressable>
       )}
