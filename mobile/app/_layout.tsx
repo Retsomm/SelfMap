@@ -48,7 +48,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情' }} />
+        <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情', headerBackButtonDisplayMode: 'minimal' }} />
       </Stack>
     </ClerkProvider>
   )

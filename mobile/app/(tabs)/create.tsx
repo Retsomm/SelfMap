@@ -13,19 +13,30 @@ import {
 import { createChart, type CreateChartPayload } from '@/lib/api'
 import { DatePicker, TimePicker } from '@/components/DateTimePicker'
 import CitySearchField from '@/components/CitySearchField'
+import TransitView from '@/components/TransitView'
+import CompositeView from '@/components/CompositeView'
+
+const T = {
+  bg: '#0f0f1a', surface: '#1e1e2e', border: '#2a2a3e',
+  accent: '#a78bfa', text: '#ffffff', sub: '#8888aa', muted: '#555577',
+}
 
 const TODAY = new Date()
+type SubTab = 'personal' | 'composite' | 'transit'
+const SUB_TABS: { id: SubTab; label: string }[] = [
+  { id: 'personal',  label: '個人' },
+  { id: 'composite', label: '合圖' },
+  { id: 'transit',   label: '流日' },
+]
 
-export default function CreateScreen() {
+// ─── Create personal chart form ───────────────────────────────────────────────
+
+function CreatePersonalView() {
   const { getToken } = useAuth()
   const router = useRouter()
 
   const [name, setName] = useState('')
-  const [date, setDate] = useState({
-    year: TODAY.getFullYear() - 30,
-    month: 1,
-    day: 1,
-  })
+  const [date, setDate] = useState({ year: TODAY.getFullYear() - 30, month: 1, day: 1 })
   const [time, setTime] = useState({ hour: 12, minute: 0 })
   const [city, setCity] = useState('')
   const [timezone, setTimezone] = useState('')
@@ -47,15 +58,7 @@ export default function CreateScreen() {
     try {
       const token = await getToken()
       if (!token) throw new Error('未登入')
-
-      const payload: CreateChartPayload = {
-        birthDate,
-        birthTime,
-        birthCity: city,
-        timezone,
-        name: name || undefined,
-      }
-
+      const payload: CreateChartPayload = { birthDate, birthTime, birthCity: city, timezone, name: name || undefined }
       const { chartId } = await createChart(token, payload)
       router.push(`/chart/${chartId}`)
     } catch (err: unknown) {
@@ -66,58 +69,54 @@ export default function CreateScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.inner}
-        keyboardShouldPersistTaps="handled"
-        nestedScrollEnabled
+    <ScrollView
+      contentContainerStyle={styles.inner}
+      keyboardShouldPersistTaps="handled"
+      nestedScrollEnabled
+    >
+      <Section label="圖表名稱（選填）">
+        <TextInput
+          style={styles.textInput}
+          value={name}
+          onChangeText={setName}
+          placeholder="例如：我的本命盤"
+          placeholderTextColor={T.muted}
+        />
+      </Section>
+
+      <Section label="出生日期">
+        <Text style={styles.previewText}>{birthDate}</Text>
+        <DatePicker value={date} onChange={setDate} />
+      </Section>
+
+      <Section label="出生時間">
+        <Text style={styles.previewText}>{birthTime}</Text>
+        <TimePicker value={time} onChange={setTime} />
+      </Section>
+
+      <Section label="出生城市">
+        <CitySearchField
+          city={city}
+          timezone={timezone}
+          onSelect={(c, tz) => { setCity(c); setTimezone(tz); setFieldError(null) }}
+        />
+        {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}
+      </Section>
+
+      {submitError ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorText}>建立失敗：{submitError}</Text>
+        </View>
+      ) : null}
+
+      <Pressable
+        style={[styles.button, submitting && styles.buttonDisabled]}
+        onPress={handleSubmit}
+        disabled={submitting}
       >
-        <Text style={styles.heading}>建立圖表</Text>
-
-        <Section label="圖表名稱（選填）">
-          <TextInput
-            style={styles.textInput}
-            value={name}
-            onChangeText={setName}
-            placeholder="例如：我的本命盤"
-            placeholderTextColor="#555577"
-          />
-        </Section>
-
-        <Section label="出生日期">
-          <Text style={styles.previewText}>{birthDate}</Text>
-          <DatePicker value={date} onChange={setDate} />
-        </Section>
-
-        <Section label="出生時間">
-          <Text style={styles.previewText}>{birthTime}</Text>
-          <TimePicker value={time} onChange={setTime} />
-        </Section>
-
-        <Section label="出生城市">
-          <CitySearchField
-            city={city}
-            timezone={timezone}
-            onSelect={(c, tz) => { setCity(c); setTimezone(tz); setFieldError(null) }}
-          />
-          {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}
-        </Section>
-
-        {submitError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>建立失敗：{submitError}</Text>
-          </View>
-        ) : null}
-
-        <Pressable
-          style={[styles.button, submitting && styles.buttonDisabled]}
-          onPress={handleSubmit}
-          disabled={submitting}
-        >
-          <Text style={styles.buttonText}>{submitting ? '計算中…' : '建立圖表'}</Text>
-        </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+        <Text style={styles.buttonText}>{submitting ? '計算中…' : '建立圖表'}</Text>
+      </Pressable>
+    </ScrollView>
   )
 }
 
@@ -130,38 +129,71 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   )
 }
 
+// ─── Main screen ──────────────────────────────────────────────────────────────
+
+export default function CreateScreen() {
+  const [subTab, setSubTab] = useState<SubTab>('personal')
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.heading}>建立圖表</Text>
+      </View>
+
+      {/* Sub-tab bar */}
+      <View style={styles.subTabBar}>
+        {SUB_TABS.map(tab => (
+          <Pressable
+            key={tab.id}
+            style={[styles.subTabItem, subTab === tab.id && styles.subTabItemActive]}
+            onPress={() => setSubTab(tab.id)}
+          >
+            <Text style={[styles.subTabText, subTab === tab.id && styles.subTabTextActive]}>
+              {tab.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Content — 全部保持掛載只切換 display，避免切 sub-tab 時重新 mount + fetch */}
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, display: subTab === 'personal' ? 'flex' : 'none' }}>
+          <CreatePersonalView />
+        </View>
+        <View style={{ flex: 1, display: subTab === 'transit' ? 'flex' : 'none' }}>
+          <TransitView />
+        </View>
+        <View style={{ flex: 1, display: subTab === 'composite' ? 'flex' : 'none' }}>
+          <CompositeView />
+        </View>
+      </View>
+    </SafeAreaView>
+  )
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f0f1a' },
-  inner: { padding: 24, gap: 20, paddingBottom: 48 },
-  heading: { fontSize: 24, fontWeight: '700', color: '#fff', marginBottom: 4 },
-  section: { gap: 8 },
-  sectionLabel: { fontSize: 14, color: '#8888aa', fontWeight: '600' },
-  previewText: { fontSize: 16, color: '#a78bfa', fontWeight: '600', textAlign: 'center' },
-  textInput: {
-    backgroundColor: '#1e1e2e',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: '#fff',
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#2e2e4e',
+  container: { flex: 1, backgroundColor: T.bg },
+  header: {
+    paddingHorizontal: 16, paddingVertical: 12,
+    borderBottomWidth: 1, borderBottomColor: T.border,
   },
-  button: {
-    backgroundColor: '#a78bfa',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
+  heading: { fontSize: 22, fontWeight: '700', color: T.text },
+
+  subTabBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: T.border },
+  subTabItem: { flex: 1, alignItems: 'center', paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  subTabItemActive: { borderBottomColor: T.accent },
+  subTabText:       { fontSize: 14, fontWeight: '500', color: T.muted },
+  subTabTextActive: { color: T.accent, fontWeight: '700' },
+
+  inner:       { padding: 24, gap: 20, paddingBottom: 48 },
+  section:     { gap: 8 },
+  sectionLabel:{ fontSize: 14, color: T.sub, fontWeight: '600' },
+  previewText: { fontSize: 16, color: T.accent, fontWeight: '600', textAlign: 'center' },
+  textInput:   { backgroundColor: T.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, color: T.text, fontSize: 15, borderWidth: 1, borderColor: T.border },
+  button:      { backgroundColor: T.accent, paddingVertical: 14, borderRadius: 12, alignItems: 'center', marginTop: 8 },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  errorText: { color: '#ff7070', fontSize: 13, marginTop: 4 },
-  errorBox: {
-    backgroundColor: '#2a1010',
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#5a2020',
-  },
+  buttonText:  { color: T.bg, fontSize: 16, fontWeight: '600' },
+  errorText:   { color: '#ff7070', fontSize: 13, marginTop: 4 },
+  errorBox:    { backgroundColor: '#2a1010', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#5a2020' },
 })
