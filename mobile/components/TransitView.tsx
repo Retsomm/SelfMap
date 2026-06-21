@@ -2,8 +2,7 @@
  * 流日分析 View — 填入出生資料後計算個人圖 + 今日流日合成圖。
  */
 import { useAuth } from '@clerk/expo'
-import { useCallback, useRef, useState } from 'react'
-import { useFocusEffect } from 'expo-router'
+import { useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Pressable,
@@ -12,13 +11,15 @@ import {
   Text,
   View,
 } from 'react-native'
-import { type CreateTransitResult, type ImpactLayer, createTransitChart } from '@/lib/api'
+import { type CreateTransitResult, createTransitChart } from '@/lib/api'
+import { buildTransitBodyGraphProps } from '@/lib/hd-bodygraph-utils'
+import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
 import { AppliedProfileCard } from '@/components/AppliedProfileCard'
 import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
 import BodyGraph from '@/components/BodyGraph'
-import { type BirthProfile, loadProfiles } from '@/lib/birthProfiles'
+import { type BirthProfile } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const PLANET_SYM: Record<string, string> = {
@@ -39,23 +40,6 @@ const IMPACT_CFG = {
   'completing-channel': { color: Colors.compro,  icon: '🔗', label: '通道補全' },
 } as const
 
-const LIB_TO_CHART: Record<string, string> = { ego: 'heart', solarPlexus: 'solar' }
-const normCenter  = (id: string) => LIB_TO_CHART[id] ?? id
-const normChannel = (id: string) => id.startsWith('c') ? id : `c${id}`
-
-function buildCombinedBodyGraphProps(data: CreateTransitResult) {
-  const activations: Record<number, { c?: boolean; u?: boolean; t?: boolean }> = {}
-  for (const g of data.personalityGates) activations[g] = { ...activations[g], c: true }
-  for (const g of data.designGates)      activations[g] = { ...activations[g], u: true }
-  for (const g of data.transit.allGates) {
-    if (!activations[g]) activations[g] = { t: true }
-  }
-
-  const definedCenterIds  = new Set(data.combined.definedCenterIds.map(normCenter))
-  const definedChannelIds = new Set(data.combined.definedChannelIds.map(normChannel))
-
-  return { activations, definedCenterIds, definedChannelIds }
-}
 
 export default function TransitView() {
   const { getToken } = useAuth()
@@ -67,19 +51,8 @@ export default function TransitView() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [result, setResult]           = useState<CreateTransitResult | null>(null)
   const [appliedProfile, setAppliedProfile] = useState<BirthProfile | null>(null)
-
-  const [savedProfiles, setSavedProfiles] = useState<BirthProfile[]>([])
   const [pickerVisible, setPickerVisible] = useState(false)
-
-  const refreshProfiles = useCallback(async () => {
-    try {
-      setSavedProfiles(await loadProfiles())
-    } catch {
-      // keep existing profiles on failure; user will see stale list rather than empty
-    }
-  }, [])
-
-  useFocusEffect(useCallback(() => { void refreshProfiles() }, [refreshProfiles]))
+  const { profiles: savedProfiles, refresh: refreshProfiles } = useBirthProfiles()
 
   function applyProfile(p: BirthProfile) {
     setForm(f => ({ ...f, date: p.date, time: p.time, city: p.city, timezone: p.timezone, name: f.name || p.label }))
@@ -181,17 +154,19 @@ export default function TransitView() {
 
           {/* 合成 Body Graph：個人（黑/紅）+ 流日（橙） */}
           {(() => {
-            const { activations, definedCenterIds, definedChannelIds } = buildCombinedBodyGraphProps(result)
+            const { activations, definedCenterIds, definedChannelIds } = buildTransitBodyGraphProps(result)
             return (
-              <View style={s.card}>
-                <Text style={s.sectionLabel}>個人 + 流日 Body Graph</Text>
-                <View style={s.legend}>
-                  <View style={[s.legendDot, { backgroundColor: Colors.text }]} />
-                  <Text style={s.legendText}>個人意識</Text>
-                  <View style={[s.legendDot, { backgroundColor: Colors.designRed }]} />
-                  <Text style={s.legendText}>個人潛意識</Text>
-                  <View style={[s.legendDot, { backgroundColor: Colors.transit }]} />
-                  <Text style={s.legendText}>今日流日</Text>
+              <View style={s.graphCard}>
+                <View style={s.graphCardHeader}>
+                  <Text style={s.sectionLabel}>個人 + 流日 Body Graph</Text>
+                  <View style={s.legend}>
+                    <View style={[s.legendDot, { backgroundColor: Colors.text }]} />
+                    <Text style={s.legendText}>個人意識</Text>
+                    <View style={[s.legendDot, { backgroundColor: Colors.designRed }]} />
+                    <Text style={s.legendText}>個人潛意識</Text>
+                    <View style={[s.legendDot, { backgroundColor: Colors.transit }]} />
+                    <Text style={s.legendText}>今日流日</Text>
+                  </View>
                 </View>
                 <View style={s.graphContainer}>
                   <BodyGraph
@@ -269,10 +244,12 @@ const s = StyleSheet.create({
   card:           { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
   sectionLabel:   { fontSize: 11, fontWeight: '600', color: Colors.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 },
   muted:          { fontSize: 13, color: Colors.sub },
-  legend:         { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.md, flexWrap: 'wrap' },
-  legendDot:      { width: 10, height: 10, borderRadius: 5 },
-  legendText:     { fontSize: 11, color: Colors.sub, marginRight: Spacing.sm },
-  graphContainer: { width: '100%', aspectRatio: 700 / 1030 },
+  graphCard:       { backgroundColor: Colors.surface, borderRadius: Radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border },
+  graphCardHeader: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm },
+  legend:          { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  legendDot:       { width: 10, height: 10, borderRadius: 5 },
+  legendText:      { fontSize: 11, color: Colors.sub, marginRight: Spacing.sm },
+  graphContainer:  { width: '100%', aspectRatio: 590 / 1030 },
   chipRow:        { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip:           { backgroundColor: Colors.accentD, borderRadius: 6, paddingHorizontal: 10, paddingVertical: Spacing.xs },
   chipText:       { fontSize: 12, fontWeight: '500', color: Colors.accent },

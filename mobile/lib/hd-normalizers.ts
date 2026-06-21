@@ -15,6 +15,15 @@ export function normalizeChannelId(id: string): string {
   return id.startsWith('c') ? id : `c${id}`
 }
 
+export const CENTER_ZH: Record<string, string> = {
+  head: '頂輪', ajna: '邏輯', throat: '喉嚨', g: 'G 中心',
+  heart: '意志力', spleen: '脾', sacral: '薦骨', solar: '情緒', root: '根部',
+}
+
+export function centerZh(id: string): string {
+  return CENTER_ZH[id] ?? id
+}
+
 export function findChannelById(rawId: string): ChartChannel | undefined {
   const id = normalizeChannelId(rawId)
   const found = HD_CHANNELS.find((ch) => ch.id === id)
