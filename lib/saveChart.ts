@@ -77,6 +77,7 @@ export const saveCompositeChart = async (p: SaveCompositeChartParams): Promise<v
       centers,
       channels,
       gates,
+      chartKind: 'composite',
     }),
   })
   const json = await res.json()

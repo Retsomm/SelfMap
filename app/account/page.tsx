@@ -224,11 +224,27 @@ export default function AccountPage() {
 
     const requestId = ++chartRequestIdRef.current
 
-    if (chart.chartKind === 'composite' && chart.meta?.personA && chart.meta?.personB) {
-      const { personA, personB } = chart.meta
+    const isComposite = chart.chartKind === 'composite' || chart.type === 'composite'
+
+    if (isComposite) {
+      let dateA: string, timeA: string, tzA: string
+      let dateB: string, timeB: string, tzB: string
+
+      if (chart.meta?.personA && chart.meta?.personB) {
+        // New format: individual fields in meta
+        const { personA, personB } = chart.meta as Required<ChartMeta>
+        dateA = personA.birthDate; timeA = personA.birthTime; tzA = personA.timezone
+        dateB = personB.birthDate; timeB = personB.birthTime; tzB = personB.timezone
+      } else {
+        // Old format: pipe-separated fields
+        ;[dateA, dateB] = chart.birthDate.split('|')
+        ;[timeA, timeB] = chart.birthTime.split('|')
+        ;[tzA, tzB] = (chart.timezone ?? 'UTC|UTC').split('|')
+      }
+
       Promise.all([
-        computeHdResult(personA.birthDate, personA.birthTime, personA.timezone),
-        computeHdResult(personB.birthDate, personB.birthTime, personB.timezone),
+        computeHdResult(dateA, timeA, tzA),
+        computeHdResult(dateB, timeB, tzB),
       ])
         .then(([a, b]) => { if (chartRequestIdRef.current === requestId) setCompositeResults({ a, b }) })
         .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error(t('account.calcFailed')) } })
@@ -577,12 +593,27 @@ export default function AccountPage() {
                   {chartComputing && (
                     <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) mb-6">{t('account.computing')}</div>
                   )}
-                  {activeChart.chartKind === 'composite' ? (
+                  {(activeChart.chartKind === 'composite' || activeChart.type === 'composite') ? (
                     compositeResults && (() => {
-                      const [cityA, cityB] = activeChart.birthCity.split('|')
-                      const [dateA, dateB] = activeChart.birthDate.split('|')
-                      const [timeA, timeB] = activeChart.birthTime.split('|')
-                      const [tzA, tzB] = (activeChart.timezone ?? 'UTC|UTC').split('|')
+                      let cityA: string, cityB: string
+                      let dateA: string, dateB: string
+                      let timeA: string, timeB: string
+                      let tzA: string, tzB: string
+
+                      if (activeChart.meta?.personA && activeChart.meta?.personB) {
+                        const pA = activeChart.meta.personA as PersonMeta
+                        const pB = activeChart.meta.personB as PersonMeta
+                        cityA = pA.birthCity; cityB = pB.birthCity
+                        dateA = pA.birthDate; dateB = pB.birthDate
+                        timeA = pA.birthTime; timeB = pB.birthTime
+                        tzA   = pA.timezone;  tzB   = pB.timezone
+                      } else {
+                        ;[cityA, cityB] = activeChart.birthCity.split('|')
+                        ;[dateA, dateB] = activeChart.birthDate.split('|')
+                        ;[timeA, timeB] = activeChart.birthTime.split('|')
+                        ;[tzA, tzB]     = (activeChart.timezone ?? 'UTC|UTC').split('|')
+                      }
+
                       return (
                         <CompositeView
                           resultA={compositeResults.a}
