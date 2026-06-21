@@ -81,12 +81,14 @@
 
 ## UI / 共用元件
 
-- [ ] 統一 Design Token（`mobile/constants/tokens.ts`：Colors、Spacing、Radius、CardShadow）
+- [x] 統一 Design Token（`mobile/constants/tokens.ts`：Colors、Spacing、Radius）
 - [x] 共用 `SectionCard` / `Row` / `Tag` 元件（`components/chart/ChartPrimitives.tsx`）
-- [ ] 共用 `Header` 元件
-- [ ] 共用 `ConfirmModal` 元件
-- [ ] Bottom Tab Bar 圖示優化
-- [ ] Loading / Skeleton 狀態統一
+- [x] 共用 `ScreenHeader` 元件（`components/ScreenHeader.tsx`）
+- [x] 共用 `SubTabBar` 元件（`components/SubTabBar.tsx`）
+- [x] 共用 `InputModal` 元件（`components/InputModal.tsx`，用於重新命名操作）
+- [x] 共用 `StateViews`（`components/StateViews.tsx`：`LoadingView` / `ErrorView`）
+- [x] Bottom Tab Bar 圖示優化（已套用 emoji 圖示）
+- [x] Loading / Skeleton 狀態統一（統一使用 `LoadingView` / `ErrorView`）
 - [ ] 錯誤狀態頁（Error Boundary）
 - [ ] 深色模式支援
 
@@ -145,7 +147,7 @@
 
 ## 下一步優先順序
 
-1. **建立 `constants/tokens.ts`**（Design Token 基礎，讓各元件共用色彩與間距）
-2. **共用 `Header` / `ConfirmModal` 元件**（套用 tokens）
-3. **Bottom Tab Bar 圖示優化**（加入 `tabBarIcon`）
-4. **Loading / Skeleton 狀態統一**
+1. **帳號設定**（用戶名編輯、已連結 OAuth 帳號顯示）
+2. **錯誤狀態頁**（Error Boundary，包裝 Tab 根層級）
+3. **深色模式支援**（以 `tokens.ts` 為基礎，切換 `Colors` 物件即可）
+4. **教育內容**（9 大主題靜態頁）

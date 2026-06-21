@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 export function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -59,21 +60,21 @@ export function Tag({ label, active, onPress }: { label: string; active?: boolea
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1e1e2e',
-    borderRadius: 14,
-    padding: 16,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: '#2a2a3e',
+    borderColor: Colors.border,
   },
   cardTitle: {
-    color: '#8888aa',
+    color: Colors.sub,
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 1,
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
-  cardBody: { rowGap: 4 },
+  cardBody: { rowGap: Spacing.xs },
 
   row: {
     flexDirection: 'row',
@@ -81,25 +82,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
   },
-  rowTappable: { paddingVertical: 8 },
-  rowPressedBg: { backgroundColor: 'rgba(167,139,250,0.08)', borderRadius: 8 },
-  rowLabel: { color: '#8888aa', fontSize: 14, flex: 1 },
-  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
-  rowValue: { color: '#fff', fontSize: 14, fontWeight: '500', textAlign: 'right', marginLeft: 8 },
-  rowAccent: { color: '#a78bfa', fontWeight: '700' },
-  rowDim: { color: '#ff9966' },
-  rowChevron: { color: '#5555aa', fontSize: 18, lineHeight: 20 },
+  rowTappable:  { paddingVertical: Spacing.sm },
+  rowPressedBg: { backgroundColor: Colors.rowPressedBg, borderRadius: Radius.sm },
+  rowLabel:  { color: Colors.sub, fontSize: 14, flex: 1 },
+  rowRight:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, flexShrink: 1 },
+  rowValue:  { color: Colors.text, fontSize: 14, fontWeight: '500', textAlign: 'right', marginLeft: Spacing.sm },
+  rowAccent: { color: Colors.accent, fontWeight: '700' },
+  rowDim:    { color: '#ff9966' },
+  rowChevron:{ color: '#5555aa', fontSize: 18, lineHeight: 20 },
 
   tag: {
     backgroundColor: '#1a1a2e',
-    borderRadius: 8,
+    borderRadius: Radius.sm,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: '#2a2a3e',
+    borderColor: Colors.border,
   },
-  tagActive: { backgroundColor: '#2e1e4e', borderColor: '#5b2dba' },
-  tagTappable: { borderColor: '#3a2a6e' },
-  tagText: { color: '#6666aa', fontSize: 13 },
-  tagTextActive: { color: '#a78bfa', fontWeight: '600' },
+  tagActive:    { backgroundColor: Colors.accentD, borderColor: '#5b2dba' },
+  tagTappable:  { borderColor: '#3a2a6e' },
+  tagText:      { color: '#6666aa', fontSize: 13 },
+  tagTextActive:{ color: Colors.accent, fontWeight: '600' },
 })

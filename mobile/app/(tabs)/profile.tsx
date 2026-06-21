@@ -1,6 +1,7 @@
 import { useAuth, useUser } from '@clerk/expo'
 import { useState } from 'react'
 import { Alert, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 export default function ProfileScreen() {
   const { signOut } = useAuth()
@@ -36,25 +37,25 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f0f1a' },
-  inner: { flex: 1, padding: 24, gap: 16 },
-  heading: { fontSize: 24, fontWeight: '700', color: '#fff' },
+  container:  { flex: 1, backgroundColor: Colors.bg },
+  inner:      { flex: 1, padding: Spacing.xl, gap: Spacing.lg },
+  heading:    { fontSize: 24, fontWeight: '700', color: Colors.text },
   card: {
-    backgroundColor: '#1e1e2e',
-    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
     padding: 20,
     gap: 6,
   },
-  name: { fontSize: 18, fontWeight: '600', color: '#fff' },
-  email: { fontSize: 14, color: '#8888aa' },
+  name:       { fontSize: 18, fontWeight: '600', color: Colors.text },
+  email:      { fontSize: 14, color: Colors.sub },
   signOutBtn: {
     borderWidth: 1,
-    borderColor: '#ff6b6b',
-    borderRadius: 12,
-    paddingVertical: 12,
+    borderColor: Colors.red,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
     marginTop: 'auto',
   },
-  signOutText: { color: '#ff6b6b', fontSize: 15, fontWeight: '600' },
-  btnDisabled: { opacity: 0.5 },
+  signOutText:{ color: Colors.red, fontSize: 15, fontWeight: '600' },
+  btnDisabled:{ opacity: 0.5 },
 })

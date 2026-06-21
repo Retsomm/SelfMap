@@ -18,19 +18,13 @@ import {
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import BodyGraph from '@/components/BodyGraph'
 import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
-
-const T = {
-  bg: '#0f0f1a', surface: '#1e1e2e', border: '#2a2a3e',
-  accent: '#a78bfa', accentD: '#2e1e4e',
-  text: '#ffffff', sub: '#8888aa', muted: '#555577', red: '#ff6b6b',
-  em: '#f59e0b', comp: '#60a5fa', compro: '#c084fc', dom: '#6b7280',
-}
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const CONN_CFG = {
-  electromagnetic: { label: '電磁連結', color: T.em,    bg: '#1a1500', icon: '⚡', desc: '兩人各有通道一半，在一起時被完整激活，帶來強烈吸引力。' },
-  companionship:   { label: '陪伴連結', color: T.comp,  bg: '#0a1525', icon: '🤝', desc: '兩人同時擁有完整通道，帶來穩定陪伴感。' },
-  compromise:      { label: '妥協連結', color: T.compro,bg: '#15102a', icon: '⚖️', desc: '一方有完整通道，另一方只有一端，容易出現調整需求。' },
-  dominance:       { label: '支配連結', color: T.dom,   bg: '#111111', icon: '🎯', desc: '能量可能出現主導或覆蓋的動態。' },
+  electromagnetic: { label: '電磁連結', color: Colors.em,    bg: '#1a1500', icon: '⚡', desc: '兩人各有通道一半，在一起時被完整激活，帶來強烈吸引力。' },
+  companionship:   { label: '陪伴連結', color: Colors.comp,  bg: '#0a1525', icon: '🤝', desc: '兩人同時擁有完整通道，帶來穩定陪伴感。' },
+  compromise:      { label: '妥協連結', color: Colors.compro,bg: '#15102a', icon: '⚖️', desc: '一方有完整通道，另一方只有一端，容易出現調整需求。' },
+  dominance:       { label: '支配連結', color: Colors.dom,   bg: '#111111', icon: '🎯', desc: '能量可能出現主導或覆蓋的動態。' },
 } as const
 
 const THEME_DESC: Record<string, string> = {
@@ -159,7 +153,7 @@ export default function CompositeView() {
             disabled={submitting}
           >
             {submitting
-              ? <ActivityIndicator color={T.bg} />
+              ? <ActivityIndicator color={Colors.bg} />
               : <Text style={s.primaryBtnText}>計算合圖</Text>
             }
           </Pressable>
@@ -200,12 +194,12 @@ export default function CompositeView() {
                 <Text style={s.muted}>已定義中心</Text>
               </View>
               <View style={s.statBox}>
-                <Text style={[s.statNum, { color: T.muted }]}>{result.compositeOpenCount}</Text>
+                <Text style={[s.statNum, { color: Colors.muted }]}>{result.compositeOpenCount}</Text>
                 <Text style={s.muted}>開放中心</Text>
               </View>
               {result.profileResonance.length > 0 && (
                 <View style={s.statBox}>
-                  <Text style={[s.statNum, { color: T.em, fontSize: 16 }]}>
+                  <Text style={[s.statNum, { color: Colors.em, fontSize: 16 }]}>
                     {result.profileResonance.join('、')} 爻
                   </Text>
                   <Text style={s.muted}>共鳴角色</Text>
@@ -221,7 +215,7 @@ export default function CompositeView() {
             const cfg = CONN_CFG[type]
             return (
               <View key={type} style={s.card}>
-                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm }}>
                   <Text style={{ fontSize: 20 }}>{cfg.icon}</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={[s.connLabel, { color: cfg.color }]}>
@@ -230,7 +224,7 @@ export default function CompositeView() {
                     <Text style={s.muted}>{cfg.desc}</Text>
                   </View>
                 </View>
-                <View style={{ borderTopWidth: 1, borderColor: cfg.color + '33', marginBottom: 8 }} />
+                <View style={{ borderTopWidth: 1, borderColor: cfg.color + '33', marginBottom: Spacing.sm }} />
                 {items.map(conn => (
                   <View key={conn.channelId} style={[s.connRow, { backgroundColor: cfg.bg }]}>
                     <Text style={[s.connId, { color: cfg.color }]}>{conn.channelId}</Text>
@@ -254,24 +248,24 @@ export default function CompositeView() {
 }
 
 const s = StyleSheet.create({
-  inner:          { padding: 16, gap: 12, paddingBottom: 48 },
-  card:           { backgroundColor: T.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: T.border },
-  cardTitle:      { fontSize: 13, fontWeight: '700', color: T.accent, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 14 },
-  sectionLabel:   { fontSize: 11, fontWeight: '600', color: T.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 },
-  muted:          { fontSize: 13, color: T.sub },
+  inner:          { padding: Spacing.lg, gap: Spacing.md, paddingBottom: 48 },
+  card:           { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
+  cardTitle:      { fontSize: 13, fontWeight: '700', color: Colors.accent, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 14 },
+  sectionLabel:   { fontSize: 11, fontWeight: '600', color: Colors.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 },
+  muted:          { fontSize: 13, color: Colors.sub },
   graphContainer: { width: '100%', aspectRatio: 700 / 1030 },
-  bigNum:         { fontSize: 36, fontWeight: '800', color: T.accent, marginBottom: 6 },
-  statRow:        { flexDirection: 'row', gap: 8 },
-  statBox:        { flex: 1, backgroundColor: T.bg, borderRadius: 10, padding: 12, alignItems: 'center' },
-  statNum:        { fontSize: 22, fontWeight: '700', color: T.text, marginBottom: 2 },
+  bigNum:         { fontSize: 36, fontWeight: '800', color: Colors.accent, marginBottom: 6 },
+  statRow:        { flexDirection: 'row', gap: Spacing.sm },
+  statBox:        { flex: 1, backgroundColor: Colors.bg, borderRadius: Radius.md, padding: Spacing.md, alignItems: 'center' },
+  statNum:        { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 2 },
   connLabel:      { fontSize: 14, fontWeight: '700', marginBottom: 2 },
-  connRow:        { borderRadius: 8, padding: 10, marginBottom: 6 },
+  connRow:        { borderRadius: Radius.sm, padding: 10, marginBottom: 6 },
   connId:         { fontSize: 14, fontWeight: '700', marginBottom: 3 },
-  primaryBtn:     { backgroundColor: T.accent, borderRadius: 12, padding: 14, alignItems: 'center' },
-  primaryBtnText: { color: T.bg, fontWeight: '700', fontSize: 15 },
-  outlineBtn:     { borderWidth: 1, borderColor: T.border, borderRadius: 8, padding: 12, alignItems: 'center' },
-  outlineBtnText: { color: T.sub, fontSize: 13 },
+  primaryBtn:     { backgroundColor: Colors.accent, borderRadius: Radius.lg, padding: 14, alignItems: 'center' },
+  primaryBtnText: { color: Colors.bg, fontWeight: '700', fontSize: 15 },
+  outlineBtn:     { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm, padding: Spacing.md, alignItems: 'center' },
+  outlineBtnText: { color: Colors.sub, fontSize: 13 },
   disabled:       { opacity: 0.5 },
-  errorBox:       { backgroundColor: '#2a1010', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#5a2020' },
+  errorBox:       { backgroundColor: Colors.errorBg, borderRadius: Radius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.errorBorder },
   errorText:      { color: '#ff7070', fontSize: 13 },
 })

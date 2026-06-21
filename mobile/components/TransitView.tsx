@@ -15,13 +15,7 @@ import { type CreateTransitResult, type ImpactLayer, createTransitChart } from '
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
 import BodyGraph from '@/components/BodyGraph'
-
-const T = {
-  bg: '#0f0f1a', surface: '#1e1e2e', border: '#2a2a3e',
-  accent: '#a78bfa', accentD: '#2e1e4e',
-  text: '#ffffff', sub: '#8888aa', muted: '#555577',
-  red: '#ff6b6b', em: '#f59e0b', transit: '#f97316', compro: '#c084fc',
-}
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const PLANET_SYM: Record<string, string> = {
   '太陽': '☉', '地球': '⊕', '月亮': '☽', '北交點': '☊', '南交點': '☋',
@@ -36,9 +30,9 @@ const CENTER_ZH: Record<string, string> = {
 }
 
 const IMPACT_CFG = {
-  'center-activated':   { color: T.em,      icon: '⚡', label: '空白中心被激活' },
-  'new-channel':        { color: T.transit,  icon: '🌊', label: '全新流日通道' },
-  'completing-channel': { color: T.compro,   icon: '🔗', label: '通道補全' },
+  'center-activated':   { color: Colors.em,     icon: '⚡', label: '空白中心被激活' },
+  'new-channel':        { color: Colors.transit, icon: '🌊', label: '全新流日通道' },
+  'completing-channel': { color: Colors.compro,  icon: '🔗', label: '通道補全' },
 } as const
 
 const LIB_TO_CHART: Record<string, string> = { ego: 'heart', solarPlexus: 'solar' }
@@ -46,16 +40,13 @@ const normCenter  = (id: string) => LIB_TO_CHART[id] ?? id
 const normChannel = (id: string) => id.startsWith('c') ? id : `c${id}`
 
 function buildCombinedBodyGraphProps(data: CreateTransitResult) {
-  // 個人閘門：黑 (c) = Personality, 紅 (u) = Design
   const activations: Record<number, { c?: boolean; u?: boolean; t?: boolean }> = {}
   for (const g of data.personalityGates) activations[g] = { ...activations[g], c: true }
   for (const g of data.designGates)      activations[g] = { ...activations[g], u: true }
-  // 流日閘門：橙 (t)，僅標記個人圖中沒有的閘門
   for (const g of data.transit.allGates) {
     if (!activations[g]) activations[g] = { t: true }
   }
 
-  // 合成後的中心與通道（server 端已計算）
   const definedCenterIds  = new Set(data.combined.definedCenterIds.map(normCenter))
   const definedChannelIds = new Set(data.combined.definedChannelIds.map(normChannel))
 
@@ -121,18 +112,18 @@ export default function TransitView() {
           />
 
           {submitError ? (
-            <View style={[s.errorBox, { marginTop: 12 }]}>
+            <View style={[s.errorBox, { marginTop: Spacing.md }]}>
               <Text style={s.errorText}>計算失敗：{submitError}</Text>
             </View>
           ) : null}
 
           <Pressable
-            style={[s.primaryBtn, { marginTop: 16 }, submitting && s.disabled]}
+            style={[s.primaryBtn, { marginTop: Spacing.lg }, submitting && s.disabled]}
             onPress={handleSubmit}
             disabled={submitting}
           >
             {submitting
-              ? <ActivityIndicator color={T.bg} />
+              ? <ActivityIndicator color={Colors.bg} />
               : <Text style={s.primaryBtnText}>計算流日</Text>
             }
           </Pressable>
@@ -152,9 +143,9 @@ export default function TransitView() {
                 <View style={s.legend}>
                   <View style={[s.legendDot, { backgroundColor: '#1a1a1a' }]} />
                   <Text style={s.legendText}>個人意識</Text>
-                  <View style={[s.legendDot, { backgroundColor: '#c04020' }]} />
+                  <View style={[s.legendDot, { backgroundColor: Colors.designRed }]} />
                   <Text style={s.legendText}>個人潛意識</Text>
-                  <View style={[s.legendDot, { backgroundColor: T.transit }]} />
+                  <View style={[s.legendDot, { backgroundColor: Colors.transit }]} />
                   <Text style={s.legendText}>今日流日</Text>
                 </View>
                 <View style={s.graphContainer}>
@@ -189,7 +180,7 @@ export default function TransitView() {
               <View style={s.chipRow}>
                 {result.transit.definedCenterIds.map(c => (
                   <View key={c} style={[s.chip, { backgroundColor: '#2a1a0e' }]}>
-                    <Text style={[s.chipText, { color: T.transit }]}>{CENTER_ZH[c] ?? c}</Text>
+                    <Text style={[s.chipText, { color: Colors.transit }]}>{CENTER_ZH[c] ?? c}</Text>
                   </View>
                 ))}
               </View>
@@ -206,7 +197,7 @@ export default function TransitView() {
               const cfg = IMPACT_CFG[layer.kind]
               return (
                 <View key={i} style={[s.card, { borderLeftWidth: 3, borderLeftColor: cfg.color }]}>
-                  <View style={{ flexDirection: 'row', gap: 8, marginBottom: 6 }}>
+                  <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: 6 }}>
                     <Text style={{ fontSize: 18 }}>{cfg.icon}</Text>
                     <View>
                       <Text style={[s.impactKind, { color: cfg.color }]}>{cfg.label}</Text>
@@ -229,29 +220,29 @@ export default function TransitView() {
 }
 
 const s = StyleSheet.create({
-  inner:          { padding: 16, gap: 12, paddingBottom: 48 },
-  card:           { backgroundColor: T.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: T.border },
-  sectionLabel:   { fontSize: 11, fontWeight: '600', color: T.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 },
-  muted:          { fontSize: 13, color: T.sub },
-  legend:         { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12, flexWrap: 'wrap' },
+  inner:          { padding: Spacing.lg, gap: Spacing.md, paddingBottom: 48 },
+  card:           { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
+  sectionLabel:   { fontSize: 11, fontWeight: '600', color: Colors.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 },
+  muted:          { fontSize: 13, color: Colors.sub },
+  legend:         { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.md, flexWrap: 'wrap' },
   legendDot:      { width: 10, height: 10, borderRadius: 5 },
-  legendText:     { fontSize: 11, color: T.sub, marginRight: 8 },
+  legendText:     { fontSize: 11, color: Colors.sub, marginRight: Spacing.sm },
   graphContainer: { width: '100%', aspectRatio: 700 / 1030 },
   chipRow:        { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip:           { backgroundColor: T.accentD, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4 },
-  chipText:       { fontSize: 12, fontWeight: '500', color: T.accent },
-  planetRow:      { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: T.border },
-  sym:            { fontSize: 15, width: 24, textAlign: 'center', color: T.sub },
-  planetName:     { flex: 1, fontSize: 14, color: T.text, marginLeft: 8 },
-  gateChip:       { backgroundColor: T.accentD, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  gateChipText:   { fontSize: 12, fontWeight: '600', color: T.accent },
-  primaryBtn:     { backgroundColor: T.accent, borderRadius: 12, padding: 14, alignItems: 'center' },
-  primaryBtnText: { color: T.bg, fontWeight: '700', fontSize: 15 },
-  outlineBtn:     { borderWidth: 1, borderColor: T.border, borderRadius: 8, padding: 12, alignItems: 'center' },
-  outlineBtnText: { color: T.sub, fontSize: 13 },
+  chip:           { backgroundColor: Colors.accentD, borderRadius: 6, paddingHorizontal: 10, paddingVertical: Spacing.xs },
+  chipText:       { fontSize: 12, fontWeight: '500', color: Colors.accent },
+  planetRow:      { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  sym:            { fontSize: 15, width: 24, textAlign: 'center', color: Colors.sub },
+  planetName:     { flex: 1, fontSize: 14, color: Colors.text, marginLeft: Spacing.sm },
+  gateChip:       { backgroundColor: Colors.accentD, borderRadius: 6, paddingHorizontal: Spacing.sm, paddingVertical: 3 },
+  gateChipText:   { fontSize: 12, fontWeight: '600', color: Colors.accent },
+  primaryBtn:     { backgroundColor: Colors.accent, borderRadius: Radius.lg, padding: 14, alignItems: 'center' },
+  primaryBtnText: { color: Colors.bg, fontWeight: '700', fontSize: 15 },
+  outlineBtn:     { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm, padding: Spacing.md, alignItems: 'center' },
+  outlineBtnText: { color: Colors.sub, fontSize: 13 },
   disabled:       { opacity: 0.5 },
-  errorBox:       { backgroundColor: '#2a1010', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#5a2020' },
-  errorText:      { color: '#ff7070', fontSize: 13 },
+  errorBox:       { backgroundColor: Colors.errorBg, borderRadius: Radius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.errorBorder },
+  errorText:      { color: Colors.red, fontSize: 13 },
   impactKind:     { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
-  impactLabel:    { fontSize: 15, fontWeight: '700', color: T.text, marginTop: 2 },
+  impactLabel:    { fontSize: 15, fontWeight: '700', color: Colors.text, marginTop: 2 },
 })
