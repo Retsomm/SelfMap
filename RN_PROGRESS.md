@@ -68,14 +68,14 @@
 - [x] 已連結 OAuth 帳號顯示（filter verified + 僅顯示支援的 provider）
 
 ### 教育內容
-- [ ] 9 大主題靜態內容頁（類型、中心、權威…）
-- [ ] 閘門 / 通道搜尋篩選
+- [x] 9 大主題靜態內容頁（類型、中心、權威…）— `app/(tabs)/learn.tsx` + `app/learn/[topic].tsx`（實機驗證 ✓）
+- [x] 閘門 / 通道搜尋篩選 — 通道／閘門主題頁含 TextInput 搜尋（實機驗證 ✓）
 
 ### 其他
 - [ ] 圖表下載為圖片（`downloadChart`）
 - [ ] AI 解讀提示詞功能
 - [x] 出生檔案快速填表（BirthProfileManager）— 新增於帳號頁，建立圖表三個 tab（個人/流日/合圖）均支援快速套用，套用後隱藏表單並自動捲至送出按鈕
-- [ ] 關於頁面
+- [x] 關於頁面 — 整合在 `(tabs)/learn.tsx` 底部（實機驗證 ✓）
 
 ---
 
@@ -149,7 +149,7 @@
 
 ## 下一步優先順序
 
-1. **帳號設定**（用戶名編輯、已連結 OAuth 帳號顯示）
-2. **錯誤狀態頁**（Error Boundary，包裝 Tab 根層級）
-3. **深色模式支援**（以 `tokens.ts` 為基礎，切換 `Colors` 物件即可）
-4. **教育內容**（9 大主題靜態頁）
+1. **深色模式支援**（以 `tokens.ts` 為基礎，整合 `useColorScheme`）
+2. **頭像上傳**（`expo-image-picker` + Clerk `setProfileImage`）
+3. **圖表下載為圖片**（`react-native-view-shot`）
+4. **AI 解讀提示詞功能**

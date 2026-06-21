@@ -20,6 +20,10 @@ export default function TabsLayout() {
         options={{ title: '建立圖表', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>✦</Text> }}
       />
       <Tabs.Screen
+        name="learn"
+        options={{ title: '學習', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>✦</Text> }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{ title: '帳號', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>◉</Text> }}
       />
