@@ -37,6 +37,8 @@ model Chart {
   personalityGates Json?
   designGates      Json?
   planets          Json?
+  chartKind        String?  @default("personal")
+  meta             Json?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
