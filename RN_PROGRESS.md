@@ -147,6 +147,18 @@
 
 ---
 
+### 網頁端 SVG 閘門背景色修正（2026-06-21）
+
+CSS `.hd-gate-circle { fill: var(--paper); }` 優先級高於 SVG `fill` 屬性，導致 JS 計算出的黑色（意識）/ 紅色（非意識）背景被覆蓋，所有閘門圓圈永遠顯示紙色。
+
+修法：
+1. `app/globals.css` — `.hd-gate-circle` 改為 `fill: var(--gate-fill, var(--paper))`，讀取 CSS custom property
+2. `components/humanDesign/BodyGraph.tsx` — 閘門圓圈改用 `style={{ '--gate-fill': circleFill }}` 傳入顏色；文字色改為 `style={{ fill: textFill }}`
+
+現在激活閘門可正確顯示：黑色背景（意識）、紅色背景（非意識）、條紋（兩者皆有）；hover mustard 效果維持正常。
+
+---
+
 ## 下一步優先順序
 
 1. **深色模式支援**（以 `tokens.ts` 為基礎，整合 `useColorScheme`）

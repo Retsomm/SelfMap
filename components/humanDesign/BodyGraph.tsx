@@ -388,14 +388,14 @@ export default function BodyGraph({
                   <circle
                     className="hd-gate-circle"
                     cx={x} cy={y} r={7.5 * gateScale}
-                    fill={circleFill}
+                    style={{ '--gate-fill': circleFill } as React.CSSProperties}
                     stroke={HD_PALETTE.ink}
                     strokeWidth={1.4 * gateScale}
                   />
                   <text
                     className="hd-gate-num"
                     x={x} y={y}
-                    fill={textFill}
+                    style={{ fill: textFill }}
                     textAnchor="middle"
                     dominantBaseline="central"
                     fontSize={10.5 * gateScale}
