@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store'
 import * as WebBrowser from 'expo-web-browser'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { useEffect } from 'react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -44,12 +45,14 @@ function AuthGuard() {
 export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <AuthGuard />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情', headerBackButtonDisplayMode: 'minimal' }} />
-      </Stack>
+      <ErrorBoundary>
+        <AuthGuard />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情', headerBackButtonDisplayMode: 'minimal' }} />
+        </Stack>
+      </ErrorBoundary>
     </ClerkProvider>
   )
 }
