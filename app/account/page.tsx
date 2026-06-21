@@ -23,6 +23,21 @@ const PROVIDER_LABEL: Record<string, string> = {
   github: 'GitHub',
 }
 
+interface PersonMeta {
+  name: string | null
+  birthDate: string
+  birthTime: string
+  birthCity: string
+  timezone: string
+  type: string
+  profile: string
+}
+
+interface ChartMeta {
+  personA?: PersonMeta
+  personB?: PersonMeta
+}
+
 interface SavedChart {
   id: string
   name: string | null
@@ -35,6 +50,8 @@ interface SavedChart {
   profile: string
   definition: string
   createdAt: string
+  chartKind: string | null
+  meta: ChartMeta | null
 }
 
 type SidebarSection = 'profile' | 'humandesign' | 'connected'
@@ -207,19 +224,11 @@ export default function AccountPage() {
 
     const requestId = ++chartRequestIdRef.current
 
-    if (chart.type === 'composite') {
-      const dateParts = chart.birthDate.split('|')
-      const timeParts = chart.birthTime.split('|')
-      const tzParts = (chart.timezone ?? 'UTC|UTC').split('|')
-      const dateA = dateParts.length === 2 && dateParts[0] && dateParts[1] ? dateParts[0] : chart.birthDate
-      const dateB = dateParts.length === 2 && dateParts[0] && dateParts[1] ? dateParts[1] : chart.birthDate
-      const timeA = timeParts.length === 2 && timeParts[0] && timeParts[1] ? timeParts[0] : chart.birthTime
-      const timeB = timeParts.length === 2 && timeParts[0] && timeParts[1] ? timeParts[1] : chart.birthTime
-      const tzA = tzParts.length === 2 && tzParts[0] && tzParts[1] ? tzParts[0] : 'UTC'
-      const tzB = tzParts.length === 2 && tzParts[0] && tzParts[1] ? tzParts[1] : 'UTC'
+    if (chart.chartKind === 'composite' && chart.meta?.personA && chart.meta?.personB) {
+      const { personA, personB } = chart.meta
       Promise.all([
-        computeHdResult(dateA, timeA, tzA),
-        computeHdResult(dateB, timeB, tzB),
+        computeHdResult(personA.birthDate, personA.birthTime, personA.timezone),
+        computeHdResult(personB.birthDate, personB.birthTime, personB.timezone),
       ])
         .then(([a, b]) => { if (chartRequestIdRef.current === requestId) setCompositeResults({ a, b }) })
         .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error(t('account.calcFailed')) } })
@@ -568,7 +577,7 @@ export default function AccountPage() {
                   {chartComputing && (
                     <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) mb-6">{t('account.computing')}</div>
                   )}
-                  {activeChart.type === 'composite' ? (
+                  {activeChart.chartKind === 'composite' ? (
                     compositeResults && (() => {
                       const [cityA, cityB] = activeChart.birthCity.split('|')
                       const [dateA, dateB] = activeChart.birthDate.split('|')
