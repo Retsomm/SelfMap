@@ -81,8 +81,8 @@
 
 ## UI / 共用元件
 
-- [x] 統一 Design Token（`mobile/constants/tokens.ts`：Colors、Spacing、Radius、CardShadow）
-- [ ] 共用 `Card` 元件
+- [ ] 統一 Design Token（`mobile/constants/tokens.ts`：Colors、Spacing、Radius、CardShadow）
+- [x] 共用 `SectionCard` / `Row` / `Tag` 元件（`components/chart/ChartPrimitives.tsx`）
 - [ ] 共用 `Header` 元件
 - [ ] 共用 `ConfirmModal` 元件
 - [ ] Bottom Tab Bar 圖示優化
@@ -98,6 +98,24 @@
 - [ ] Android Picker 行為測試
 - [x] Body Graph SVG 套件選擇 → `react-native-svg@15.15.5`（已確認）
 - [x] WASM Swiss Ephemeris 是否可在 RN 環境執行（目前 server 端計算）→ **確認 server 端可正常執行**
+
+---
+
+## 重構紀錄
+
+### `app/chart/[id].tsx` 拆分（2026-06-21）
+
+原始 999 行單檔拆分為 6 個模組，主畫面降至 286 行（-71%）：
+
+| 新檔案 | 行數 | 內容 |
+|--------|------|------|
+| `lib/hd-normalizers.ts` | 30 | `normalizeCenterId` / `normalizeChannelId` / `findChannelById` |
+| `lib/hd-type-meta.ts` | 18 | `TYPE_META` 常數 + `getTypeMeta` |
+| `components/chart/ChartPrimitives.tsx` | 105 | `SectionCard` / `Row` / `Tag` |
+| `components/chart/TransitAnalysis.tsx` | 220 | 流日分析元件 |
+| `components/chart/CompositeInfo.tsx` | 278 | 合圖資訊元件 |
+
+實機驗證：個人圖 / 流日 / 合圖三種類型皆正常渲染。
 
 ---
 
@@ -127,7 +145,7 @@
 
 ## 下一步優先順序
 
-1. **實機測試流日 / 合圖功能**
-2. **共用 Card / Header / ConfirmModal 元件**（套用 tokens）
+1. **建立 `constants/tokens.ts`**（Design Token 基礎，讓各元件共用色彩與間距）
+2. **共用 `Header` / `ConfirmModal` 元件**（套用 tokens）
 3. **Bottom Tab Bar 圖示優化**（加入 `tabBarIcon`）
 4. **Loading / Skeleton 狀態統一**
