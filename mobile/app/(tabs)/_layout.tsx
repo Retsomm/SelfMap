@@ -4,13 +4,12 @@ import { Colors } from '@/constants/tokens'
 
 // ── 線條型 tab 圖示（24×24 viewBox，strokeWidth 1.8）──────────────────────────
 
-function IconCharts({ color }: { color: string }) {
+function IconAbout({ color }: { color: string }) {
   return (
     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-      {/* 菱形外框（體圖中心風格）*/}
-      <Path d="M12 3L21 12L12 21L3 12Z" stroke={color} strokeWidth={1.8} strokeLinejoin="round" />
-      {/* 內部格線 */}
-      <Path d="M12 3v18M3 12h18" stroke={color} strokeWidth={1.2} strokeLinecap="round" opacity={0.5} />
+      <Circle cx={12} cy={12} r={9} stroke={color} strokeWidth={1.8} />
+      <Path d="M12 11v5" stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+      <Circle cx={12} cy={8} r={0.8} fill={color} />
     </Svg>
   )
 }
@@ -64,12 +63,12 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
-        options={{ title: '我的圖表', tabBarIcon: ({ color }) => <IconCharts color={color} /> }}
-      />
-      <Tabs.Screen
         name="create"
         options={{ title: '建立圖表', tabBarIcon: ({ color }) => <IconCreate color={color} /> }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{ title: '關於', tabBarIcon: ({ color }) => <IconAbout color={color} /> }}
       />
       <Tabs.Screen
         name="learn"
