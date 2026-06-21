@@ -28,8 +28,8 @@ const SUB_TABS = [
 
 const KIND_CFG: Record<string, { label: string; color: string; bg: string }> = {
   personal:  { label: '個人', color: Colors.accent,  bg: Colors.accentD },
-  composite: { label: '合圖', color: Colors.comp,    bg: '#0a1525' },
-  transit:   { label: '流日', color: Colors.transit, bg: '#1a0d00' },
+  composite: { label: '合圖', color: Colors.comp,    bg: Colors.compDimBg },
+  transit:   { label: '流日', color: Colors.transit, bg: Colors.transitDimBg },
 }
 
 function kindOf(c: Chart): string {

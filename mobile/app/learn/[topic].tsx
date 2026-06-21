@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   acSubtitle: { fontSize: 11, color: Colors.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 2 },
   acTitle:    { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 4 },
   acIntro:    { fontSize: 13, color: Colors.sub, lineHeight: 20 },
-  paragraph:  { fontSize: 14, color: '#ccc', lineHeight: 22 },
+  paragraph:  { fontSize: 14, color: Colors.text, lineHeight: 22 },
   chevron:    { fontSize: 22, color: Colors.muted, marginTop: 4, transform: [{ rotate: '0deg' }] },
   chevronOpen:{ transform: [{ rotate: '90deg' }] },
 
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   highlights:     { gap: Spacing.sm },
   highlightCard:  { backgroundColor: Colors.accentD, borderRadius: Radius.md, padding: Spacing.md, borderLeftWidth: 3, borderLeftColor: Colors.accent, gap: 4 },
   highlightLabel: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
-  highlightBody:  { color: '#ddd', fontSize: 14, lineHeight: 21 },
+  highlightBody:  { color: Colors.text, fontSize: 14, lineHeight: 21 },
 
   // Center specific
   centerDot: { width: 12, height: 12, borderRadius: 6, marginTop: 6 },

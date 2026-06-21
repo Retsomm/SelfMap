@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
 import { useRef } from 'react'
 import { Alert, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 export default function SignInScreen() {
   const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' })
@@ -42,17 +43,17 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f0f1a' },
-  inner: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, padding: 24 },
-  title: { fontSize: 36, fontWeight: '700', color: '#fff' },
-  subtitle: { fontSize: 16, color: '#8888aa', marginBottom: 32 },
+  container:  { flex: 1, backgroundColor: Colors.bg },
+  inner:      { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.lg, padding: Spacing.xl },
+  title:      { fontSize: 36, fontWeight: '700', color: Colors.text },
+  subtitle:   { fontSize: 16, color: Colors.sub, marginBottom: 32 },
   button: {
-    backgroundColor: '#4285F4',
+    backgroundColor: Colors.accent,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 12,
+    borderRadius: Radius.md,
     width: '100%',
     alignItems: 'center',
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  buttonText: { color: Colors.surface, fontSize: 16, fontWeight: '600' },
 })

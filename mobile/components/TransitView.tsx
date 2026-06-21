@@ -2,7 +2,8 @@
  * 流日分析 View — 填入出生資料後計算個人圖 + 今日流日合成圖。
  */
 import { useAuth } from '@clerk/expo'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import { useFocusEffect } from 'expo-router'
 import {
   ActivityIndicator,
   Pressable,
@@ -71,10 +72,14 @@ export default function TransitView() {
   const [pickerVisible, setPickerVisible] = useState(false)
 
   const refreshProfiles = useCallback(async () => {
-    setSavedProfiles(await loadProfiles())
+    try {
+      setSavedProfiles(await loadProfiles())
+    } catch {
+      // keep existing profiles on failure; user will see stale list rather than empty
+    }
   }, [])
 
-  useEffect(() => { refreshProfiles() }, [refreshProfiles])
+  useFocusEffect(useCallback(() => { void refreshProfiles() }, [refreshProfiles]))
 
   function applyProfile(p: BirthProfile) {
     setForm(f => ({ ...f, date: p.date, time: p.time, city: p.city, timezone: p.timezone, name: f.name || p.label }))
@@ -126,7 +131,7 @@ export default function TransitView() {
         <>
         <View style={s.card}>
           {savedProfiles.length > 0 && !appliedProfile && (
-            <Pressable style={s.quickApplyBtn} onPress={() => setPickerVisible(true)}>
+            <Pressable style={s.quickApplyBtn} onPress={async () => { await refreshProfiles(); setPickerVisible(true) }}>
               <Text style={s.quickApplyText}>⚡ 快速套用出生資料</Text>
             </Pressable>
           )}
@@ -181,7 +186,7 @@ export default function TransitView() {
               <View style={s.card}>
                 <Text style={s.sectionLabel}>個人 + 流日 Body Graph</Text>
                 <View style={s.legend}>
-                  <View style={[s.legendDot, { backgroundColor: '#1a1a1a' }]} />
+                  <View style={[s.legendDot, { backgroundColor: Colors.text }]} />
                   <Text style={s.legendText}>個人意識</Text>
                   <View style={[s.legendDot, { backgroundColor: Colors.designRed }]} />
                   <Text style={s.legendText}>個人潛意識</Text>
@@ -219,7 +224,7 @@ export default function TransitView() {
               <Text style={s.sectionLabel}>今日流日定義中心（{result.transit.definedCenterIds.length}）</Text>
               <View style={s.chipRow}>
                 {result.transit.definedCenterIds.map(c => (
-                  <View key={c} style={[s.chip, { backgroundColor: '#2a1a0e' }]}>
+                  <View key={c} style={[s.chip, { backgroundColor: Colors.transitChipBg }]}>
                     <Text style={[s.chipText, { color: Colors.transit }]}>{CENTER_ZH[c] ?? c}</Text>
                   </View>
                 ))}
