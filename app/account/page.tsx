@@ -577,7 +577,7 @@ export default function AccountPage() {
                   {chartComputing && (
                     <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) mb-6">{t('account.computing')}</div>
                   )}
-                  {activeChart.type === 'composite' ? (
+                  {activeChart.chartKind === 'composite' ? (
                     compositeResults && (() => {
                       const [cityA, cityB] = activeChart.birthCity.split('|')
                       const [dateA, dateB] = activeChart.birthDate.split('|')

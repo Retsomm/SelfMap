@@ -23,10 +23,16 @@ export async function POST(req: NextRequest) {
     if (!birthDate || !birthTime || !birthCity || !timezone)
       return NextResponse.json({ error: '請填寫完整出生資料' }, { status: 400 })
 
-    const [hd, swe] = await Promise.all([
-      computeHdResultServer(birthDate, birthTime, timezone),
-      initSwissEphServer(),
-    ])
+    let hd, swe
+    try {
+      ;[hd, swe] = await Promise.all([
+        computeHdResultServer(birthDate, birthTime, timezone),
+        initSwissEphServer(),
+      ])
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : ''
+      return NextResponse.json({ error: msg || '出生資料計算失敗' }, { status: 400 })
+    }
 
     const now = new Date()
     const jd  = swe.dateToJulianDay(now)

@@ -9,11 +9,21 @@ import type { CenterName } from '@/lib/humanDesign/types'
 function toHdResult(chart: {
   gates: unknown; centers: unknown; channels: unknown; profile: string
 }): Pick<HdResult, 'allGates' | 'profile' | 'definedCenterIds' | 'definedChannels'> {
+  if (!Array.isArray(chart.gates) || !Array.isArray(chart.centers) || !Array.isArray(chart.channels))
+    throw new Error('圖表資料格式異常')
   const allGates         = new Set<number>(chart.gates as number[])
-  const definedCenterIds = new Set<CenterName>((chart.centers as string[]) as CenterName[])
+  const definedCenterIds = new Set<CenterName>(chart.centers as CenterName[])
   const channelIdSet     = new Set<string>(chart.channels as string[])
   const definedChannels  = CHANNEL_DEFS.filter(ch => channelIdSet.has(ch.id))
-  return { allGates, profile: { profile: chart.profile } as any, definedCenterIds, definedChannels }
+  const nullGateAndLine = { gate: 0, line: 0, color: 0, tone: 0, base: 0, full: '' }
+  const profile: HdResult['profile'] = {
+    profile: chart.profile,
+    personalitySunLine: 0,
+    designSunLine: 0,
+    personalitySun: nullGateAndLine,
+    designSun: nullGateAndLine,
+  }
+  return { allGates, profile, definedCenterIds, definedChannels }
 }
 
 export async function POST(req: NextRequest) {
@@ -22,7 +32,7 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { chartAId, chartBId } = await req.json()
-    if (!chartAId || !chartBId)
+    if (!chartAId || !chartBId || typeof chartAId !== 'string' || typeof chartBId !== 'string')
       return NextResponse.json({ error: '缺少 chartAId 或 chartBId' }, { status: 400 })
 
     const user = await prisma.user.findUnique({ where: { clerkId: userId } })

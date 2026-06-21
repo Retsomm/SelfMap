@@ -15,13 +15,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '請填寫所有必填欄位' }, { status: 400 })
     }
 
+    const VALID_CHART_KINDS = ['personal', 'composite', 'transit']
+    if (chartKind != null && !VALID_CHART_KINDS.includes(chartKind)) {
+      return NextResponse.json({ error: 'chartKind 不合法' }, { status: 400 })
+    }
+
     let planets: object[] | undefined
     let personalityGates: number[] | undefined
     let designGates: number[] | undefined
 
     if (!type || !authority || !profile || !definition) {
       if (!timezone) return NextResponse.json({ error: '請提供時區' }, { status: 400 })
-      const result = await computeHdResultServer(birthDate, birthTime, timezone)
+      let result
+      try {
+        result = await computeHdResultServer(birthDate, birthTime, timezone)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : ''
+        return NextResponse.json({ error: msg || '出生資料計算失敗' }, { status: 400 })
+      }
       type = result.type
       authority = result.authority.name
       profile = result.profile.profile

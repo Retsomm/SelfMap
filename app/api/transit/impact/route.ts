@@ -40,8 +40,11 @@ export async function POST(req: NextRequest) {
     const { definedCenterIds: transitCenterIds, definedChannels: transitChannels } =
       calculateCentersAndChannels(transitGates)
 
+    if (!Array.isArray(chart.gates) || !Array.isArray(chart.centers) || !Array.isArray(chart.channels))
+      return NextResponse.json({ error: '圖表資料格式異常' }, { status: 500 })
+
     const personalGates     = new Set<number>(chart.gates as number[])
-    const personalCenterIds = new Set<CenterName>((chart.centers as string[]) as CenterName[])
+    const personalCenterIds = new Set<CenterName>(chart.centers as CenterName[])
     const channelIdSet      = new Set<string>(chart.channels as string[])
     const personalChannels  = CHANNEL_DEFS.filter(ch => channelIdSet.has(ch.id))
 

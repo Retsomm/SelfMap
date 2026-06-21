@@ -29,17 +29,31 @@ export async function POST(req: NextRequest) {
     const { userId } = await auth()
 
     const body = await req.json()
+
+    const isValidBirth = (p: unknown): p is BirthPayload =>
+      !!p && typeof p === 'object' &&
+      typeof (p as BirthPayload).birthDate === 'string' && !!(p as BirthPayload).birthDate &&
+      typeof (p as BirthPayload).birthTime === 'string' && !!(p as BirthPayload).birthTime &&
+      typeof (p as BirthPayload).birthCity === 'string' && !!(p as BirthPayload).birthCity &&
+      typeof (p as BirthPayload).timezone  === 'string' && !!(p as BirthPayload).timezone
+
+    if (!isValidBirth(body?.personA))
+      return NextResponse.json({ error: '請填寫人物 A 的完整出生資料（欄位需為字串）' }, { status: 400 })
+    if (!isValidBirth(body?.personB))
+      return NextResponse.json({ error: '請填寫人物 B 的完整出生資料（欄位需為字串）' }, { status: 400 })
+
     const { personA, personB, name } = body as { personA: BirthPayload; personB: BirthPayload; name?: string }
 
-    if (!personA?.birthDate || !personA?.birthTime || !personA?.birthCity || !personA?.timezone)
-      return NextResponse.json({ error: '請填寫人物 A 的完整出生資料' }, { status: 400 })
-    if (!personB?.birthDate || !personB?.birthTime || !personB?.birthCity || !personB?.timezone)
-      return NextResponse.json({ error: '請填寫人物 B 的完整出生資料' }, { status: 400 })
-
-    const [hdA, hdB] = await Promise.all([
-      computeHdResultServer(personA.birthDate, personA.birthTime, personA.timezone),
-      computeHdResultServer(personB.birthDate, personB.birthTime, personB.timezone),
-    ])
+    let hdA, hdB
+    try {
+      ;[hdA, hdB] = await Promise.all([
+        computeHdResultServer(personA.birthDate, personA.birthTime, personA.timezone),
+        computeHdResultServer(personB.birthDate, personB.birthTime, personB.timezone),
+      ])
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : ''
+      return NextResponse.json({ error: msg || '出生資料計算失敗' }, { status: 400 })
+    }
 
     const composite = analyzeComposite(
       hdToCompositeInput(hdA) as HdResult,
