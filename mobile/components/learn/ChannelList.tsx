@@ -14,10 +14,10 @@ export function ChannelList() {
     const q = query.trim().toLowerCase()
     if (!q) return HD_CHANNELS
     return HD_CHANNELS.filter(ch =>
-      ch.name.zh.includes(q) ||
+      ch.name.zh.toLowerCase().includes(q) ||
       String(ch.from).includes(q) ||
       String(ch.to).includes(q) ||
-      ch.desc.zh.slice(0, 30).toLowerCase().includes(q)
+      ch.desc.zh.toLowerCase().includes(q)
     )
   }, [query])
 

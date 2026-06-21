@@ -93,7 +93,7 @@ function CreatePersonalView() {
       nestedScrollEnabled
     >
       {savedProfiles.length > 0 && !appliedProfile && (
-        <Pressable style={styles.quickApplyBtn} onPress={() => setPickerVisible(true)}>
+        <Pressable style={styles.quickApplyBtn} onPress={async () => { await refreshProfiles(); setPickerVisible(true) }}>
           <Text style={styles.quickApplyText}>⚡ 快速套用出生資料</Text>
         </Pressable>
       )}

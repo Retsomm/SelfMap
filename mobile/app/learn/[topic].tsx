@@ -43,6 +43,11 @@ export default function TopicScreen() {
       {topic === 'center'     && <CenterList />}
       {topic === 'channel'    && <ChannelList />}
       {topic === 'gate'       && <GateList />}
+      {!['type','authority','profile','definition','center','channel','gate'].includes(topic) && (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: Colors.sub, fontSize: 15 }}>此主題尚未支援</Text>
+        </View>
+      )}
     </SafeAreaView>
   )
 }

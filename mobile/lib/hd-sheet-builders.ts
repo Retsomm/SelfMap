@@ -38,9 +38,21 @@ const DEFINITION_ZH_TO_KEY: Record<string, string> = {
   '無定義（反映者）': 'None',
 }
 
-export function buildCenterContent(id: string): SheetContent | null {
+const NOT_FOUND: SheetContent = {
+  title: '資料不存在',
+  subtitle: '',
+  sections: [{ body: '無法顯示此內容，請稍後再試。' }],
+  keywords: [],
+}
+
+/**
+ * @param id - Center key (e.g. 'head', 'sacral') from HD_CENTERS_INFO
+ * @returns SheetContent with description, defined/open states, and keywords;
+ *   falls back to a "not found" message when the id is unrecognised.
+ */
+export function buildCenterContent(id: string): SheetContent {
   const info = HD_CENTERS_INFO[id]
-  if (!info) return null
+  if (!info) return NOT_FOUND
   return {
     title: info.name.zh,
     subtitle: info.type.zh,
@@ -53,9 +65,14 @@ export function buildCenterContent(id: string): SheetContent | null {
   }
 }
 
-export function buildGateContent(num: number): SheetContent | null {
+/**
+ * @param num - Gate number (1–64)
+ * @returns SheetContent with description and related channels;
+ *   falls back to a "not found" message when the gate number is unrecognised.
+ */
+export function buildGateContent(num: number): SheetContent {
   const gate = HD_GATES[num]
-  if (!gate) return null
+  if (!gate) return NOT_FOUND
 
   const relatedChannels = HD_CHANNELS.filter(ch => ch.from === num || ch.to === num)
   const sections: SheetContent['sections'] = [{ body: gate.desc.zh }]
@@ -74,6 +91,11 @@ export function buildGateContent(num: number): SheetContent | null {
   }
 }
 
+/**
+ * @param ch - Channel data from HD_CHANNELS
+ * @returns SheetContent with description and the two connecting gate names.
+ *   Always succeeds because the caller already holds a valid ChartChannel.
+ */
 export function buildChannelContent(ch: ChartChannel): SheetContent {
   const fromGate = HD_GATES[ch.from]
   const toGate   = HD_GATES[ch.to]
@@ -90,9 +112,14 @@ export function buildChannelContent(ch: ChartChannel): SheetContent {
   }
 }
 
-export function buildTypeContent(typeKey: string): SheetContent | null {
+/**
+ * @param typeKey - HD_TYPE_CONTENT lookup key (English type name)
+ * @returns SheetContent with intro, paragraphs, and highlights;
+ *   falls back to a "not found" message when the key is unrecognised.
+ */
+export function buildTypeContent(typeKey: string): SheetContent {
   const d = HD_TYPE_CONTENT[typeKey]
-  if (!d) return null
+  if (!d) return NOT_FOUND
   return {
     title: d.title,
     subtitle: d.subtitle ?? '能量類型',
@@ -102,10 +129,16 @@ export function buildTypeContent(typeKey: string): SheetContent | null {
   }
 }
 
-export function buildAuthorityContent(authorityKey: string): SheetContent | null {
+/**
+ * @param authorityKey - Chinese authority label or English key;
+ *   Chinese labels are mapped via AUTHORITY_ZH_TO_KEY before lookup.
+ * @returns SheetContent with intro, paragraphs, and highlights;
+ *   falls back to a "not found" message when no matching entry is found.
+ */
+export function buildAuthorityContent(authorityKey: string): SheetContent {
   const key = AUTHORITY_ZH_TO_KEY[authorityKey] ?? authorityKey
   const d = HD_AUTHORITY_CONTENT[key]
-  if (!d) return null
+  if (!d) return NOT_FOUND
   return {
     title: d.title,
     subtitle: d.subtitle ?? '內在權威',
@@ -115,9 +148,14 @@ export function buildAuthorityContent(authorityKey: string): SheetContent | null
   }
 }
 
-export function buildProfileContent(profile: string): SheetContent | null {
+/**
+ * @param profile - Profile string (e.g. '1/3')
+ * @returns SheetContent with intro, paragraphs, and highlights;
+ *   falls back to a "not found" message when the profile is unrecognised.
+ */
+export function buildProfileContent(profile: string): SheetContent {
   const d = HD_PROFILE_CONTENT[profile]
-  if (!d) return null
+  if (!d) return NOT_FOUND
   return {
     title: d.title,
     subtitle: d.subtitle ?? '人生角色',
@@ -127,10 +165,16 @@ export function buildProfileContent(profile: string): SheetContent | null {
   }
 }
 
-export function buildDefinitionContent(definitionKey: string): SheetContent | null {
+/**
+ * @param definitionKey - Chinese definition label or English key;
+ *   Chinese labels are mapped via DEFINITION_ZH_TO_KEY before lookup.
+ * @returns SheetContent with intro, paragraphs, and highlights;
+ *   falls back to a "not found" message when no matching entry is found.
+ */
+export function buildDefinitionContent(definitionKey: string): SheetContent {
   const key = DEFINITION_ZH_TO_KEY[definitionKey] ?? definitionKey
   const d = HD_DEFINITION_CONTENT[key]
-  if (!d) return null
+  if (!d) return NOT_FOUND
   return {
     title: d.title,
     subtitle: d.subtitle ?? '定義',

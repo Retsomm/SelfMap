@@ -20,6 +20,11 @@ export const CENTER_ZH: Record<string, string> = {
   heart: '意志力', spleen: '脾', sacral: '薦骨', solar: '情緒', root: '根部',
 }
 
+/**
+ * Returns the Chinese display name for a centre id.
+ * Falls back to the raw `id` when it is not found in CENTER_ZH,
+ * so callers always receive a renderable string.
+ */
 export function centerZh(id: string): string {
   return CENTER_ZH[id] ?? id
 }

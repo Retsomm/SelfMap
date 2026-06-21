@@ -20,8 +20,8 @@ export function GateList() {
         if (!q) return true
         return (
           String(num).includes(q) ||
-          gate.name.zh.includes(q) ||
-          gate.desc.zh.slice(0, 40).toLowerCase().includes(q)
+          gate.name.zh.toLowerCase().includes(q) ||
+          gate.desc.zh.toLowerCase().includes(q)
         )
       })
   }, [query])

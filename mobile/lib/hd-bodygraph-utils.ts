@@ -7,6 +7,12 @@ export interface BodyGraphProps {
   activations: Record<number, { c?: boolean; u?: boolean; t?: boolean }>
 }
 
+/**
+ * Builds BodyGraph props from a composite (合圖) result.
+ * Person A gates receive `c: true`, person B gates receive `u: true`.
+ * When the same gate appears in both, both flags are set and the renderer
+ * shows a split colour to indicate the dominance or shared activation.
+ */
 export function buildCompositeBodyGraphProps(result: CreateCompositeResult): BodyGraphProps {
   const definedCenterIds  = new Set(result.compositeDefinedCenterIds.map(normalizeCenterId))
   const definedChannelIds = new Set<string>([
@@ -25,6 +31,12 @@ export function buildCompositeBodyGraphProps(result: CreateCompositeResult): Bod
   return { definedCenterIds, definedChannelIds, activations }
 }
 
+/**
+ * Builds BodyGraph props from a transit (流日) result.
+ * Personality gates → `c: true`, design gates → `u: true`,
+ * transit-only gates → `t: true`. Personality/design always take precedence
+ * over transit so personal activations are never overwritten.
+ */
 export function buildTransitBodyGraphProps(data: CreateTransitResult): BodyGraphProps {
   const activations: BodyGraphProps['activations'] = {}
   for (const g of data.personalityGates) activations[g] = { ...activations[g], c: true }
