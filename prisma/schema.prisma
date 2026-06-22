@@ -9,13 +9,28 @@ datasource db {
 }
 
 model User {
+  id            String         @id @default(cuid())
+  clerkId       String         @unique
+  email         String         @unique
+  name          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  charts        Chart[]
+  birthProfiles BirthProfile[]
+}
+
+model BirthProfile {
   id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String   @unique
-  name      String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  date      String
+  time      String
+  timezone  String
+  location  String
+  sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  charts    Chart[]
 }
 
 model Chart {

@@ -2,16 +2,20 @@
  * 流日分析 View — 填入出生資料後計算個人圖 + 今日流日合成圖。
  */
 import { useAuth } from '@clerk/expo'
+import { useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
 import {
   ActivityIndicator,
+  Alert,
+  Clipboard,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
-import { type CreateTransitResult, createTransitChart } from '@/lib/api'
+import { type CreateTransitResult, previewTransitChart, createTransitChart } from '@/lib/api'
+import { downloadTransitPdf, generateTransitAiPrompt } from '@/lib/chartPdf'
 import { buildTransitBodyGraphProps } from '@/lib/hd-bodygraph-utils'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
@@ -43,6 +47,7 @@ const IMPACT_CFG = {
 
 export default function TransitView() {
   const { getToken } = useAuth()
+  const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
 
   const [form, setForm]               = useState<BirthFormData>(defaultBirthFormData)
@@ -50,12 +55,18 @@ export default function TransitView() {
   const [submitting, setSubmitting]   = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [result, setResult]           = useState<CreateTransitResult | null>(null)
+  const [lastPayload, setLastPayload] = useState<{ birthDate: string; birthTime: string; birthCity: string; timezone: string; name?: string } | null>(null)
   const [appliedProfile, setAppliedProfile] = useState<BirthProfile | null>(null)
   const [pickerVisible, setPickerVisible] = useState(false)
   const { profiles: savedProfiles, refresh: refreshProfiles } = useBirthProfiles()
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [copied, setCopied]         = useState(false)
+  const [saveState, setSaveState]   = useState<'idle' | 'loading' | 'saved'>('idle')
 
   function applyProfile(p: BirthProfile) {
-    setForm(f => ({ ...f, date: p.date, time: p.time, city: p.city, timezone: p.timezone, name: f.name || p.label }))
+    const [year, month, day] = p.date.split('-').map(Number)
+    const [hour, minute] = p.time.split(':').map(Number)
+    setForm(f => ({ ...f, date: { year, month, day }, time: { hour, minute }, city: p.location, timezone: p.timezone, name: f.name || p.label }))
     setFieldError(null)
     setAppliedProfile(p)
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80)
@@ -66,21 +77,22 @@ export default function TransitView() {
       setFieldError('請輸入城市名稱並從清單中選擇')
       return
     }
+    const payload = {
+      birthDate: formToBirthDate(form),
+      birthTime: formToBirthTime(form),
+      birthCity: form.city,
+      timezone:  form.timezone,
+      name:      form.name || undefined,
+    }
     setFieldError(null)
     setSubmitError(null)
     setSubmitting(true)
     setResult(null)
+    setSaveState('idle')
     try {
-      const token = await getToken()
-      if (!token) throw new Error('未登入')
-      const data = await createTransitChart(token, {
-        birthDate: formToBirthDate(form),
-        birthTime: formToBirthTime(form),
-        birthCity: form.city,
-        timezone:  form.timezone,
-        name:      form.name || undefined,
-      })
+      const data = await previewTransitChart(payload)
       setResult(data)
+      setLastPayload(payload)
     } catch (e: unknown) {
       setSubmitError(e instanceof Error ? e.message : '發生未知錯誤，請稍後再試')
     } finally {
@@ -88,7 +100,39 @@ export default function TransitView() {
     }
   }
 
-  const reset = () => { setResult(null); setSubmitError(null) }
+  const reset = () => { setResult(null); setLastPayload(null); setSubmitError(null); setSaveState('idle') }
+
+  const handleDownload = async () => {
+    if (!result) return
+    setPdfLoading(true)
+    try { await downloadTransitPdf(result) }
+    catch { Alert.alert('錯誤', '下載失敗，請稍後再試') }
+    finally { setPdfLoading(false) }
+  }
+
+  const handleCopyPrompt = () => {
+    if (!result) return
+    Clipboard.setString(generateTransitAiPrompt(result))
+    setCopied(true)
+    Alert.alert('已複製', '流日提示詞已複製到剪貼簿，可貼到 ChatGPT 或其他 AI 工具使用。')
+    setTimeout(() => setCopied(false), 3000)
+  }
+
+  const handleSave = async () => {
+    if (!lastPayload || saveState !== 'idle') return
+    const token = await getToken()
+    if (!token) { Alert.alert('請先登入', '登入後才能儲存圖表'); return }
+    setSaveState('loading')
+    try {
+      const saved = await createTransitChart(token, lastPayload)
+      setResult(saved)
+      setSaveState('saved')
+      router.push({ pathname: '/(tabs)/profile', params: { chartTab: 'transit' } } as never)
+    } catch (e: unknown) {
+      setSaveState('idle')
+      Alert.alert('儲存失敗', e instanceof Error ? e.message : '請稍後再試')
+    }
+  }
 
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleString('zh-TW', { hour12: false, timeZone: 'Asia/Taipei' })
@@ -230,6 +274,29 @@ export default function TransitView() {
             })
           )}
 
+          {/* 三個行動按鈕 */}
+          <View style={s.actionSection}>
+            <Pressable
+              style={[s.actionBtn, pdfLoading && s.disabled]}
+              onPress={handleDownload}
+              disabled={pdfLoading}
+            >
+              <Text style={s.actionBtnText}>{pdfLoading ? '處理中…' : '下載 PDF'}</Text>
+            </Pressable>
+            <Pressable style={s.actionBtn} onPress={handleCopyPrompt}>
+              <Text style={s.actionBtnText}>{copied ? '已複製！' : '複製提示詞'}</Text>
+            </Pressable>
+            <Pressable
+              style={[s.actionBtn, s.actionBtnPrimary, saveState === 'loading' && s.disabled]}
+              onPress={handleSave}
+              disabled={saveState !== 'idle'}
+            >
+              <Text style={[s.actionBtnText, s.actionBtnTextPrimary]}>
+                {saveState === 'loading' ? '儲存中…' : saveState === 'saved' ? '已儲存' : '儲存圖表'}
+              </Text>
+            </Pressable>
+          </View>
+
           <Pressable style={s.outlineBtn} onPress={reset}>
             <Text style={s.outlineBtnText}>重新輸入</Text>
           </Pressable>
@@ -269,4 +336,9 @@ const s = StyleSheet.create({
   errorText:      { color: Colors.red, fontSize: 13 },
   impactKind:     { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
   impactLabel:    { fontSize: 15, fontWeight: '700', color: Colors.text, marginTop: 2 },
+  actionSection:        { gap: Spacing.sm },
+  actionBtn:            { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.lg, padding: 13, alignItems: 'center' },
+  actionBtnPrimary:     { backgroundColor: Colors.accent, borderColor: Colors.accent },
+  actionBtnText:        { fontSize: 14, fontWeight: '600', color: Colors.text },
+  actionBtnTextPrimary: { color: Colors.bg },
 })

@@ -215,6 +215,62 @@ export default function ChartDetailScreen() {
               </SectionCard>
             )}
 
+            {/* 輪迴交叉 */}
+            {chart.meta?.incarnationCross && (
+              <SectionCard title="輪迴交叉">
+                <Row label="交叉類型" value={chart.meta.incarnationCross.crossTypeLabel} accent />
+                <Row label="交叉名稱" value={`${chart.meta.incarnationCross.crossBaseName}${chart.meta.incarnationCross.variant}`} />
+                <Row label="完整名稱" value={`${chart.meta.incarnationCross.crossTypeLabel}之${chart.meta.incarnationCross.crossBaseName}${chart.meta.incarnationCross.variant}`} />
+                <Row label="閘門組合" value={chart.meta.incarnationCross.gatesLabel} />
+              </SectionCard>
+            )}
+
+            {/* 四箭頭 */}
+            {chart.meta?.variables && chart.meta?.arrows && (
+              <SectionCard title="四箭頭（Variables）">
+                <View style={styles.arrowsGrid}>
+                  <View style={styles.arrowsCol}>
+                    <Text style={styles.arrowsSide}>← Design（紅）</Text>
+                    <View style={styles.arrowItem}>
+                      <Text style={styles.arrowDir}>{chart.meta.arrows.topLeft ? '←' : '→'}</Text>
+                      <View style={styles.arrowInfo}>
+                        <Text style={styles.arrowCategory}>飲食（Digestion）</Text>
+                        <Text style={styles.arrowLabel}>{chart.meta.variables.digestion.label}</Text>
+                        <Text style={styles.arrowDesc}>{chart.meta.variables.digestion.description}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.arrowItem}>
+                      <Text style={styles.arrowDir}>{chart.meta.arrows.bottomLeft ? '←' : '→'}</Text>
+                      <View style={styles.arrowInfo}>
+                        <Text style={styles.arrowCategory}>環境（Environment）</Text>
+                        <Text style={styles.arrowLabel}>{chart.meta.variables.environment.label}</Text>
+                        <Text style={styles.arrowDesc}>{chart.meta.variables.environment.description}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={styles.arrowsCol}>
+                    <Text style={styles.arrowsSide}>Personality（黑）→</Text>
+                    <View style={styles.arrowItem}>
+                      <Text style={styles.arrowDir}>{chart.meta.arrows.topRight ? '←' : '→'}</Text>
+                      <View style={styles.arrowInfo}>
+                        <Text style={styles.arrowCategory}>動機（Motivation）</Text>
+                        <Text style={styles.arrowLabel}>{chart.meta.variables.motivation.label}</Text>
+                        <Text style={styles.arrowDesc}>{chart.meta.variables.motivation.description}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.arrowItem}>
+                      <Text style={styles.arrowDir}>{chart.meta.arrows.bottomRight ? '←' : '→'}</Text>
+                      <View style={styles.arrowInfo}>
+                        <Text style={styles.arrowCategory}>觀點（Perspective）</Text>
+                        <Text style={styles.arrowLabel}>{chart.meta.variables.perspective.label}</Text>
+                        <Text style={styles.arrowDesc}>{chart.meta.variables.perspective.description}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </SectionCard>
+            )}
+
             <SectionCard title={`激活閘門（${chart.gates.length}）`}>
               <View style={styles.gateGrid}>
                 {chart.gates.map((g) => (
@@ -271,4 +327,14 @@ const styles = StyleSheet.create({
   planetGateCol:    { flex: 1, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
   planetBlack:      { color: Colors.text },
   planetRed:        { color: Colors.planetRedText },
+
+  arrowsGrid:    { flexDirection: 'row', gap: Spacing.md, padding: Spacing.md },
+  arrowsCol:     { flex: 1, gap: Spacing.sm },
+  arrowsSide:    { fontSize: 11, color: Colors.muted, fontWeight: '600', marginBottom: 2 },
+  arrowItem:     { flexDirection: 'row', gap: Spacing.sm, alignItems: 'flex-start' },
+  arrowDir:      { fontSize: 18, color: Colors.accent, fontWeight: '700', width: 20, lineHeight: 22 },
+  arrowInfo:     { flex: 1, gap: 2 },
+  arrowCategory: { fontSize: 10, color: Colors.sub, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
+  arrowLabel:    { fontSize: 13, color: Colors.text, fontWeight: '700' },
+  arrowDesc:     { fontSize: 11, color: Colors.sub, lineHeight: 15 },
 })

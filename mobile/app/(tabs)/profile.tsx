@@ -1,7 +1,8 @@
 import { useAuth, useUser } from '@clerk/expo'
+import { useLocalSearchParams } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { SubTabBar } from '@/components/SubTabBar'
@@ -25,8 +26,11 @@ const OUTER_TABS = [
 // ─── 個人頁面內容 ────────────────────────────────────────────────────────────
 
 function PersonalView() {
-  const { signOut } = useAuth()
+  const { signOut, getToken } = useAuth()
   const { user } = useUser()
+  const getTokenRef = useRef(getToken)
+  useEffect(() => { getTokenRef.current = getToken }, [getToken])
+
   const [signingOut, setSigningOut]       = useState(false)
   const [editingName, setEditingName]     = useState(false)
   const [nameInput, setNameInput]         = useState('')
@@ -35,18 +39,40 @@ function PersonalView() {
   const inputRef = useRef<TextInput>(null)
 
   const [profiles, setProfiles]       = useState<BirthProfile[]>([])
+  const [profilesLoading, setProfilesLoading] = useState(false)
+  const [syncing, setSyncing]         = useState(false)
   const [sheetVisible, setSheetVisible] = useState(false)
   const [editTarget, setEditTarget]   = useState<BirthProfile | null>(null)
 
   const refreshProfiles = useCallback(async () => {
-    setProfiles(await loadProfiles())
-  }, [])
+    setProfilesLoading(true)
+    try {
+      const token = await getTokenRef.current()
+      if (!token) throw new Error('尚未登入，請重新啟動 App')
+      setProfiles(await loadProfiles(token))
+    } catch (err) {
+      Alert.alert('讀取失敗', err instanceof Error ? err.message : '請稍後再試')
+    } finally {
+      setProfilesLoading(false)
+    }
+  }, []) // getToken 透過 ref 取用，不放 deps 避免無限循環
 
   useEffect(() => { refreshProfiles() }, [refreshProfiles])
 
-  async function handleSaveProfile(profile: BirthProfile) {
+  async function handleSync() {
+    setSyncing(true)
     try {
-      setProfiles(await saveProfile(profile))
+      await refreshProfiles()
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  async function handleSaveProfile(profile: BirthProfile) {
+    const token = await getTokenRef.current()
+    if (!token) return
+    try {
+      setProfiles(await saveProfile(token, profile, profiles))
       setSheetVisible(false)
     } catch (err) {
       Alert.alert('儲存失敗', err instanceof Error ? err.message : '請稍後再試')
@@ -63,13 +89,15 @@ function PersonalView() {
     setSheetVisible(true)
   }
 
-  function handleDeleteProfile(p: BirthProfile) {
+  async function handleDeleteProfile(p: BirthProfile) {
     Alert.alert('刪除出生資料', `確定要刪除「${p.label}」？`, [
       { text: '取消', style: 'cancel' },
       {
         text: '刪除', style: 'destructive',
         onPress: async () => {
-          try { setProfiles(await deleteProfile(p.id)) }
+          const token = await getTokenRef.current()
+          if (!token) return
+          try { setProfiles(await deleteProfile(token, p.id, profiles)) }
           catch (err) { Alert.alert('刪除失敗', err instanceof Error ? err.message : '請稍後再試') }
         },
       },
@@ -190,12 +218,28 @@ function PersonalView() {
         <View style={s.section}>
           <View style={s.sectionHeader}>
             <Text style={s.sectionTitle}>出生資料</Text>
-            <Pressable onPress={handleAddProfile} accessibilityLabel="新增出生資料">
-              <Text style={s.addText}>＋ 新增</Text>
-            </Pressable>
+            <View style={s.sectionActions}>
+              <Pressable
+                onPress={handleSync}
+                disabled={syncing || profilesLoading}
+                accessibilityLabel="立即同步"
+                style={s.syncBtn}
+              >
+                {syncing
+                  ? <ActivityIndicator size="small" color={Colors.sub} />
+                  : <Text style={s.syncText}>↻ 同步</Text>}
+              </Pressable>
+              <Pressable onPress={handleAddProfile} accessibilityLabel="新增出生資料">
+                <Text style={s.addText}>＋ 新增</Text>
+              </Pressable>
+            </View>
           </View>
 
-          {profiles.length === 0 ? (
+          {profilesLoading ? (
+            <View style={s.emptyCard}>
+              <ActivityIndicator size="small" color={Colors.sub} />
+            </View>
+          ) : profiles.length === 0 ? (
             <Pressable style={s.emptyCard} onPress={handleAddProfile}>
               <Text style={s.emptyText}>尚無出生資料，點此新增</Text>
             </Pressable>
@@ -259,6 +303,7 @@ function PersonalView() {
 
 export default function ProfileScreen() {
   const [outerTab, setOuterTab] = useState<OuterTab>('charts')
+  const { chartTab } = useLocalSearchParams<{ chartTab?: 'personal' | 'composite' | 'transit' }>()
 
   return (
     <SafeAreaView style={s.container}>
@@ -266,7 +311,7 @@ export default function ProfileScreen() {
       <SubTabBar tabs={OUTER_TABS} active={outerTab} onSelect={setOuterTab} />
 
       <View style={{ flex: 1, display: outerTab === 'charts' ? 'flex' : 'none' }}>
-        <ChartListView />
+        <ChartListView initialTab={chartTab} />
       </View>
       <View style={{ flex: 1, display: outerTab === 'personal' ? 'flex' : 'none' }}>
         <PersonalView />
@@ -292,10 +337,13 @@ const s = StyleSheet.create({
   editBtn:      { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm, paddingHorizontal: Spacing.md, paddingVertical: 6 },
   editText:     { color: Colors.sub, fontSize: 13 },
 
-  section:       { gap: Spacing.sm },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle:  { fontSize: 12, color: Colors.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
-  addText:       { color: Colors.accent, fontSize: 14, fontWeight: '600' },
+  section:        { gap: Spacing.sm },
+  sectionHeader:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionTitle:   { fontSize: 12, color: Colors.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
+  sectionActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  syncBtn:        { paddingHorizontal: 4 },
+  syncText:       { color: Colors.sub, fontSize: 13 },
+  addText:        { color: Colors.accent, fontSize: 14, fontWeight: '600' },
 
   oauthRow:      { paddingVertical: Spacing.sm, gap: 4 },
   separator:     { borderTopWidth: 1, borderTopColor: Colors.border, marginTop: Spacing.sm, paddingTop: Spacing.sm },

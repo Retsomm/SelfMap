@@ -127,9 +127,13 @@ function ChartFlatList({
   )
 }
 
-export default function ChartListView() {
+export default function ChartListView({ initialTab }: { initialTab?: ChartTab }) {
   const { getToken } = useAuth()
-  const [chartTab, setChartTab]             = useState<ChartTab>('personal')
+  const [chartTab, setChartTab]             = useState<ChartTab>(initialTab ?? 'personal')
+
+  useEffect(() => {
+    if (initialTab) setChartTab(initialTab)
+  }, [initialTab])
   const [charts, setCharts]                 = useState<Chart[]>([])
   const [loading, setLoading]               = useState(true)
   const [refreshing, setRefreshing]         = useState(false)
@@ -161,11 +165,9 @@ export default function ChartListView() {
   useEffect(() => { fetchCharts() }, [fetchCharts])
 
   const fetchRef = useRef(fetchCharts)
-
-  const didFocusRef = useRef(false)
+  useEffect(() => { fetchRef.current = fetchCharts }, [fetchCharts])
 
   useFocusEffect(useCallback(() => {
-    if (!didFocusRef.current) { didFocusRef.current = true; return }
     fetchRef.current()
   }, []))
 

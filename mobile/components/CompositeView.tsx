@@ -2,9 +2,12 @@
  * 合圖分析 View — 兩個出生資料表單，計算後存一筆並顯示合圖 Body Graph 與結果。
  */
 import { useAuth } from '@clerk/expo'
+import { useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
 import {
   ActivityIndicator,
+  Alert,
+  Clipboard,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,8 +16,11 @@ import {
 } from 'react-native'
 import {
   type CreateCompositeResult,
+  type CreateCompositePayload,
+  previewCompositeChart,
   createCompositeChart,
 } from '@/lib/api'
+import { downloadCompositePdf, generateCompositeAiPrompt } from '@/lib/chartPdf'
 import { buildCompositeBodyGraphProps } from '@/lib/hd-bodygraph-utils'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
@@ -44,15 +50,20 @@ const THEME_DESC: Record<string, string> = {
 
 export default function CompositeView() {
   const { getToken } = useAuth()
+  const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
 
   const [formA, setFormA] = useState<BirthFormData>(defaultBirthFormData)
   const [formB, setFormB] = useState<BirthFormData>(defaultBirthFormData)
   const [errorA, setErrorA] = useState<string | null>(null)
   const [errorB, setErrorB] = useState<string | null>(null)
-  const [result, setResult]       = useState<CreateCompositeResult | null>(null)
+  const [result, setResult]         = useState<CreateCompositeResult | null>(null)
+  const [lastPayload, setLastPayload] = useState<CreateCompositePayload | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [copied, setCopied]         = useState(false)
+  const [saveState, setSaveState]   = useState<'idle' | 'loading' | 'saved'>('idle')
 
   const [pickerTarget, setPickerTarget] = useState<'A' | 'B' | null>(null)
   const [appliedA, setAppliedA] = useState<BirthProfile | null>(null)
@@ -60,7 +71,9 @@ export default function CompositeView() {
   const { profiles: savedProfiles, refresh: refreshProfiles } = useBirthProfiles()
 
   function applyProfile(p: BirthProfile) {
-    const patch = { date: p.date, time: p.time, city: p.city, timezone: p.timezone }
+    const [year, month, day] = p.date.split('-').map(Number)
+    const [hour, minute] = p.time.split(':').map(Number)
+    const patch = { date: { year, month, day }, time: { hour, minute }, city: p.location, timezone: p.timezone }
     if (pickerTarget === 'A') {
       setFormA(f => ({ ...f, ...patch, name: f.name || p.label }))
       setErrorA(null)
@@ -70,7 +83,6 @@ export default function CompositeView() {
       setErrorB(null)
       setAppliedB(p)
     }
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80)
   }
 
   const calculate = async () => {
@@ -79,31 +91,31 @@ export default function CompositeView() {
     if (!formB.city || !formB.timezone) { setErrorB('請輸入城市名稱並從清單中選擇'); valid = false }
     if (!valid) return
 
+    const payload: CreateCompositePayload = {
+      personA: {
+        name:      formA.name || undefined,
+        birthDate: formToBirthDate(formA),
+        birthTime: formToBirthTime(formA),
+        birthCity: formA.city,
+        timezone:  formA.timezone,
+      },
+      personB: {
+        name:      formB.name || undefined,
+        birthDate: formToBirthDate(formB),
+        birthTime: formToBirthTime(formB),
+        birthCity: formB.city,
+        timezone:  formB.timezone,
+      },
+    }
+
     setSubmitting(true)
     setSubmitError(null)
     setResult(null)
+    setSaveState('idle')
     try {
-      const token = await getToken()
-      if (!token) throw new Error('未登入')
-
-      const data = await createCompositeChart(token, {
-        personA: {
-          name:      formA.name || undefined,
-          birthDate: formToBirthDate(formA),
-          birthTime: formToBirthTime(formA),
-          birthCity: formA.city,
-          timezone:  formA.timezone,
-        },
-        personB: {
-          name:      formB.name || undefined,
-          birthDate: formToBirthDate(formB),
-          birthTime: formToBirthTime(formB),
-          birthCity: formB.city,
-          timezone:  formB.timezone,
-        },
-      })
-
+      const data = await previewCompositeChart(payload)
       setResult(data)
+      setLastPayload(payload)
       scrollRef.current?.scrollTo({ y: 0, animated: true })
     } catch (e: unknown) {
       setSubmitError(e instanceof Error ? e.message : '發生未知錯誤，請稍後再試')
@@ -112,7 +124,39 @@ export default function CompositeView() {
     }
   }
 
-  const reset = () => { setResult(null); setSubmitError(null) }
+  const reset = () => { setResult(null); setLastPayload(null); setSubmitError(null); setSaveState('idle') }
+
+  const handleDownload = async () => {
+    if (!result) return
+    setPdfLoading(true)
+    try { await downloadCompositePdf(result) }
+    catch { Alert.alert('錯誤', '下載失敗，請稍後再試') }
+    finally { setPdfLoading(false) }
+  }
+
+  const handleCopyPrompt = () => {
+    if (!result) return
+    Clipboard.setString(generateCompositeAiPrompt(result))
+    setCopied(true)
+    Alert.alert('已複製', '合圖提示詞已複製到剪貼簿，可貼到 ChatGPT 或其他 AI 工具使用。')
+    setTimeout(() => setCopied(false), 3000)
+  }
+
+  const handleSave = async () => {
+    if (!lastPayload || saveState !== 'idle') return
+    const token = await getToken()
+    if (!token) { Alert.alert('請先登入', '登入後才能儲存圖表'); return }
+    setSaveState('loading')
+    try {
+      const saved = await createCompositeChart(token, lastPayload)
+      setResult(saved)
+      setSaveState('saved')
+      router.push({ pathname: '/(tabs)/profile', params: { chartTab: 'composite' } } as never)
+    } catch (e: unknown) {
+      setSaveState('idle')
+      Alert.alert('儲存失敗', e instanceof Error ? e.message : '請稍後再試')
+    }
+  }
 
   return (
     <ScrollView
@@ -273,6 +317,29 @@ export default function CompositeView() {
             )
           })}
 
+          {/* 三個行動按鈕 */}
+          <View style={s.actionSection}>
+            <Pressable
+              style={[s.actionBtn, pdfLoading && s.disabled]}
+              onPress={handleDownload}
+              disabled={pdfLoading}
+            >
+              <Text style={s.actionBtnText}>{pdfLoading ? '處理中…' : '下載 PDF'}</Text>
+            </Pressable>
+            <Pressable style={s.actionBtn} onPress={handleCopyPrompt}>
+              <Text style={s.actionBtnText}>{copied ? '已複製！' : '複製提示詞'}</Text>
+            </Pressable>
+            <Pressable
+              style={[s.actionBtn, s.actionBtnPrimary, saveState === 'loading' && s.disabled]}
+              onPress={handleSave}
+              disabled={saveState !== 'idle'}
+            >
+              <Text style={[s.actionBtnText, s.actionBtnTextPrimary]}>
+                {saveState === 'loading' ? '儲存中…' : saveState === 'saved' ? '已儲存' : '儲存圖表'}
+              </Text>
+            </Pressable>
+          </View>
+
           <Pressable style={s.outlineBtn} onPress={reset}>
             <Text style={s.outlineBtnText}>重新輸入</Text>
           </Pressable>
@@ -308,4 +375,9 @@ const s = StyleSheet.create({
   disabled:       { opacity: 0.5 },
   errorBox:       { backgroundColor: Colors.errorBg, borderRadius: Radius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.errorBorder },
   errorText:      { color: Colors.red, fontSize: 13 },
+  actionSection:        { gap: Spacing.sm },
+  actionBtn:            { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.lg, padding: 13, alignItems: 'center' },
+  actionBtnPrimary:     { backgroundColor: Colors.accent, borderColor: Colors.accent },
+  actionBtnText:        { fontSize: 14, fontWeight: '600', color: Colors.text },
+  actionBtnTextPrimary: { color: Colors.bg },
 })

@@ -1,4 +1,3 @@
-import { useAuth } from '@clerk/expo'
 import { useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
 import {
@@ -10,7 +9,8 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { createChart, type CreateChartPayload } from '@/lib/api'
+import { previewChart, type CreateChartPayload } from '@/lib/api'
+import { setPendingChart } from '@/lib/pendingChart'
 import { DatePicker, TimePicker } from '@/components/DateTimePicker'
 import CitySearchField from '@/components/CitySearchField'
 import TransitView from '@/components/TransitView'
@@ -34,7 +34,6 @@ const SUB_TABS = [
 // ─── Create personal chart form ───────────────────────────────────────────────
 
 function CreatePersonalView() {
-  const { getToken } = useAuth()
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
 
@@ -62,11 +61,29 @@ function CreatePersonalView() {
     setSubmitError(null)
     setSubmitting(true)
     try {
-      const token = await getToken()
-      if (!token) throw new Error('未登入')
       const payload: CreateChartPayload = { birthDate, birthTime, birthCity: city, timezone, name: name || undefined }
-      const { chartId } = await createChart(token, payload)
-      router.push(`/chart/${chartId}`)
+      const result = await previewChart(payload)
+      setPendingChart({
+        name: name || '',
+        birthDate,
+        birthTime,
+        birthCity: city,
+        timezone,
+        type:             result.type,
+        authority:        result.authority,
+        profile:          result.profile,
+        definition:       result.definition,
+        centers:          result.centers,
+        channels:         result.channels,
+        gates:            result.gates,
+        planets:          result.planets,
+        personalityGates: result.personalityGates,
+        designGates:      result.designGates,
+        incarnationCross: result.incarnationCross,
+        variables:        result.variables,
+        arrows:           result.arrows,
+      })
+      router.push('/chart/preview')
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -75,9 +92,11 @@ function CreatePersonalView() {
   }
 
   function applyProfile(p: BirthProfile) {
-    setDate(p.date)
-    setTime(p.time)
-    setCity(p.city)
+    const [year, month, day] = p.date.split('-').map(Number)
+    const [hour, minute] = p.time.split(':').map(Number)
+    setDate({ year, month, day })
+    setTime({ hour, minute })
+    setCity(p.location)
     setTimezone(p.timezone)
     if (!name) setName(p.label)
     setFieldError(null)

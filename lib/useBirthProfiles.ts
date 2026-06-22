@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@clerk/nextjs'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type BirthProfile = {
   id: string
@@ -12,7 +12,9 @@ export type BirthProfile = {
   location: string
 }
 
-const isValidProfile = (p: unknown): p is BirthProfile =>
+type DbProfile = BirthProfile & { sortOrder?: number; createdAt?: string; updatedAt?: string }
+
+const isValidClerkProfile = (p: unknown): p is BirthProfile =>
   typeof p === 'object' && p !== null &&
   typeof (p as BirthProfile).id === 'string' &&
   typeof (p as BirthProfile).label === 'string' &&
@@ -21,44 +23,107 @@ const isValidProfile = (p: unknown): p is BirthProfile =>
   typeof (p as BirthProfile).timezone === 'string' &&
   typeof (p as BirthProfile).location === 'string'
 
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...init,
+  })
+  if (!res.ok) {
+    const msg = await res.json().then((d: { error?: string }) => d.error).catch(() => `HTTP ${res.status}`)
+    throw new Error(msg)
+  }
+  return res.json() as Promise<T>
+}
+
 export const useBirthProfiles = () => {
   const { isSignedIn, user } = useUser()
-  const raw = isSignedIn ? user?.unsafeMetadata?.birthProfiles : undefined
-  const profiles: BirthProfile[] = Array.isArray(raw) ? raw.filter(isValidProfile) : []
+  const [profiles, setProfiles] = useState<BirthProfile[]>([])
+  const [loading, setLoading] = useState(false)
+  const migrationRanRef = useRef(false)
 
-  // 永遠持有最新的 user 物件，供 queue 內的 task 讀取
-  const userRef = useRef(user)
-  useEffect(() => { userRef.current = user }, [user])
+  // ── 從 DB 讀取 ──────────────────────────────────────────────────────────
+  const refresh = useCallback(async () => {
+    if (!isSignedIn) return
+    setLoading(true)
+    try {
+      const data = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')
+      setProfiles(data.profiles.map(p => ({
+        id: p.id,
+        label: p.label,
+        date: p.date,
+        time: p.time,
+        timezone: p.timezone,
+        location: p.location,
+      })))
+    } finally {
+      setLoading(false)
+    }
+  }, [isSignedIn])
 
-  // 所有寫入操作串成 Promise 鏈，避免 read-modify-write 競態
-  const writeQueue = useRef<Promise<void>>(Promise.resolve())
+  // ── 首次載入：從 DB 讀取；若 DB 空且 Clerk metadata 有舊資料 → 自動遷移 ──
+  useEffect(() => {
+    if (!isSignedIn || !user || migrationRanRef.current) return
+    migrationRanRef.current = true
 
-  const enqueue = useCallback(<T>(task: () => Promise<T>): Promise<T> => {
-    const result = writeQueue.current.then(task, task)
-    writeQueue.current = result.then(() => undefined, () => undefined)
-    return result
+    const run = async () => {
+      const dbData = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')
+      if (dbData.profiles.length > 0) {
+        setProfiles(dbData.profiles.map(p => ({
+          id: p.id, label: p.label, date: p.date,
+          time: p.time, timezone: p.timezone, location: p.location,
+        })))
+        return
+      }
+      // DB 空，檢查 Clerk metadata 舊資料
+      const clerkRaw = user.unsafeMetadata?.birthProfiles
+      const clerkProfiles: BirthProfile[] = Array.isArray(clerkRaw)
+        ? clerkRaw.filter(isValidClerkProfile)
+        : []
+      if (clerkProfiles.length === 0) return
+
+      // 批次匯入到 DB（Clerk 資料保留不刪除，作為備份）
+      console.log('[useBirthProfiles] migrating', clerkProfiles.length, 'profiles from Clerk to DB')
+      const imported = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles', {
+        method: 'POST',
+        body: JSON.stringify({
+          profiles: clerkProfiles.map((p, i) => ({ ...p, sortOrder: i })),
+        }),
+      })
+      console.log('[useBirthProfiles] migration done, imported', imported.profiles.length)
+      setProfiles(imported.profiles.map(p => ({
+        id: p.id, label: p.label, date: p.date,
+        time: p.time, timezone: p.timezone, location: p.location,
+      })))
+    }
+
+    run().catch(err => console.error('[useBirthProfiles] migration error:', err))
+  }, [isSignedIn, user])
+
+  // ── CRUD ────────────────────────────────────────────────────────────────
+  const saveProfile = useCallback(async (profile: BirthProfile) => {
+    const exists = profiles.some(p => p.id === profile.id)
+    if (exists) {
+      await apiFetch(`/api/birth-profiles/${profile.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(profile),
+      })
+      setProfiles(prev => prev.map(p => p.id === profile.id ? profile : p))
+    } else {
+      const data = await apiFetch<{ profile: DbProfile }>('/api/birth-profiles', {
+        method: 'POST',
+        body: JSON.stringify({ ...profile, sortOrder: profiles.length }),
+      })
+      setProfiles(prev => [...prev, {
+        id: data.profile.id, label: data.profile.label, date: data.profile.date,
+        time: data.profile.time, timezone: data.profile.timezone, location: data.profile.location,
+      }])
+    }
+  }, [profiles])
+
+  const deleteProfile = useCallback(async (id: string) => {
+    await apiFetch(`/api/birth-profiles/${id}`, { method: 'DELETE' })
+    setProfiles(prev => prev.filter(p => p.id !== id))
   }, [])
 
-  const saveProfile = useCallback((profile: BirthProfile) =>
-    enqueue(async () => {
-      const u = userRef.current
-      if (!u) throw new Error('Not authenticated')
-      const current = (u.unsafeMetadata?.birthProfiles as BirthProfile[] | undefined) ?? []
-      const updated = current.some(p => p.id === profile.id)
-        ? current.map(p => p.id === profile.id ? profile : p)
-        : [...current, profile]
-      await u.update({ unsafeMetadata: { ...u.unsafeMetadata, birthProfiles: updated } })
-    }), [enqueue])
-
-  const deleteProfile = useCallback((id: string) =>
-    enqueue(async () => {
-      const u = userRef.current
-      if (!u) throw new Error('Not authenticated')
-      const current = (u.unsafeMetadata?.birthProfiles as BirthProfile[] | undefined) ?? []
-      await u.update({
-        unsafeMetadata: { ...u.unsafeMetadata, birthProfiles: current.filter(p => p.id !== id) },
-      })
-    }), [enqueue])
-
-  return { profiles, saveProfile, deleteProfile, isSignedIn: !!isSignedIn }
+  return { profiles, loading, saveProfile, deleteProfile, refresh, isSignedIn: !!isSignedIn }
 }

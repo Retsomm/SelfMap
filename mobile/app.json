@@ -34,7 +34,8 @@
         {
           "photosPermission": "SelfMap 需要存取您的相片庫以上傳大頭貼。"
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

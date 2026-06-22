@@ -30,6 +30,10 @@ export type Chart = {
   planets?: StoredPlanet[]
   chartKind?: ChartKind | null
   meta?: {
+    // 個人圖
+    incarnationCross?: import('./pendingChart').IncarnationCross
+    variables?: import('./pendingChart').Variables
+    arrows?: import('./pendingChart').Arrows
     // 合圖
     personA?: { name: string | null; birthDate: string; birthTime?: string; birthCity: string; timezone?: string; type: string; profile: string; authority?: string; authorityTip?: string }
     personB?: { name: string | null; birthDate: string; birthTime?: string; birthCity: string; timezone?: string; type: string; profile: string; authority?: string; authorityTip?: string }
@@ -99,6 +103,32 @@ export type CreateChartPayload = {
   name?: string
   chartKind?: ChartKind
 }
+
+export type ChartPreviewResponse = {
+  chartId: null
+  type: string
+  authority: string
+  profile: string
+  definition: string
+  centers: string[]
+  channels: string[]
+  gates: number[]
+  planets?: StoredPlanet[]
+  personalityGates?: number[]
+  designGates?: number[]
+  incarnationCross?: import('./pendingChart').IncarnationCross
+  variables?: import('./pendingChart').Variables
+  arrows?: import('./pendingChart').Arrows
+}
+
+// 不帶 token — server 端計算但不儲存 DB，回傳計算結果
+export function previewChart(payload: CreateChartPayload) {
+  return request<ChartPreviewResponse>('/api/charts', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
 export function createChart(token: string, payload: CreateChartPayload) {
   return request<{ chartId: string }>('/api/charts', {
     method: 'POST',
@@ -140,7 +170,7 @@ export type CompositePersonMeta = {
 }
 
 export type CreateCompositeResult = {
-  chartId: string
+  chartId: string | null
   integrationTheme: string
   compositeDefinedCount: number
   compositeOpenCount: number
@@ -160,6 +190,15 @@ export type CreateCompositePayload = {
   name?: string
 }
 
+/** 不帶 token — 計算合圖但不存 DB，chartId 回傳 null */
+export function previewCompositeChart(payload: CreateCompositePayload) {
+  return request<CreateCompositeResult>('/api/composite/create', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+/** 帶 token — 計算合圖並存 DB，chartId 回傳儲存後的 id */
 export function createCompositeChart(token: string, payload: CreateCompositePayload) {
   return request<CreateCompositeResult>('/api/composite/create', {
     method: 'POST',
@@ -171,7 +210,7 @@ export function createCompositeChart(token: string, payload: CreateCompositePayl
 // ─── Transit create (出生資料 + 流日 → 一筆合成圖) ───────────────────────────
 
 export type CreateTransitResult = {
-  chartId: string
+  chartId: string | null
   personalGates: number[]
   personalityGates: number[]
   designGates: number[]
@@ -191,6 +230,17 @@ export type CreateTransitResult = {
   impact: { layers: ImpactLayer[] }
 }
 
+/** 不帶 token — 計算流日但不存 DB，chartId 回傳 null */
+export function previewTransitChart(
+  payload: { birthDate: string; birthTime: string; birthCity: string; timezone: string; name?: string },
+) {
+  return request<CreateTransitResult>('/api/transit/create', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+/** 帶 token — 計算流日並存 DB，chartId 回傳儲存後的 id */
 export function createTransitChart(
   token: string,
   payload: { birthDate: string; birthTime: string; birthCity: string; timezone: string; name?: string },
@@ -260,6 +310,64 @@ export function getComposite(token: string, chartAId: string, chartBId: string) 
   return request<CompositeResult>('/api/composite', {
     method: 'POST',
     body: JSON.stringify({ chartAId, chartBId }),
+    token,
+  })
+}
+
+// ─── Birth Profiles ───────────────────────────────────────────────────────────
+
+export type RemoteBirthProfile = {
+  id: string
+  label: string
+  date: string
+  time: string
+  timezone: string
+  location: string
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export function getBirthProfiles(token: string) {
+  return request<{ profiles: RemoteBirthProfile[] }>('/api/birth-profiles', { token })
+}
+
+export type BirthProfilePayload = {
+  label: string
+  date: string
+  time: string
+  timezone: string
+  location: string
+  sortOrder?: number
+}
+
+export function createBirthProfile(token: string, payload: BirthProfilePayload) {
+  return request<{ profile: RemoteBirthProfile }>('/api/birth-profiles', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    token,
+  })
+}
+
+export function importBirthProfiles(token: string, profiles: BirthProfilePayload[]) {
+  return request<{ profiles: RemoteBirthProfile[] }>('/api/birth-profiles', {
+    method: 'POST',
+    body: JSON.stringify({ profiles }),
+    token,
+  })
+}
+
+export function updateBirthProfile(token: string, id: string, payload: Partial<BirthProfilePayload>) {
+  return request<{ ok: true }>(`/api/birth-profiles/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+    token,
+  })
+}
+
+export function deleteBirthProfile(token: string, id: string) {
+  return request<{ ok: true }>(`/api/birth-profiles/${id}`, {
+    method: 'DELETE',
     token,
   })
 }

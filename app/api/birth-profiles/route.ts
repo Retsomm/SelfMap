@@ -1,0 +1,99 @@
+import { auth, currentUser } from '@clerk/nextjs/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+
+async function getOrCreateUser(userId: string) {
+  const clerkUser = await currentUser()
+  const email = clerkUser?.emailAddresses[0]?.emailAddress ?? `clerk_${userId}@placeholder.local`
+  const updateData: { email?: string; name?: string | null } = {}
+  if (!email.endsWith('@placeholder.local')) updateData.email = email
+  if (clerkUser?.fullName != null) updateData.name = clerkUser.fullName
+
+  let user = await prisma.user.findUnique({ where: { clerkId: userId } })
+  if (user) {
+    if (Object.keys(updateData).length > 0) {
+      user = await prisma.user.update({ where: { clerkId: userId }, data: updateData })
+    }
+  } else {
+    const byEmail = email.endsWith('@placeholder.local')
+      ? null
+      : await prisma.user.findUnique({ where: { email } })
+    if (byEmail) {
+      user = await prisma.user.update({ where: { email }, data: { clerkId: userId, ...updateData } })
+    } else {
+      user = await prisma.user.create({ data: { clerkId: userId, email, name: clerkUser?.fullName ?? null } })
+    }
+  }
+  return user
+}
+
+// GET /api/birth-profiles — 取得目前用戶的所有出生資料
+export async function GET() {
+  try {
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    if (!user) return NextResponse.json({ profiles: [] })
+
+    const profiles = await prisma.birthProfile.findMany({
+      where: { userId: user.id },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    })
+
+    console.log(`[GET /api/birth-profiles] userId=${userId} found=${profiles.length}`)
+    return NextResponse.json({ profiles })
+  } catch (err) {
+    console.error('[GET /api/birth-profiles]', err)
+    return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 })
+  }
+}
+
+// POST /api/birth-profiles — 新增出生資料（支援單筆或批次匯入）
+export async function POST(req: NextRequest) {
+  try {
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const body = await req.json()
+    // auto-create user if not in DB yet (e.g. new user who hasn't created a chart)
+    const user = await getOrCreateUser(userId)
+
+    // 批次匯入：{ profiles: [...] }
+    if (Array.isArray(body.profiles)) {
+      const created = await prisma.$transaction(
+        body.profiles.map((p: { label: string; date: string; time: string; timezone: string; location: string; sortOrder?: number }) =>
+          prisma.birthProfile.create({
+            data: {
+              userId: user.id,
+              label: p.label,
+              date: p.date,
+              time: p.time,
+              timezone: p.timezone,
+              location: p.location,
+              sortOrder: p.sortOrder ?? 0,
+            },
+          })
+        )
+      )
+      console.log(`[POST /api/birth-profiles] batch userId=${userId} count=${created.length}`)
+      return NextResponse.json({ profiles: created })
+    }
+
+    // 單筆新增
+    const { label, date, time, timezone, location, sortOrder } = body
+    if (!label || !date || !time || !timezone || !location) {
+      return NextResponse.json({ error: '缺少必要欄位' }, { status: 400 })
+    }
+
+    const profile = await prisma.birthProfile.create({
+      data: { userId: user.id, label, date, time, timezone, location, sortOrder: sortOrder ?? 0 },
+    })
+
+    console.log(`[POST /api/birth-profiles] single userId=${userId} id=${profile.id}`)
+    return NextResponse.json({ profile })
+  } catch (err) {
+    console.error('[POST /api/birth-profiles]', err)
+    return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 })
+  }
+}
