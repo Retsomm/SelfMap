@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native'
-import { type Chart, type StoredPlanet, getChart } from '@/lib/api'
+import { type Chart, type StoredPlanet, type CreateCompositeResult, getChart, previewCompositeChart } from '@/lib/api'
 import { HD_CENTERS_INFO } from '@/lib/hd-chart-data'
 import { normalizeCenterId, normalizeChannelId, findChannelById } from '@/lib/hd-normalizers'
 import { getTypeMeta } from '@/lib/hd-type-meta'
@@ -28,6 +28,8 @@ export default function ChartDetailScreen() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sheetTarget, setSheetTarget] = useState<SheetTarget | null>(null)
+  const [compositeFetched, setCompositeFetched]         = useState<CreateCompositeResult | null>(null)
+  const [compositeFetchLoading, setCompositeFetchLoading] = useState(false)
 
   const loadChart = async () => {
     setLoading(true)
@@ -36,7 +38,12 @@ export default function ChartDetailScreen() {
       const token = await getToken()
       if (!token) { setError('未登入，請重新登入'); return }
       const data = await getChart(token, id)
-      setChart(data.chart)
+      const c = data.chart
+      console.log(`[ChartDetail] id=${c.id} chartKind=${c.chartKind}`)
+      console.log(`[ChartDetail] meta存在=${!!c.meta} incarnationCross=${!!(c.meta?.incarnationCross)} variables=${!!(c.meta?.variables)} arrows=${!!(c.meta?.arrows)}`)
+      if (!c.meta?.incarnationCross) console.warn('[ChartDetail] ⚠️ meta.incarnationCross 不存在，輪迴交叉無法顯示')
+      if (!c.meta?.variables || !c.meta?.arrows) console.warn('[ChartDetail] ⚠️ meta.variables/arrows 不存在，四箭頭無法顯示')
+      setChart(c)
     } catch (err) {
       console.error(err)
       const msg = err instanceof Error ? err.message : String(err)
@@ -48,13 +55,58 @@ export default function ChartDetailScreen() {
 
   useEffect(() => { loadChart() }, [id])
 
+  // 自動補算舊格式 / 缺少 meta.compositeResult 的合圖
+  useEffect(() => {
+    if (!chart) return
+    const isOldComposite = chart.type === '合圖' || chart.birthDate?.includes('|')
+    const needsFetch = (chart.chartKind === 'composite' || isOldComposite) && !chart.meta?.compositeResult
+    if (!needsFetch) return
+
+    let payload: Parameters<typeof previewCompositeChart>[1] | null = null
+
+    if (chart.meta?.personA && chart.meta?.personB) {
+      const pA = chart.meta.personA
+      const pB = chart.meta.personB
+      if (pA.birthDate && pA.birthTime && pA.timezone && pB.birthDate && pB.birthTime && pB.timezone) {
+        payload = {
+          personA: { name: pA.name ?? undefined, birthDate: pA.birthDate, birthTime: pA.birthTime, birthCity: pA.birthCity, timezone: pA.timezone },
+          personB: { name: pB.name ?? undefined, birthDate: pB.birthDate, birthTime: pB.birthTime, birthCity: pB.birthCity, timezone: pB.timezone },
+        }
+      }
+    } else if (chart.birthDate?.includes('|')) {
+      const [dateA, dateB] = chart.birthDate.split('|')
+      const [timeA, timeB] = chart.birthTime.split('|')
+      const [cityA, cityB] = chart.birthCity.split('|')
+      const [tzA, tzB] = (chart.timezone ?? 'UTC|UTC').split('|')
+      if (dateA && dateB && timeA && timeB) {
+        payload = {
+          personA: { birthDate: dateA, birthTime: timeA, birthCity: cityA ?? '', timezone: tzA ?? 'UTC' },
+          personB: { birthDate: dateB, birthTime: timeB, birthCity: cityB ?? '', timezone: tzB ?? 'UTC' },
+        }
+      }
+    }
+
+    if (!payload) return
+    setCompositeFetchLoading(true)
+    getToken().then(token => {
+      if (!token) { setCompositeFetchLoading(false); return }
+      const p = payload
+      if (!p) { setCompositeFetchLoading(false); return }
+      return previewCompositeChart(token, p)
+        .then(r => setCompositeFetched(r))
+        .catch(e => { console.warn('[CompositeInfo] previewCompositeChart failed:', e) })
+        .finally(() => setCompositeFetchLoading(false))
+    }).catch(e => { console.warn('[CompositeInfo] getToken failed:', e); setCompositeFetchLoading(false) })
+  }, [chart])
+
   if (loading) return <SafeAreaView style={styles.container}><LoadingView /></SafeAreaView>
   if (error || !chart) return <SafeAreaView style={styles.container}><ErrorView message={error ?? '找不到圖表'} onRetry={loadChart} /></SafeAreaView>
 
-  const typeMeta          = getTypeMeta(chart.type)
-  const transitSnapshot   = chart.chartKind === 'transit' ? chart.meta?.transitSnapshot : undefined
-  const isComposite       = chart.chartKind === 'composite'
-  const isPersonal        = !transitSnapshot && !isComposite
+  const typeMeta        = getTypeMeta(chart.type)
+  const transitSnapshot = chart.chartKind === 'transit' ? chart.meta?.transitSnapshot : undefined
+  // 舊格式合圖：type='合圖' 或 birthDate 含 '|'（網頁端舊儲存方式）
+  const isComposite     = chart.chartKind === 'composite' || chart.type === '合圖' || !!(chart.birthDate?.includes('|'))
+  const isPersonal      = !transitSnapshot && !isComposite
 
   const definedCenterIds = transitSnapshot
     ? new Set(transitSnapshot.combinedDefinedCenterIds.map(normalizeCenterId))
@@ -65,8 +117,50 @@ export default function ChartDetailScreen() {
 
   const planets: StoredPlanet[] = chart.planets ?? []
 
+  // 合圖的通道連結資料：優先用 DB 存的 meta，否則用非同步補算結果
+  const compositeConnections = isComposite
+    ? (chart.meta?.compositeResult ?? compositeFetched)
+    : null
+
+  // 對網頁端 pipe-separated 舊格式合圖，同步解析人物基本資料 + integrationTheme
+  // 這樣不必等 async fetch 就能立即顯示人物卡片
+  const syncCompositeData: {
+    personA: { name: null; birthDate: string; birthCity: string; type: string; profile: string; authority: string }
+    personB: { name: null; birthDate: string; birthCity: string; type: string; profile: string; authority: string }
+    integrationTheme: string
+    compositeDefinedCount: number
+    compositeOpenCount: number
+  } | null = (isComposite && !chart.meta?.personA && chart.birthDate?.includes('|')) ? (() => {
+    const [dateA = '', dateB = '']   = chart.birthDate.split('|')
+    const [cityA = '', cityB = '']   = chart.birthCity.split('|')
+    const [authA = '', authB = '']   = (chart.authority ?? '').split(' / ')
+    const [profA = '', profB = '']   = (chart.profile ?? '').split(' / ')
+    const compositeDefinedCount      = chart.centers.length
+    const compositeOpenCount         = 9 - compositeDefinedCount
+    const integrationTheme           =
+      compositeOpenCount === 0 ? '9+0' :
+      compositeOpenCount === 1 ? '8+1' :
+      compositeOpenCount === 2 ? '7+2' : '6+3+'
+    return {
+      personA: { name: null, birthDate: dateA.trim(), birthCity: cityA.trim(), type: '—', profile: profA.trim(), authority: authA.trim() },
+      personB: { name: null, birthDate: dateB.trim(), birthCity: cityB.trim(), type: '—', profile: profB.trim(), authority: authB.trim() },
+      integrationTheme,
+      compositeDefinedCount,
+      compositeOpenCount,
+    }
+  })() : null
+
   const activations: Record<number, { c?: boolean; u?: boolean; t?: boolean }> = {}
-  if (planets.length > 0) {
+  if (isComposite && compositeConnections) {
+    // 合圖：只標記參與通道的閘門，A=黑(c)，B=紅(u)
+    for (const type of ['electromagnetic', 'companionship', 'compromise', 'dominance'] as const) {
+      const conns = compositeConnections[type] ?? []
+      for (const conn of conns) {
+        for (const g of conn.aGates) activations[g] = { ...activations[g], c: true }
+        for (const g of conn.bGates) activations[g] = { ...activations[g], u: true }
+      }
+    }
+  } else if (planets.length > 0) {
     for (const p of planets) {
       activations[p.blackGate] = { ...activations[p.blackGate], c: true }
       activations[p.redGate]   = { ...activations[p.redGate],   u: true }
@@ -153,7 +247,14 @@ export default function ChartDetailScreen() {
         ) : null}
 
         {/* 合圖資訊（composite 專屬） */}
-        {isComposite && <CompositeInfo chart={chart} />}
+        {isComposite && (
+          <CompositeInfo
+            chart={chart}
+            fetchedResult={compositeFetched}
+            syncData={syncCompositeData}
+            fetchLoading={compositeFetchLoading}
+          />
+        )}
 
         {/* 以下區塊只對個人圖顯示 */}
         {isPersonal && (
