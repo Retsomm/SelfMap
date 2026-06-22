@@ -1,5 +1,6 @@
 import type { HdResult } from '@/lib/buildAiPrompt'
 import type { CenterName, ChannelDef } from '@/lib/humanDesign/types'
+import { CROSS_TYPE_LABELS } from '@/lib/humanDesign/constants'
 
 export interface SaveChartParams {
   result: HdResult
@@ -26,6 +27,26 @@ export const saveChart = async ({ result, date, time, locationLabel, timezone }:
       centers: [...result.definedCenterIds],
       channels: result.definedChannels.map(ch => ch.id),
       gates: [...result.allGates],
+      incarnationCross: {
+        crossType:      result.incarnationCross.crossType,
+        crossTypeLabel: CROSS_TYPE_LABELS[result.incarnationCross.crossType] ?? result.incarnationCross.crossType,
+        crossBaseName:  result.incarnationCross.crossBaseName,
+        crossName:      result.incarnationCross.crossName,
+        gatesLabel:     result.incarnationCross.gatesLabel,
+        variant:        result.incarnationCross.variant,
+      },
+      variables: {
+        digestion:   result.variables.digestion,
+        environment: result.variables.environment,
+        perspective: result.variables.perspective,
+        motivation:  result.variables.motivation,
+      },
+      arrows: {
+        topLeft:     (result.planets[0]?.red.tone   ?? 1) <= 3,
+        bottomLeft:  (result.planets[3]?.red.tone   ?? 1) <= 3,
+        topRight:    (result.planets[0]?.black.tone ?? 1) <= 3,
+        bottomRight: (result.planets[3]?.black.tone ?? 1) <= 3,
+      },
     }),
   })
   const json = await res.json()

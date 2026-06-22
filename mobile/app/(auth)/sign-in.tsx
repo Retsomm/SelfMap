@@ -15,7 +15,7 @@ export default function SignInScreen() {
     isLoading.current = true
     try {
       const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL('/(tabs)', { scheme: 'selfmap' }),
+        redirectUrl: Linking.createURL('/', { scheme: 'selfmap' }),
       })
       if (createdSessionId) {
         await setActive?.({ session: createdSessionId })

@@ -1,7 +1,8 @@
 import { useAuth, useUser } from '@clerk/expo'
+import { useLocalSearchParams } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { SubTabBar } from '@/components/SubTabBar'
@@ -15,6 +16,7 @@ import {
   deleteProfile,
   profileSummary,
 } from '@/lib/birthProfiles'
+import { type Chart, getCharts, getChart } from '@/lib/api'
 
 type OuterTab = 'charts' | 'personal'
 const OUTER_TABS = [
@@ -25,8 +27,11 @@ const OUTER_TABS = [
 // ─── 個人頁面內容 ────────────────────────────────────────────────────────────
 
 function PersonalView() {
-  const { signOut } = useAuth()
+  const { signOut, getToken } = useAuth()
   const { user } = useUser()
+  const getTokenRef = useRef(getToken)
+  useEffect(() => { getTokenRef.current = getToken }, [getToken])
+
   const [signingOut, setSigningOut]       = useState(false)
   const [editingName, setEditingName]     = useState(false)
   const [nameInput, setNameInput]         = useState('')
@@ -35,18 +40,71 @@ function PersonalView() {
   const inputRef = useRef<TextInput>(null)
 
   const [profiles, setProfiles]       = useState<BirthProfile[]>([])
+  const [profilesLoading, setProfilesLoading] = useState(true)
+  const [syncing, setSyncing]         = useState(false)
   const [sheetVisible, setSheetVisible] = useState(false)
   const [editTarget, setEditTarget]   = useState<BirthProfile | null>(null)
 
+  const [hdChart, setHdChart]         = useState<Chart | null>(null)
+  const [hdLoading, setHdLoading]     = useState(true)
+
   const refreshProfiles = useCallback(async () => {
-    setProfiles(await loadProfiles())
+    setProfilesLoading(true)
+    try {
+      const token = await getTokenRef.current()
+      if (!token) throw new Error('尚未登入，請重新啟動 App')
+      setProfiles(await loadProfiles(token))
+    } catch (err) {
+      Alert.alert('讀取失敗', err instanceof Error ? err.message : '請稍後再試')
+    } finally {
+      setProfilesLoading(false)
+    }
+  }, []) // getToken 透過 ref 取用，不放 deps 避免無限循環
+
+  const refreshHdChart = useCallback(async () => {
+    setHdLoading(true)
+    try {
+      const token = await getTokenRef.current()
+      if (!token) return
+      const { charts } = await getCharts(token)
+      const personal = charts.filter(c => !c.chartKind || c.chartKind === 'personal')
+      if (__DEV__) console.log('[PersonalView] 個人圖數量:', personal.length, '| meta 存在:', personal.filter(c => c.meta).length)
+      if (personal.length === 0) { setHdChart(null); return }
+
+      const candidate = personal[0]
+      // 若 list 端點回傳的圖任一 meta 欄位缺失，改用單筆 API 觸發 server 端懶補算
+      if (!candidate.meta?.incarnationCross || !candidate.meta?.variables || !candidate.meta?.arrows) {
+        if (__DEV__) console.log('[PersonalView] list meta 缺失，改呼叫單筆 API 觸發補算')
+        const { chart } = await getChart(token, candidate.id)
+        setHdChart(chart)
+      } else {
+        setHdChart(candidate)
+      }
+    } catch (err) {
+      console.error('[PersonalView] refreshHdChart 失敗:', err)
+      Alert.alert('載入失敗', '人類圖資料載入失敗，請稍後再試')
+    } finally {
+      setHdLoading(false)
+    }
   }, [])
 
   useEffect(() => { refreshProfiles() }, [refreshProfiles])
+  useEffect(() => { refreshHdChart() }, [refreshHdChart])
+
+  async function handleSync() {
+    setSyncing(true)
+    try {
+      await refreshProfiles()
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   async function handleSaveProfile(profile: BirthProfile) {
+    const token = await getTokenRef.current()
+    if (!token) { Alert.alert('驗證失敗', '無法取得登入憑證，請重新登入'); return }
     try {
-      setProfiles(await saveProfile(profile))
+      setProfiles(await saveProfile(token, profile, profiles))
       setSheetVisible(false)
     } catch (err) {
       Alert.alert('儲存失敗', err instanceof Error ? err.message : '請稍後再試')
@@ -63,13 +121,15 @@ function PersonalView() {
     setSheetVisible(true)
   }
 
-  function handleDeleteProfile(p: BirthProfile) {
+  async function handleDeleteProfile(p: BirthProfile) {
     Alert.alert('刪除出生資料', `確定要刪除「${p.label}」？`, [
       { text: '取消', style: 'cancel' },
       {
         text: '刪除', style: 'destructive',
         onPress: async () => {
-          try { setProfiles(await deleteProfile(p.id)) }
+          const token = await getTokenRef.current()
+          if (!token) { Alert.alert('驗證失敗', '無法取得登入憑證，請重新登入'); return }
+          try { setProfiles(await deleteProfile(token, p.id, profiles)) }
           catch (err) { Alert.alert('刪除失敗', err instanceof Error ? err.message : '請稍後再試') }
         },
       },
@@ -190,12 +250,28 @@ function PersonalView() {
         <View style={s.section}>
           <View style={s.sectionHeader}>
             <Text style={s.sectionTitle}>出生資料</Text>
-            <Pressable onPress={handleAddProfile} accessibilityLabel="新增出生資料">
-              <Text style={s.addText}>＋ 新增</Text>
-            </Pressable>
+            <View style={s.sectionActions}>
+              <Pressable
+                onPress={handleSync}
+                disabled={syncing || profilesLoading}
+                accessibilityLabel="立即同步"
+                style={s.syncBtn}
+              >
+                {syncing
+                  ? <ActivityIndicator size="small" color={Colors.sub} />
+                  : <Text style={s.syncText}>↻ 同步</Text>}
+              </Pressable>
+              <Pressable onPress={handleAddProfile} accessibilityLabel="新增出生資料">
+                <Text style={s.addText}>＋ 新增</Text>
+              </Pressable>
+            </View>
           </View>
 
-          {profiles.length === 0 ? (
+          {profilesLoading ? (
+            <View style={s.emptyCard}>
+              <ActivityIndicator size="small" color={Colors.sub} />
+            </View>
+          ) : profiles.length === 0 ? (
             <Pressable style={s.emptyCard} onPress={handleAddProfile}>
               <Text style={s.emptyText}>尚無出生資料，點此新增</Text>
             </Pressable>
@@ -220,6 +296,90 @@ function PersonalView() {
             </View>
           )}
         </View>
+
+        {/* 輪迴交叉 */}
+        {(hdLoading || hdChart?.meta?.incarnationCross) && (
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>輪迴交叉</Text>
+            {hdLoading ? (
+              <View style={[s.card, { alignItems: 'center', paddingVertical: 20 }]}>
+                <ActivityIndicator size="small" color={Colors.sub} />
+              </View>
+            ) : hdChart?.meta?.incarnationCross ? (
+              <View style={s.card}>
+                <View style={s.hdRow}>
+                  <Text style={s.hdLabel}>交叉類型</Text>
+                  <Text style={[s.hdValue, { color: Colors.accent }]}>{hdChart.meta.incarnationCross.crossTypeLabel}</Text>
+                </View>
+                <View style={[s.hdRow, s.separator]}>
+                  <Text style={s.hdLabel}>交叉名稱</Text>
+                  <Text style={s.hdValue}>{hdChart.meta.incarnationCross.crossBaseName}{hdChart.meta.incarnationCross.variant}</Text>
+                </View>
+                <View style={[s.hdRow, s.separator]}>
+                  <Text style={s.hdLabel}>閘門組合</Text>
+                  <Text style={s.hdValue}>{hdChart.meta.incarnationCross.gatesLabel}</Text>
+                </View>
+                {hdChart.name && (
+                  <View style={[s.hdRow, s.separator]}>
+                    <Text style={s.hdLabel}>圖表</Text>
+                    <Text style={[s.hdValue, { color: Colors.sub }]}>{hdChart.name}</Text>
+                  </View>
+                )}
+              </View>
+            ) : null}
+          </View>
+        )}
+
+        {/* 四箭頭 */}
+        {(hdLoading || (hdChart?.meta?.variables && hdChart?.meta?.arrows)) && (
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>四箭頭（Variables）</Text>
+            {hdLoading ? null : hdChart?.meta?.variables && hdChart?.meta?.arrows ? (
+              <View style={s.card}>
+                <View style={s.arrowsGrid}>
+                  <View style={s.arrowsCol}>
+                    <Text style={s.arrowsSide}>← Design（紅）</Text>
+                    <View style={s.arrowItem}>
+                      <Text style={s.arrowDir}>{hdChart.meta.arrows.topLeft ? '←' : '→'}</Text>
+                      <View style={s.arrowInfo}>
+                        <Text style={s.arrowCategory}>飲食（Digestion）</Text>
+                        <Text style={s.arrowLabelText}>{hdChart.meta.variables.digestion.label}</Text>
+                        <Text style={s.arrowDesc}>{hdChart.meta.variables.digestion.description}</Text>
+                      </View>
+                    </View>
+                    <View style={[s.arrowItem, s.arrowItemSep]}>
+                      <Text style={s.arrowDir}>{hdChart.meta.arrows.bottomLeft ? '←' : '→'}</Text>
+                      <View style={s.arrowInfo}>
+                        <Text style={s.arrowCategory}>環境（Environment）</Text>
+                        <Text style={s.arrowLabelText}>{hdChart.meta.variables.environment.label}</Text>
+                        <Text style={s.arrowDesc}>{hdChart.meta.variables.environment.description}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={[s.arrowsCol, s.arrowsColSep]}>
+                    <Text style={s.arrowsSide}>Personality（黑）→</Text>
+                    <View style={s.arrowItem}>
+                      <Text style={s.arrowDir}>{hdChart.meta.arrows.topRight ? '←' : '→'}</Text>
+                      <View style={s.arrowInfo}>
+                        <Text style={s.arrowCategory}>動機（Motivation）</Text>
+                        <Text style={s.arrowLabelText}>{hdChart.meta.variables.motivation.label}</Text>
+                        <Text style={s.arrowDesc}>{hdChart.meta.variables.motivation.description}</Text>
+                      </View>
+                    </View>
+                    <View style={[s.arrowItem, s.arrowItemSep]}>
+                      <Text style={s.arrowDir}>{hdChart.meta.arrows.bottomRight ? '←' : '→'}</Text>
+                      <View style={s.arrowInfo}>
+                        <Text style={s.arrowCategory}>觀點（Perspective）</Text>
+                        <Text style={s.arrowLabelText}>{hdChart.meta.variables.perspective.label}</Text>
+                        <Text style={s.arrowDesc}>{hdChart.meta.variables.perspective.description}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ) : null}
+          </View>
+        )}
 
         {/* 登出 */}
         <Pressable
@@ -259,6 +419,12 @@ function PersonalView() {
 
 export default function ProfileScreen() {
   const [outerTab, setOuterTab] = useState<OuterTab>('charts')
+  const { chartTab: rawChartTab } = useLocalSearchParams<{ chartTab?: string }>()
+  const VALID_CHART_TABS = ['personal', 'composite', 'transit'] as const
+  type ChartTab = typeof VALID_CHART_TABS[number]
+  const chartTab: ChartTab | undefined = VALID_CHART_TABS.includes(rawChartTab as ChartTab)
+    ? (rawChartTab as ChartTab)
+    : undefined
 
   return (
     <SafeAreaView style={s.container}>
@@ -266,7 +432,7 @@ export default function ProfileScreen() {
       <SubTabBar tabs={OUTER_TABS} active={outerTab} onSelect={setOuterTab} />
 
       <View style={{ flex: 1, display: outerTab === 'charts' ? 'flex' : 'none' }}>
-        <ChartListView />
+        <ChartListView key={chartTab ?? 'personal'} initialTab={chartTab} />
       </View>
       <View style={{ flex: 1, display: outerTab === 'personal' ? 'flex' : 'none' }}>
         <PersonalView />
@@ -292,10 +458,13 @@ const s = StyleSheet.create({
   editBtn:      { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm, paddingHorizontal: Spacing.md, paddingVertical: 6 },
   editText:     { color: Colors.sub, fontSize: 13 },
 
-  section:       { gap: Spacing.sm },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle:  { fontSize: 12, color: Colors.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
-  addText:       { color: Colors.accent, fontSize: 14, fontWeight: '600' },
+  section:        { gap: Spacing.sm },
+  sectionHeader:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionTitle:   { fontSize: 12, color: Colors.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
+  sectionActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  syncBtn:        { paddingHorizontal: 4 },
+  syncText:       { color: Colors.sub, fontSize: 13 },
+  addText:        { color: Colors.accent, fontSize: 14, fontWeight: '600' },
 
   oauthRow:      { paddingVertical: Spacing.sm, gap: 4 },
   separator:     { borderTopWidth: 1, borderTopColor: Colors.border, marginTop: Spacing.sm, paddingTop: Spacing.sm },
@@ -313,4 +482,20 @@ const s = StyleSheet.create({
   signOutBtn:   { borderWidth: 1, borderColor: Colors.red, borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center', marginTop: Spacing.sm },
   signOutText:  { color: Colors.red, fontSize: 15, fontWeight: '600' },
   btnDisabled:  { opacity: 0.5 },
+
+  hdRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
+  hdLabel:      { fontSize: 13, color: Colors.sub, flex: 1 },
+  hdValue:      { fontSize: 14, color: Colors.text, fontWeight: '500', flex: 2, textAlign: 'right' },
+
+  arrowsGrid:   { flexDirection: 'row', gap: Spacing.md },
+  arrowsCol:    { flex: 1 },
+  arrowsColSep: { borderLeftWidth: 1, borderLeftColor: Colors.border, paddingLeft: Spacing.md },
+  arrowsSide:   { fontSize: 10, color: Colors.muted, marginBottom: Spacing.sm, fontWeight: '600' },
+  arrowItem:    { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  arrowItemSep: { marginTop: Spacing.md, paddingTop: Spacing.md, borderTopWidth: 1, borderTopColor: Colors.border },
+  arrowDir:     { fontSize: 18, color: Colors.accent, width: 20, textAlign: 'center', lineHeight: 22 },
+  arrowInfo:    { flex: 1 },
+  arrowCategory:{ fontSize: 10, color: Colors.muted, marginBottom: 2 },
+  arrowLabelText: { fontSize: 13, color: Colors.text, fontWeight: '600' },
+  arrowDesc:    { fontSize: 11, color: Colors.sub, marginTop: 2 },
 })

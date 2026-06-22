@@ -2,6 +2,7 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { computeHdResultServer } from '@/lib/computeHdResultServer'
+import { CROSS_TYPE_LABELS } from '@/lib/humanDesign/constants'
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,6 +24,9 @@ export async function POST(req: NextRequest) {
     let planets: object[] | undefined
     let personalityGates: number[] | undefined
     let designGates: number[] | undefined
+    let incarnationCross: object | undefined
+    let variables: object | undefined
+    let arrows: object | undefined
 
     if (!type || !authority || !profile || !definition) {
       if (!timezone) return NextResponse.json({ error: '請提供時區' }, { status: 400 })
@@ -49,6 +53,32 @@ export async function POST(req: NextRequest) {
       }))
       personalityGates = result.planets.map((p) => p.black.gate)
       designGates = result.planets.map((p) => p.red.gate)
+      incarnationCross = {
+        crossType:      result.incarnationCross.crossType,
+        crossTypeLabel: CROSS_TYPE_LABELS[result.incarnationCross.crossType] ?? result.incarnationCross.crossType,
+        crossBaseName:  result.incarnationCross.crossBaseName,
+        crossName:      result.incarnationCross.crossName,
+        gatesLabel:     result.incarnationCross.gatesLabel,
+        variant:        result.incarnationCross.variant,
+      }
+      variables = {
+        digestion:   result.variables.digestion,
+        environment: result.variables.environment,
+        perspective: result.variables.perspective,
+        motivation:  result.variables.motivation,
+      }
+      // 箭頭方向：tone 1–3 = 左（←），tone 4–6 = 右（→）
+      arrows = {
+        topLeft:     (result.planets[0]?.red.tone   ?? 1) <= 3,  // Design 太陽（身體/飲食）
+        bottomLeft:  (result.planets[3]?.red.tone   ?? 1) <= 3,  // Design 北交點（環境）
+        topRight:    (result.planets[0]?.black.tone ?? 1) <= 3,  // Personality 太陽（心智/動機）
+        bottomRight: (result.planets[3]?.black.tone ?? 1) <= 3,  // Personality 北交點（觀點）
+      }
+    } else {
+      // 使用方提供預計算結果時，仍從 body 取出 meta 欄位以便存入 DB
+      incarnationCross = body.incarnationCross
+      variables = body.variables
+      arrows = body.arrows
     }
 
     // 未登入：只回傳計算結果，不存 DB
@@ -60,11 +90,17 @@ export async function POST(req: NextRequest) {
         channels: channels ?? [],
         gates: gates ?? [],
         ...(planets ? { planets, personalityGates, designGates } : {}),
+        ...(incarnationCross ? { incarnationCross } : {}),
+        ...(variables ? { variables } : {}),
+        ...(arrows ? { arrows } : {}),
       })
     }
 
     const clerkUser = await currentUser()
-    const email = clerkUser?.emailAddresses[0]?.emailAddress || `clerk_${userId}@placeholder.local`
+    const primaryAddr = clerkUser?.emailAddresses.find(
+      e => e.id === clerkUser.primaryEmailAddressId && e.verification?.status === 'verified'
+    )
+    const email = primaryAddr?.emailAddress ?? `clerk_${userId}@placeholder.local`
 
     const updateData: { email?: string; name?: string | null } = {}
     if (!email.endsWith('@placeholder.local')) updateData.email = email
@@ -108,6 +144,9 @@ export async function POST(req: NextRequest) {
         gates: gates ?? [],
         chartKind: chartKind ?? 'personal',
         ...(planets ? { planets, personalityGates, designGates } : {}),
+        ...((incarnationCross || variables || arrows) ? {
+          meta: { incarnationCross, variables, arrows },
+        } : {}),
       },
     })
 
@@ -130,7 +169,15 @@ export async function GET() {
       include: { charts: { orderBy: { createdAt: 'desc' } } },
     })
 
-    return NextResponse.json({ charts: user?.charts ?? [] })
+    const charts = user?.charts ?? []
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[GET /api/charts] 回傳圖表數量:', charts.length)
+      charts.forEach((c, i) => {
+        const meta = c.meta as Record<string, unknown> | null
+        console.log(`[GET /api/charts] [${i}] chartKind=${c.chartKind} meta存在=${!!meta} incarnationCross=${!!(meta?.incarnationCross)} variables=${!!(meta?.variables)} arrows=${!!(meta?.arrows)}`)
+      })
+    }
+    return NextResponse.json({ charts })
   } catch (err) {
     console.error('[GET /api/charts]', err)
     return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 })

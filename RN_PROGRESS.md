@@ -72,8 +72,8 @@
 - [x] 閘門 / 通道搜尋篩選 — 通道／閘門主題頁含 TextInput 搜尋（實機驗證 ✓）
 
 ### 其他
-- [ ] 圖表下載為圖片（`downloadChart`）
-- [ ] AI 解讀提示詞功能
+- [x] 圖表下載為 PDF（`expo-print` + `expo-sharing`，HTML 模板，`mobile/lib/chartPdf.ts`）
+- [x] AI 解讀提示詞功能（`generateAiPrompt`，複製到剪貼簿）
 - [x] 出生檔案快速填表（BirthProfileManager）— 新增於帳號頁，建立圖表三個 tab（個人/流日/合圖）均支援快速套用，套用後隱藏表單並自動捲至送出按鈕
 - [x] 關於頁面 — 獨立 Tab（`app/(tabs)/index.tsx`），含功能介紹、人類圖說明、使用步驟（實機驗證 ✓）
 
@@ -107,95 +107,33 @@
 
 ---
 
-## 重構紀錄
-
-### `app/chart/[id].tsx` 拆分（2026-06-21）
-
-原始 999 行單檔拆分為 6 個模組，主畫面降至 286 行（-71%）：
-
-| 新檔案 | 行數 | 內容 |
-|--------|------|------|
-| `lib/hd-normalizers.ts` | 30 | `normalizeCenterId` / `normalizeChannelId` / `findChannelById` |
-| `lib/hd-type-meta.ts` | 18 | `TYPE_META` 常數 + `getTypeMeta` |
-| `components/chart/ChartPrimitives.tsx` | 105 | `SectionCard` / `Row` / `Tag` |
-| `components/chart/TransitAnalysis.tsx` | 220 | 流日分析元件 |
-| `components/chart/CompositeInfo.tsx` | 278 | 合圖資訊元件 |
-
-實機驗證：個人圖 / 流日 / 合圖三種類型皆正常渲染。
-
----
-
-## 修復紀錄
-
-### Server-side compute ESM 衝突修復（2026-06-20）
-
-`POST /api/charts` 呼叫 `computeHdResult` → `initSwissEph`（browser 版）→ `import('@swisseph/browser')` → `exports is not defined` 錯誤。
-
-修法：
-1. 建立 `lib/computeHdResultServer.ts`，使用 `initSwissEphServer`（讀 WASM 檔案，繞過 ESM 限制）
-2. `utils/ephemeris.ts` 加入 `getOffsetFromTimezone`，移除舊的 browser import
-3. `LocationPicker.tsx` 改為從 `utils/ephemeris` re-export，原有呼叫不受影響
-4. `app/api/charts/route.ts` 與 `app/api/compute/route.ts` 改用 `computeHdResultServer`
-
-### `POST /api/charts` 本地 dev 環境修復（2026-06-20）
-
-正式環境一直正常，本地跑 dev server 連續踩到三個問題：
-
-1. **webpack 攔截 `require.resolve`**：`_require.resolve('@swisseph/browser')` 被 webpack 當作需要 bundle 的 ESM 套件 → 改用 `resolve(process.cwd(), 'node_modules/@swisseph/browser/dist')` 直接拼路徑繞過。
-
-2. **`swisseph.js` 結尾有 `export default`**：`new Function(src)` 執行環境不是 module scope，`export` 語法不合法 → 讀檔後先 `.replace(/\nexport default \w+;\s*$/, '')` 移除。正式環境 bundler 在 build time 會自動轉換，dev server 不會。
-
-3. **`getOffsetFromTimezone` 在 `'use client'` 檔案裡**：Next.js 把整個 `LocationPicker.tsx` 的 export 都標為 client-only → 將函式移到 `utils/ephemeris.ts`，`LocationPicker` 改 re-export。
-
----
-
-### 網頁端 SVG 閘門背景色修正（2026-06-21）
-
-CSS `.hd-gate-circle { fill: var(--paper); }` 優先級高於 SVG `fill` 屬性，導致 JS 計算出的黑色（意識）/ 紅色（非意識）背景被覆蓋，所有閘門圓圈永遠顯示紙色。
-
-修法：
-1. `app/globals.css` — `.hd-gate-circle` 改為 `fill: var(--gate-fill, var(--paper))`，讀取 CSS custom property
-2. `components/humanDesign/BodyGraph.tsx` — 閘門圓圈改用 `style={{ '--gate-fill': circleFill }}` 傳入顏色；文字色改為 `style={{ fill: textFill }}`
-
-現在激活閘門可正確顯示：黑色背景（意識）、紅色背景（非意識）、條紋（兩者皆有）；hover mustard 效果維持正常。
-
 ---
 
 ## 下一步優先順序
 
-1. **深色模式支援**（以 `tokens.ts` 為基礎，整合 `useColorScheme`）
-2. **頭像上傳**（`expo-image-picker` + Clerk `setProfileImage`）— ✅ 已完成
-3. **圖表下載為圖片**（`react-native-view-shot`）
-4. **AI 解讀提示詞功能**
-5. **網頁 ↔ APP 出生資料同步**（最後步驟）
+3. ~~**網頁 ↔ APP 出生資料同步**~~ ✅ 已完成
+4. **圖表預覽 PDF 強化**（未來可考慮加入 Body Graph SVG 截圖）
 
 ---
 
-## 出生資料同步計畫（網頁 ↔ APP）
+## 出生資料同步（網頁 ↔ APP）✅ 已實作
 
-> 目標：兩端讀寫同一份資料，衝突時以**網頁端為主**。
+> 資料庫為唯一真實來源，所有 CRUD 皆透過 API 進行。
 
-### 現況差異
+### 架構
 
 | | 儲存位置 | 資料格式 |
 |---|---|---|
-| 網頁 | Clerk `user.unsafeMetadata.birthProfiles` | `{ date: string, time: string, location: string }` |
-| APP | 本機 `AsyncStorage` | `{ date: { year, month, day }, time: { hour, minute }, city: string }` |
+| 網頁 | PostgreSQL `BirthProfile` 資料表 | `{ date: "YYYY-MM-DD", time: "HH:mm", timezone, location }` |
+| APP | 同上（透過 API） | 同上 |
 
-圖表本命盤已走 API + DB，兩端本來就共享，不需處理。
+### 實作內容
 
-### 實作步驟
-
-1. **統一資料格式** — 採用網頁端的 string 格式（`date: "YYYY-MM-DD"`, `time: "HH:mm"`, `location: string`），Mobile 端配合調整。
-
-2. **Mobile 改用 Clerk 儲存** — 將 `mobile/lib/birthProfiles.ts` 從 `AsyncStorage` 改為呼叫 `user.update({ unsafeMetadata: { birthProfiles: [...] } })`，邏輯與 `lib/useBirthProfiles.ts`（網頁）一致。
-
-3. **舊資料遷移** — APP 首次啟動時，檢查 `AsyncStorage` 是否有舊資料：
-   - 有 → 轉換格式後寫入 Clerk（與現有 Clerk 資料合併，Clerk 已有的 id 優先）
-   - 完成後清除 `AsyncStorage`
-
-4. **相關檔案**
-   - `mobile/lib/birthProfiles.ts` — 改寫儲存層
-   - `mobile/hooks/useBirthProfiles.ts` — 改用 Clerk `useUser`
-   - `mobile/lib/birthProfileMigration.ts` — 新增遷移邏輯（一次性）
-   - `mobile/app/_layout.tsx` — 啟動時觸發遷移
+- **DB Schema** — `prisma/schema.prisma` 新增 `BirthProfile` model，`prisma db push` 已套用
+- **API 路由** — `app/api/birth-profiles/route.ts`（GET 列表 / POST 新增/批次匯入）、`app/api/birth-profiles/[id]/route.ts`（PATCH 更新 / DELETE 刪除）
+- **網頁 Hook** — `lib/useBirthProfiles.ts` 改用 DB API；首次登入若 Clerk metadata 有舊資料，自動批次匯入（Clerk 舊資料保留作備份）
+- **Mobile API** — `mobile/lib/api.ts` 新增 `getBirthProfiles / createBirthProfile / updateBirthProfile / deleteBirthProfile / importBirthProfiles`
+- **Mobile 儲存層** — `mobile/lib/birthProfiles.ts` 從 AsyncStorage 改為 DB API；格式統一為 string（`location` 取代 `city`）
+- **遷移** — `mobile/lib/birthProfileMigration.ts`（AsyncStorage → DB，一次性，DB 有資料則跳過）
+- **啟動觸發** — `mobile/app/_layout.tsx` 登入後自動執行遷移
+- **立即同步按鈕** — 帳號頁個人 Tab 出生資料區塊右上角「↻ 同步」，手動強制重新拉取 DB 資料

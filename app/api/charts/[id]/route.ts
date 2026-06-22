@@ -1,6 +1,8 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { computeHdResultServer } from '@/lib/computeHdResultServer'
+import { CROSS_TYPE_LABELS } from '@/lib/humanDesign/constants'
 
 export async function GET(
   _req: NextRequest,
@@ -15,8 +17,58 @@ export async function GET(
     const user = await prisma.user.findUnique({ where: { clerkId: userId } })
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-    const chart = await prisma.chart.findFirst({ where: { id, userId: user.id } })
+    let chart = await prisma.chart.findFirst({ where: { id, userId: user.id } })
     if (!chart) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    // 懶補算：個人圖缺少任一 meta 欄位時，重新計算並存回 DB
+    const isPersonal = !chart.chartKind || chart.chartKind === 'personal'
+    const meta = chart.meta as Record<string, unknown> | null
+    if (isPersonal && (!meta?.incarnationCross || !meta?.variables || !meta?.arrows)) {
+      if (!chart.timezone) {
+        console.warn(`[GET /api/charts/${id}] ⚠️ timezone 為 null，無法補算`)
+      } else {
+        try {
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[GET /api/charts/${id}] meta 缺失，開始補算…`)
+          }
+          const result = await computeHdResultServer(chart.birthDate, chart.birthTime, chart.timezone)
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[GET /api/charts/${id}] computeHdResultServer 完成`)
+          }
+          const newMeta = {
+            incarnationCross: {
+              crossType:      result.incarnationCross.crossType,
+              crossTypeLabel: CROSS_TYPE_LABELS[result.incarnationCross.crossType] ?? result.incarnationCross.crossType,
+              crossBaseName:  result.incarnationCross.crossBaseName,
+              crossName:      result.incarnationCross.crossName,
+              gatesLabel:     result.incarnationCross.gatesLabel,
+              variant:        result.incarnationCross.variant,
+            },
+            variables: {
+              digestion:   result.variables.digestion,
+              environment: result.variables.environment,
+              perspective: result.variables.perspective,
+              motivation:  result.variables.motivation,
+            },
+            arrows: {
+              topLeft:     (result.planets[0]?.red.tone   ?? 1) <= 3,
+              bottomLeft:  (result.planets[3]?.red.tone   ?? 1) <= 3,
+              topRight:    (result.planets[0]?.black.tone ?? 1) <= 3,
+              bottomRight: (result.planets[3]?.black.tone ?? 1) <= 3,
+            },
+          }
+          chart = await prisma.chart.update({
+            where: { id },
+            data: { meta: newMeta },
+          })
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[GET /api/charts/${id}] meta 補算完成，已存回 DB`)
+          }
+        } catch (err) {
+          console.error(`[GET /api/charts/${id}] meta 補算失敗:`, err)
+        }
+      }
+    }
 
     return NextResponse.json({ chart })
   } catch (err) {

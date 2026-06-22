@@ -12,7 +12,7 @@ type Props = {
 }
 
 function profileToForm(p: BirthProfile): BirthFormData {
-  return { name: p.label, date: p.date, time: p.time, city: p.city, timezone: p.timezone }
+  return { name: p.label, date: p.date, time: p.time, city: p.location, timezone: p.timezone }
 }
 
 export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props) {
@@ -39,7 +39,7 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
         label: form.name.trim() || '未命名',
         date: form.date,
         time: form.time,
-        city: form.city,
+        location: form.city,
         timezone: form.timezone,
       })
     } finally {

@@ -8,6 +8,11 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/stats',
+  '/api/charts',             // 未登入可計算但不儲存（POST handler 內部判斷 userId）
+  '/api/composite/create',   // 未登入可預覽合圖但不儲存
+  '/api/transit/create',     // 未登入可預覽流日但不儲存
+  '/api/birth-profiles',     // 手機端 Bearer token 存取，route handler 自行驗證
+  '/api/birth-profiles/(.*)',// 包含 /api/birth-profiles/:id
   '/sitemap.xml',
   '/robots.txt',
 ])
