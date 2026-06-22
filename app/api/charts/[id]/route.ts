@@ -24,7 +24,14 @@ export async function GET(
     const isPersonal = !chart.chartKind || chart.chartKind === 'personal'
     const meta = chart.meta as Record<string, unknown> | null
     const needsMetaCalc = isPersonal && (!meta?.incarnationCross || !meta?.variables || !meta?.arrows)
-    const needsPlanetCalc = isPersonal && (!chart.personalityGates || (chart.personalityGates as number[]).length === 0)
+    const pgates = chart.personalityGates
+    const dgates = chart.designGates
+    const planets = chart.planets
+    const needsPlanetCalc = isPersonal && (
+      !Array.isArray(pgates) || pgates.length === 0 ||
+      !Array.isArray(dgates) || dgates.length === 0 ||
+      !Array.isArray(planets) || planets.length === 0
+    )
     if (needsMetaCalc || needsPlanetCalc) {
       if (!chart.timezone) {
         console.warn(`[GET /api/charts/${id}] ⚠️ timezone 為 null，無法補算`)
