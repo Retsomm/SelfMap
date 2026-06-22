@@ -1,4 +1,4 @@
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import { type BirthProfile, makeProfileId } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
@@ -12,7 +12,15 @@ type Props = {
 }
 
 function profileToForm(p: BirthProfile): BirthFormData {
-  return { name: p.label, date: p.date, time: p.time, city: p.location, timezone: p.timezone }
+  const [year, month, day] = p.date.split('-').map(Number)
+  const [hour, minute] = p.time.split(':').map(Number)
+  return {
+    name: p.label,
+    date: { year, month, day },
+    time: { hour, minute },
+    city: p.location,
+    timezone: p.timezone,
+  }
 }
 
 export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props) {
@@ -34,11 +42,13 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
     }
     setSaving(true)
     try {
+      const { year, month, day } = form.date
+      const { hour, minute } = form.time
       await onSave({
         id: initial?.id ?? makeProfileId(),
         label: form.name.trim() || '未命名',
-        date: form.date,
-        time: form.time,
+        date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+        time: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
         location: form.city,
         timezone: form.timezone,
       })
@@ -56,7 +66,9 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
           </Pressable>
           <Text style={styles.title}>{initial ? '編輯出生資料' : '新增出生資料'}</Text>
           <Pressable onPress={handleSave} style={styles.headerBtn} disabled={saving}>
-            <Text style={[styles.saveText, saving && styles.saveDisabled]}>儲存</Text>
+            {saving
+              ? <ActivityIndicator size="small" color={Colors.accent} style={{ alignSelf: 'flex-end' }} />
+              : <Text style={styles.saveText}>儲存</Text>}
           </Pressable>
         </View>
 

@@ -20,52 +20,62 @@ export async function GET(
     let chart = await prisma.chart.findFirst({ where: { id, userId: user.id } })
     if (!chart) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // 懶補算：個人圖缺少任一 meta 欄位時，重新計算並存回 DB
+    // 懶補算：個人圖缺少任一 meta 欄位，或缺少 personalityGates/designGates 時，重新計算並存回 DB
     const isPersonal = !chart.chartKind || chart.chartKind === 'personal'
     const meta = chart.meta as Record<string, unknown> | null
-    if (isPersonal && (!meta?.incarnationCross || !meta?.variables || !meta?.arrows)) {
+    const needsMetaCalc = isPersonal && (!meta?.incarnationCross || !meta?.variables || !meta?.arrows)
+    const needsPlanetCalc = isPersonal && (!chart.personalityGates || (chart.personalityGates as number[]).length === 0)
+    if (needsMetaCalc || needsPlanetCalc) {
       if (!chart.timezone) {
         console.warn(`[GET /api/charts/${id}] ⚠️ timezone 為 null，無法補算`)
       } else {
         try {
           if (process.env.NODE_ENV === 'development') {
-            console.log(`[GET /api/charts/${id}] meta 缺失，開始補算…`)
+            console.log(`[GET /api/charts/${id}] 開始補算… (meta缺失=${needsMetaCalc}, planets缺失=${needsPlanetCalc})`)
           }
           const result = await computeHdResultServer(chart.birthDate, chart.birthTime, chart.timezone)
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`[GET /api/charts/${id}] computeHdResultServer 完成`)
+          const updateData: Record<string, unknown> = {}
+          if (needsMetaCalc) {
+            updateData.meta = {
+              incarnationCross: {
+                crossType:      result.incarnationCross.crossType,
+                crossTypeLabel: CROSS_TYPE_LABELS[result.incarnationCross.crossType] ?? result.incarnationCross.crossType,
+                crossBaseName:  result.incarnationCross.crossBaseName,
+                crossName:      result.incarnationCross.crossName,
+                gatesLabel:     result.incarnationCross.gatesLabel,
+                variant:        result.incarnationCross.variant,
+              },
+              variables: {
+                digestion:   result.variables.digestion,
+                environment: result.variables.environment,
+                perspective: result.variables.perspective,
+                motivation:  result.variables.motivation,
+              },
+              arrows: {
+                topLeft:     (result.planets[0]?.red.tone   ?? 1) <= 3,
+                bottomLeft:  (result.planets[3]?.red.tone   ?? 1) <= 3,
+                topRight:    (result.planets[0]?.black.tone ?? 1) <= 3,
+                bottomRight: (result.planets[3]?.black.tone ?? 1) <= 3,
+              },
+            }
           }
-          const newMeta = {
-            incarnationCross: {
-              crossType:      result.incarnationCross.crossType,
-              crossTypeLabel: CROSS_TYPE_LABELS[result.incarnationCross.crossType] ?? result.incarnationCross.crossType,
-              crossBaseName:  result.incarnationCross.crossBaseName,
-              crossName:      result.incarnationCross.crossName,
-              gatesLabel:     result.incarnationCross.gatesLabel,
-              variant:        result.incarnationCross.variant,
-            },
-            variables: {
-              digestion:   result.variables.digestion,
-              environment: result.variables.environment,
-              perspective: result.variables.perspective,
-              motivation:  result.variables.motivation,
-            },
-            arrows: {
-              topLeft:     (result.planets[0]?.red.tone   ?? 1) <= 3,
-              bottomLeft:  (result.planets[3]?.red.tone   ?? 1) <= 3,
-              topRight:    (result.planets[0]?.black.tone ?? 1) <= 3,
-              bottomRight: (result.planets[3]?.black.tone ?? 1) <= 3,
-            },
+          if (needsPlanetCalc) {
+            updateData.planets = result.planets.map(p => ({
+              name:      p.planetName,
+              blackGate: p.black.gate,
+              blackLine: p.black.line,
+              redGate:   p.red.gate,
+              redLine:   p.red.line,
+            }))
+            updateData.personalityGates = result.planets.map(p => p.black.gate)
+            updateData.designGates      = result.planets.map(p => p.red.gate)
           }
-          chart = await prisma.chart.update({
-            where: { id },
-            data: { meta: newMeta },
-          })
+          chart = await prisma.chart.update({ where: { id }, data: updateData })
           if (process.env.NODE_ENV === 'development') {
-            console.log(`[GET /api/charts/${id}] meta 補算完成，已存回 DB`)
+            console.log(`[GET /api/charts/${id}] 補算完成，已存回 DB`)
           }
         } catch (err) {
-          console.error(`[GET /api/charts/${id}] meta 補算失敗:`, err)
+          console.error(`[GET /api/charts/${id}] 補算失敗:`, err)
         }
       }
     }

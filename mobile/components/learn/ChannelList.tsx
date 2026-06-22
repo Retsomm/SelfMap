@@ -10,16 +10,21 @@ export function ChannelList() {
   const toggle = (id: string) =>
     setExpanded(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
 
+  const sorted = useMemo(
+    () => [...HD_CHANNELS].sort((a, b) => Math.min(a.from, a.to) - Math.min(b.from, b.to)),
+    []
+  )
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return HD_CHANNELS
-    return HD_CHANNELS.filter(ch =>
+    if (!q) return sorted
+    return sorted.filter(ch =>
       ch.name.zh.toLowerCase().includes(q) ||
       String(ch.from).includes(q) ||
       String(ch.to).includes(q) ||
       ch.desc.zh.toLowerCase().includes(q)
     )
-  }, [query])
+  }, [query, sorted])
 
   return (
     <ScrollView contentContainerStyle={ls.inner} keyboardShouldPersistTaps="handled">
