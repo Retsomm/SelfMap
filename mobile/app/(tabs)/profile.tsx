@@ -172,7 +172,7 @@ function PersonalView() {
   }
 
   function openEditName() {
-    setNameInput(user?.firstName ?? '')
+    setNameInput(user?.fullName ?? user?.firstName ?? '')
     setEditingName(true)
   }
 
@@ -181,7 +181,10 @@ function PersonalView() {
     if (!trimmed || !user) return
     setSavingName(true)
     try {
-      await user.update({ firstName: trimmed })
+      const spaceIdx = trimmed.indexOf(' ')
+      const firstName = spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx)
+      const lastName  = spaceIdx === -1 ? ''      : trimmed.slice(spaceIdx + 1).trim()
+      await user.update({ firstName, lastName })
       setEditingName(false)
     } catch (err) {
       Alert.alert('更新失敗', err instanceof Error ? err.message : '請稍後再試')
@@ -279,9 +282,17 @@ function PersonalView() {
             <View style={s.card}>
               {profiles.map((p, i) => (
                 <View key={p.id} style={[s.profileRow, i > 0 && s.separator]}>
-                  <Pressable style={{ flex: 1 }} onPress={() => handleEditProfile(p)}>
+                  <View style={{ flex: 1 }}>
                     <Text style={s.profileLabel}>{p.label}</Text>
                     <Text style={s.profileSub}>{profileSummary(p)}</Text>
+                  </View>
+                  <Pressable
+                    style={s.editProfileBtn}
+                    onPress={() => handleEditProfile(p)}
+                    accessibilityLabel={`編輯 ${p.label}`}
+                    hitSlop={8}
+                  >
+                    <Text style={s.editProfileIcon}>✎</Text>
                   </Pressable>
                   <Pressable
                     style={s.deleteBtn}
@@ -296,90 +307,6 @@ function PersonalView() {
             </View>
           )}
         </View>
-
-        {/* 輪迴交叉 */}
-        {(hdLoading || hdChart?.meta?.incarnationCross) && (
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>輪迴交叉</Text>
-            {hdLoading ? (
-              <View style={[s.card, { alignItems: 'center', paddingVertical: 20 }]}>
-                <ActivityIndicator size="small" color={Colors.sub} />
-              </View>
-            ) : hdChart?.meta?.incarnationCross ? (
-              <View style={s.card}>
-                <View style={s.hdRow}>
-                  <Text style={s.hdLabel}>交叉類型</Text>
-                  <Text style={[s.hdValue, { color: Colors.accent }]}>{hdChart.meta.incarnationCross.crossTypeLabel}</Text>
-                </View>
-                <View style={[s.hdRow, s.separator]}>
-                  <Text style={s.hdLabel}>交叉名稱</Text>
-                  <Text style={s.hdValue}>{hdChart.meta.incarnationCross.crossBaseName}{hdChart.meta.incarnationCross.variant}</Text>
-                </View>
-                <View style={[s.hdRow, s.separator]}>
-                  <Text style={s.hdLabel}>閘門組合</Text>
-                  <Text style={s.hdValue}>{hdChart.meta.incarnationCross.gatesLabel}</Text>
-                </View>
-                {hdChart.name && (
-                  <View style={[s.hdRow, s.separator]}>
-                    <Text style={s.hdLabel}>圖表</Text>
-                    <Text style={[s.hdValue, { color: Colors.sub }]}>{hdChart.name}</Text>
-                  </View>
-                )}
-              </View>
-            ) : null}
-          </View>
-        )}
-
-        {/* 四箭頭 */}
-        {(hdLoading || (hdChart?.meta?.variables && hdChart?.meta?.arrows)) && (
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>四箭頭（Variables）</Text>
-            {hdLoading ? null : hdChart?.meta?.variables && hdChart?.meta?.arrows ? (
-              <View style={s.card}>
-                <View style={s.arrowsGrid}>
-                  <View style={s.arrowsCol}>
-                    <Text style={s.arrowsSide}>← Design（紅）</Text>
-                    <View style={s.arrowItem}>
-                      <Text style={s.arrowDir}>{hdChart.meta.arrows.topLeft ? '←' : '→'}</Text>
-                      <View style={s.arrowInfo}>
-                        <Text style={s.arrowCategory}>飲食（Digestion）</Text>
-                        <Text style={s.arrowLabelText}>{hdChart.meta.variables.digestion.label}</Text>
-                        <Text style={s.arrowDesc}>{hdChart.meta.variables.digestion.description}</Text>
-                      </View>
-                    </View>
-                    <View style={[s.arrowItem, s.arrowItemSep]}>
-                      <Text style={s.arrowDir}>{hdChart.meta.arrows.bottomLeft ? '←' : '→'}</Text>
-                      <View style={s.arrowInfo}>
-                        <Text style={s.arrowCategory}>環境（Environment）</Text>
-                        <Text style={s.arrowLabelText}>{hdChart.meta.variables.environment.label}</Text>
-                        <Text style={s.arrowDesc}>{hdChart.meta.variables.environment.description}</Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={[s.arrowsCol, s.arrowsColSep]}>
-                    <Text style={s.arrowsSide}>Personality（黑）→</Text>
-                    <View style={s.arrowItem}>
-                      <Text style={s.arrowDir}>{hdChart.meta.arrows.topRight ? '←' : '→'}</Text>
-                      <View style={s.arrowInfo}>
-                        <Text style={s.arrowCategory}>動機（Motivation）</Text>
-                        <Text style={s.arrowLabelText}>{hdChart.meta.variables.motivation.label}</Text>
-                        <Text style={s.arrowDesc}>{hdChart.meta.variables.motivation.description}</Text>
-                      </View>
-                    </View>
-                    <View style={[s.arrowItem, s.arrowItemSep]}>
-                      <Text style={s.arrowDir}>{hdChart.meta.arrows.bottomRight ? '←' : '→'}</Text>
-                      <View style={s.arrowInfo}>
-                        <Text style={s.arrowCategory}>觀點（Perspective）</Text>
-                        <Text style={s.arrowLabelText}>{hdChart.meta.variables.perspective.label}</Text>
-                        <Text style={s.arrowDesc}>{hdChart.meta.variables.perspective.description}</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            ) : null}
-          </View>
-        )}
 
         {/* 登出 */}
         <Pressable
@@ -476,26 +403,12 @@ const s = StyleSheet.create({
   profileRow:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   profileLabel: { fontSize: 15, fontWeight: '600', color: Colors.text },
   profileSub:   { fontSize: 12, color: Colors.sub, marginTop: 3 },
+  editProfileBtn:  { padding: Spacing.xs },
+  editProfileIcon: { color: Colors.sub, fontSize: 15 },
   deleteBtn:    { padding: Spacing.xs },
   deleteText:   { color: Colors.muted, fontSize: 14 },
 
   signOutBtn:   { borderWidth: 1, borderColor: Colors.red, borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center', marginTop: Spacing.sm },
   signOutText:  { color: Colors.red, fontSize: 15, fontWeight: '600' },
   btnDisabled:  { opacity: 0.5 },
-
-  hdRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
-  hdLabel:      { fontSize: 13, color: Colors.sub, flex: 1 },
-  hdValue:      { fontSize: 14, color: Colors.text, fontWeight: '500', flex: 2, textAlign: 'right' },
-
-  arrowsGrid:   { flexDirection: 'row', gap: Spacing.md },
-  arrowsCol:    { flex: 1 },
-  arrowsColSep: { borderLeftWidth: 1, borderLeftColor: Colors.border, paddingLeft: Spacing.md },
-  arrowsSide:   { fontSize: 10, color: Colors.muted, marginBottom: Spacing.sm, fontWeight: '600' },
-  arrowItem:    { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
-  arrowItemSep: { marginTop: Spacing.md, paddingTop: Spacing.md, borderTopWidth: 1, borderTopColor: Colors.border },
-  arrowDir:     { fontSize: 18, color: Colors.accent, width: 20, textAlign: 'center', lineHeight: 22 },
-  arrowInfo:    { flex: 1 },
-  arrowCategory:{ fontSize: 10, color: Colors.muted, marginBottom: 2 },
-  arrowLabelText: { fontSize: 13, color: Colors.text, fontWeight: '600' },
-  arrowDesc:    { fontSize: 11, color: Colors.sub, marginTop: 2 },
 })

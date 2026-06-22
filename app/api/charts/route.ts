@@ -79,6 +79,16 @@ export async function POST(req: NextRequest) {
       incarnationCross = body.incarnationCross
       variables = body.variables
       arrows = body.arrows
+      // 接受 client 傳來的 planets/personalityGates/designGates（web 端 saveChart 提供）
+      if (
+        Array.isArray(body.planets) && body.planets.length > 0 &&
+        Array.isArray(body.personalityGates) && body.personalityGates.length === body.planets.length &&
+        Array.isArray(body.designGates) && body.designGates.length === body.planets.length
+      ) {
+        planets = body.planets
+        personalityGates = body.personalityGates
+        designGates = body.designGates
+      }
     }
 
     // 未登入：只回傳計算結果，不存 DB

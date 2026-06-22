@@ -47,6 +47,16 @@ export const saveChart = async ({ result, date, time, locationLabel, timezone }:
         topRight:    (result.planets[0]?.black.tone ?? 1) <= 3,
         bottomRight: (result.planets[3]?.black.tone ?? 1) <= 3,
       },
+      planets: (result.planets ?? []).map(p => ({
+        name:      p.planetName,
+        blackGate: p.black.gate,
+        blackLine: p.black.line,
+        redGate:   p.red.gate,
+        redLine:   p.red.line,
+      })),
+      // black = Personality（意識），red = Design（潛意識）
+      personalityGates: (result.planets ?? []).map(p => p.black.gate),
+      designGates:      (result.planets ?? []).map(p => p.red.gate),
     }),
   })
   const json = await res.json()

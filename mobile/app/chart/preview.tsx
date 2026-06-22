@@ -239,7 +239,7 @@ export default function ChartPreviewScreen() {
         {/* 激活閘門 */}
         <SectionCard title={`激活閘門（${chart.gates.length}）`}>
           <View style={styles.gateGrid}>
-            {chart.gates.map((g) => (
+            {[...chart.gates].sort((a, b) => a - b).map((g) => (
               <Pressable
                 key={g}
                 style={({ pressed }) => [styles.gate, pressed && styles.gatePressed]}
