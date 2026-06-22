@@ -76,7 +76,7 @@ export default function ChartPreviewScreen() {
       return
     }
     setChart(pending)
-  }, [])
+  }, [router])
 
   if (!chart) return null
 
@@ -109,7 +109,6 @@ export default function ChartPreviewScreen() {
   }
 
   async function handleDownload() {
-    if (!isSignedIn) { requireLogin(); return }
     setPdfState('loading')
     try {
       await downloadChartAsPdf(chart!)
@@ -121,7 +120,6 @@ export default function ChartPreviewScreen() {
   }
 
   function handleCopyPrompt() {
-    if (!isSignedIn) { requireLogin(); return }
     Clipboard.setString(generateAiPrompt(chart!))
     Alert.alert('已複製', '提示詞已複製到剪貼簿，可貼到 ChatGPT 或其他 AI 工具使用。')
   }

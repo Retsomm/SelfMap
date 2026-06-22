@@ -20,18 +20,21 @@ export async function GET(
     let chart = await prisma.chart.findFirst({ where: { id, userId: user.id } })
     if (!chart) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // 懶補算：個人圖缺少 meta 時，重新計算並存回 DB
+    // 懶補算：個人圖缺少任一 meta 欄位時，重新計算並存回 DB
     const isPersonal = !chart.chartKind || chart.chartKind === 'personal'
     const meta = chart.meta as Record<string, unknown> | null
-    console.log(`[GET /api/charts/${id}] isPersonal=${isPersonal} timezone=${chart.timezone} meta=${JSON.stringify(meta)?.slice(0, 80)}`)
-    if (isPersonal && !meta?.incarnationCross) {
+    if (isPersonal && (!meta?.incarnationCross || !meta?.variables || !meta?.arrows)) {
       if (!chart.timezone) {
         console.warn(`[GET /api/charts/${id}] ⚠️ timezone 為 null，無法補算`)
       } else {
         try {
-          console.log(`[GET /api/charts/${id}] meta 缺失，開始補算… birthDate=${chart.birthDate} birthTime=${chart.birthTime} timezone=${chart.timezone}`)
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[GET /api/charts/${id}] meta 缺失，開始補算…`)
+          }
           const result = await computeHdResultServer(chart.birthDate, chart.birthTime, chart.timezone)
-          console.log(`[GET /api/charts/${id}] computeHdResultServer 完成, incarnationCross.crossType=${result.incarnationCross?.crossType}`)
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[GET /api/charts/${id}] computeHdResultServer 完成`)
+          }
           const newMeta = {
             incarnationCross: {
               crossType:      result.incarnationCross.crossType,
@@ -58,7 +61,9 @@ export async function GET(
             where: { id },
             data: { meta: newMeta },
           })
-          console.log(`[GET /api/charts/${id}] meta 補算完成，已存回 DB`)
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[GET /api/charts/${id}] meta 補算完成，已存回 DB`)
+          }
         } catch (err) {
           console.error(`[GET /api/charts/${id}] meta 補算失敗:`, err)
         }

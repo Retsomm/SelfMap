@@ -14,7 +14,7 @@ export function useBirthProfiles() {
   const refresh = useCallback(async () => {
     try {
       const token = await getTokenRef.current()
-      if (!token) return
+      if (!token) { setProfiles([]); return }
       setProfiles(await loadProfiles(token))
       setError(null)
     } catch (e) {

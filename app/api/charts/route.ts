@@ -170,11 +170,13 @@ export async function GET() {
     })
 
     const charts = user?.charts ?? []
-    console.log('[GET /api/charts] 回傳圖表數量:', charts.length)
-    charts.forEach((c, i) => {
-      const meta = c.meta as Record<string, unknown> | null
-      console.log(`[GET /api/charts] [${i}] id=${c.id} chartKind=${c.chartKind} meta存在=${!!meta} incarnationCross=${!!(meta?.incarnationCross)} variables=${!!(meta?.variables)} arrows=${!!(meta?.arrows)}`)
-    })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[GET /api/charts] 回傳圖表數量:', charts.length)
+      charts.forEach((c, i) => {
+        const meta = c.meta as Record<string, unknown> | null
+        console.log(`[GET /api/charts] [${i}] chartKind=${c.chartKind} meta存在=${!!meta} incarnationCross=${!!(meta?.incarnationCross)} variables=${!!(meta?.variables)} arrows=${!!(meta?.arrows)}`)
+      })
+    }
     return NextResponse.json({ charts })
   } catch (err) {
     console.error('[GET /api/charts]', err)

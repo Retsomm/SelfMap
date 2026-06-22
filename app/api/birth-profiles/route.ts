@@ -4,7 +4,10 @@ import { prisma } from '@/lib/db'
 
 async function getOrCreateUser(userId: string) {
   const clerkUser = await currentUser()
-  const email = clerkUser?.emailAddresses[0]?.emailAddress ?? `clerk_${userId}@placeholder.local`
+  const primaryAddr = clerkUser?.emailAddresses.find(
+    e => e.id === clerkUser.primaryEmailAddressId && e.verification?.status === 'verified'
+  )
+  const email = primaryAddr?.emailAddress ?? `clerk_${userId}@placeholder.local`
   const updateData: { email?: string; name?: string | null } = {}
   if (!email.endsWith('@placeholder.local')) updateData.email = email
   if (clerkUser?.fullName != null) updateData.name = clerkUser.fullName
@@ -41,7 +44,7 @@ export async function GET() {
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     })
 
-    console.log(`[GET /api/birth-profiles] userId=${userId} found=${profiles.length}`)
+    console.log(`[GET /api/birth-profiles] found=${profiles.length}`)
     return NextResponse.json({ profiles })
   } catch (err) {
     console.error('[GET /api/birth-profiles]', err)
@@ -61,6 +64,18 @@ export async function POST(req: NextRequest) {
 
     // 批次匯入：{ profiles: [...] }
     if (Array.isArray(body.profiles)) {
+      for (let i = 0; i < body.profiles.length; i++) {
+        const p = body.profiles[i] as Record<string, unknown>
+        const required = ['label', 'date', 'time', 'timezone', 'location'] as const
+        for (const field of required) {
+          if (typeof p[field] !== 'string' || (p[field] as string).trim() === '') {
+            return NextResponse.json({ error: `profiles[${i}].${field} 為必填且不可為空` }, { status: 400 })
+          }
+        }
+        if (p.sortOrder !== undefined && typeof p.sortOrder !== 'number') {
+          return NextResponse.json({ error: `profiles[${i}].sortOrder 必須是數字` }, { status: 400 })
+        }
+      }
       const created = await prisma.$transaction(
         body.profiles.map((p: { label: string; date: string; time: string; timezone: string; location: string; sortOrder?: number }) =>
           prisma.birthProfile.create({
@@ -76,7 +91,7 @@ export async function POST(req: NextRequest) {
           })
         )
       )
-      console.log(`[POST /api/birth-profiles] batch userId=${userId} count=${created.length}`)
+      console.log(`[POST /api/birth-profiles] batch count=${created.length}`)
       return NextResponse.json({ profiles: created })
     }
 
@@ -90,7 +105,7 @@ export async function POST(req: NextRequest) {
       data: { userId: user.id, label, date, time, timezone, location, sortOrder: sortOrder ?? 0 },
     })
 
-    console.log(`[POST /api/birth-profiles] single userId=${userId} id=${profile.id}`)
+    console.log(`[POST /api/birth-profiles] single id=${profile.id}`)
     return NextResponse.json({ profile })
   } catch (err) {
     console.error('[POST /api/birth-profiles]', err)

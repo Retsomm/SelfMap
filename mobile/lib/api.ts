@@ -78,10 +78,16 @@ async function request<T>(
         ...init.headers,
       },
     })
+    const contentType = res.headers.get('content-type') ?? ''
     if (!res.ok) {
       let msg = `HTTP ${res.status}`
-      try { msg = (await res.json())?.error ?? msg } catch { /* non-JSON body */ }
+      if (contentType.includes('application/json')) {
+        try { msg = (await res.json())?.error ?? msg } catch { /* ignore */ }
+      }
       throw new Error(msg)
+    }
+    if (!contentType.includes('application/json')) {
+      throw new Error(`Unexpected response (${contentType || 'no content-type'}) from ${path}`)
     }
     return (await res.json()) as T
   } finally {
@@ -167,6 +173,8 @@ export type CompositePersonMeta = {
   birthCity: string
   type: string
   profile: string
+  authority?: string
+  authorityTip?: string
 }
 
 export type CreateCompositeResult = {
@@ -190,11 +198,12 @@ export type CreateCompositePayload = {
   name?: string
 }
 
-/** 不帶 token — 計算合圖但不存 DB，chartId 回傳 null */
-export function previewCompositeChart(payload: CreateCompositePayload) {
+/** 帶 token + previewOnly:true — 只計算合圖不存 DB，chartId 回傳 null */
+export function previewCompositeChart(token: string, payload: CreateCompositePayload) {
   return request<CreateCompositeResult>('/api/composite/create', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, previewOnly: true }),
+    token,
   })
 }
 

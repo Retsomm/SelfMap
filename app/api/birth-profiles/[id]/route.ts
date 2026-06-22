@@ -15,6 +15,21 @@ export async function PATCH(
     const body = await req.json()
     const { label, date, time, timezone, location, sortOrder } = body
 
+    const updatableFields = { label, date, time, timezone, location, sortOrder }
+    const providedFields = Object.entries(updatableFields).filter(([, v]) => v !== undefined)
+    if (providedFields.length === 0) {
+      return NextResponse.json({ error: '至少需要提供一個要更新的欄位' }, { status: 400 })
+    }
+    if (sortOrder !== undefined && typeof sortOrder !== 'number') {
+      return NextResponse.json({ error: 'sortOrder 必須是數字' }, { status: 400 })
+    }
+    const stringFields = { label, date, time, timezone, location }
+    for (const [key, val] of Object.entries(stringFields)) {
+      if (val !== undefined && (typeof val !== 'string' || val.trim() === '')) {
+        return NextResponse.json({ error: `${key} 不可為空字串` }, { status: 400 })
+      }
+    }
+
     const user = await prisma.user.findUnique({ where: { clerkId: userId } })
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 

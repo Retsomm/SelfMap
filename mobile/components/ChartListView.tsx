@@ -31,6 +31,9 @@ const KIND_CFG: Record<string, { label: string; color: string; bg: string }> = {
 }
 
 function kindOf(c: Chart): string {
+  if (c.chartKind === 'composite' || c.chartKind === 'transit') return c.chartKind
+  // 舊格式合圖：網頁端存 type='合圖' 但沒有設 chartKind
+  if (c.type === '合圖' || c.birthDate?.includes('|')) return 'composite'
   return c.chartKind ?? 'personal'
 }
 
@@ -130,10 +133,6 @@ function ChartFlatList({
 export default function ChartListView({ initialTab }: { initialTab?: ChartTab }) {
   const { getToken } = useAuth()
   const [chartTab, setChartTab]             = useState<ChartTab>(initialTab ?? 'personal')
-
-  useEffect(() => {
-    if (initialTab) setChartTab(initialTab)
-  }, [initialTab])
   const [charts, setCharts]                 = useState<Chart[]>([])
   const [loading, setLoading]               = useState(true)
   const [refreshing, setRefreshing]         = useState(false)
@@ -162,14 +161,9 @@ export default function ChartListView({ initialTab }: { initialTab?: ChartTab })
     }
   }, [])
 
-  useEffect(() => { fetchCharts() }, [fetchCharts])
-
-  const fetchRef = useRef(fetchCharts)
-  useEffect(() => { fetchRef.current = fetchCharts }, [fetchCharts])
-
   useFocusEffect(useCallback(() => {
-    fetchRef.current()
-  }, []))
+    void fetchCharts()
+  }, [fetchCharts]))
 
   const openRename = (chart: Chart) => {
     setRenameTarget(chart)

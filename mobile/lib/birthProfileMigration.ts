@@ -8,14 +8,19 @@ const MIGRATION_DONE_KEY = '@selfmap/birth_profiles_migrated'
 function isLegacyProfile(obj: unknown): obj is LegacyBirthProfile {
   if (!obj || typeof obj !== 'object') return false
   const p = obj as Record<string, unknown>
-  return (
-    typeof p.id === 'string' &&
-    typeof p.label === 'string' &&
-    typeof p.city === 'string' &&
-    typeof p.timezone === 'string' &&
-    p.date !== null && typeof p.date === 'object' &&
-    p.time !== null && typeof p.time === 'object'
-  )
+  if (
+    typeof p.id !== 'string' ||
+    typeof p.label !== 'string' ||
+    typeof p.city !== 'string' ||
+    typeof p.timezone !== 'string'
+  ) return false
+  if (p.date === null || typeof p.date !== 'object') return false
+  const d = p.date as Record<string, unknown>
+  if (typeof d.year !== 'number' || typeof d.month !== 'number' || typeof d.day !== 'number') return false
+  if (p.time === null || typeof p.time !== 'object') return false
+  const t = p.time as Record<string, unknown>
+  if (typeof t.hour !== 'number' || typeof t.minute !== 'number') return false
+  return true
 }
 
 // 啟動時執行一次性遷移：AsyncStorage 舊資料 → DB

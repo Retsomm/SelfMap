@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native'
-import { type Chart } from '@/lib/api'
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
+import { type Chart, type CreateCompositeResult } from '@/lib/api'
 import { findChannelById } from '@/lib/hd-normalizers'
-import { Colors } from '@/constants/tokens'
+import { Colors, Spacing } from '@/constants/tokens'
 
 const LIB_CENTER_ZH: Record<string, string> = {
   head: '頭腦中心', ajna: '心智中心', throat: '喉嚨中心', g: 'G 中心',
@@ -67,15 +67,52 @@ const CONN_CFG: Record<string, { label: string; desc: string; accentColor: strin
 
 const C = Colors
 
-export default function CompositeInfo({ chart }: { chart: Chart }) {
-  const meta    = chart.meta
-  const personA = meta?.personA
-  const personB = meta?.personB
-  const result  = meta?.compositeResult
-  const theme   = result ? (INTEGRATION_THEME[result.integrationTheme] ?? INTEGRATION_THEME['6+3+']) : null
+type SyncCompositeData = {
+  personA: { name: null; birthDate: string; birthCity: string; type: string; profile: string; authority: string; authorityTip?: string }
+  personB: { name: null; birthDate: string; birthCity: string; type: string; profile: string; authority: string; authorityTip?: string }
+  integrationTheme: string
+  compositeDefinedCount: number
+  compositeOpenCount: number
+}
 
-  const nameA = personA?.name || 'A'
-  const nameB = personB?.name || 'B'
+export default function CompositeInfo({
+  chart,
+  fetchedResult,
+  syncData,
+  fetchLoading,
+}: {
+  chart: Chart
+  fetchedResult?: CreateCompositeResult | null
+  syncData?: SyncCompositeData | null
+  fetchLoading?: boolean
+}) {
+  const meta = chart.meta
+
+  // 人物資料優先順序：DB meta > async fetchedResult > 同步解析的 syncData
+  const personA = meta?.personA ?? fetchedResult?.personA ?? syncData?.personA
+  const personB = meta?.personB ?? fetchedResult?.personB ?? syncData?.personB
+
+  // 連結分析資料：DB meta > async fetchedResult
+  // （syncData 沒有電磁/陪伴等資料，需要 async fetch）
+  const result = meta?.compositeResult ?? (fetchedResult ? {
+    integrationTheme:      fetchedResult.integrationTheme,
+    compositeDefinedCount: fetchedResult.compositeDefinedCount,
+    compositeOpenCount:    fetchedResult.compositeOpenCount,
+    profileResonance:      fetchedResult.profileResonance,
+    electromagnetic:       fetchedResult.electromagnetic,
+    companionship:         fetchedResult.companionship,
+    compromise:            fetchedResult.compromise,
+    dominance:             fetchedResult.dominance,
+  } : null)
+
+  // integrationTheme 可從 syncData 直接取得（無需 async）
+  const integrationTheme = result?.integrationTheme ?? syncData?.integrationTheme
+  const compositeDefinedCount = result?.compositeDefinedCount ?? syncData?.compositeDefinedCount
+  const compositeOpenCount    = result?.compositeOpenCount    ?? syncData?.compositeOpenCount
+  const theme = integrationTheme ? (INTEGRATION_THEME[integrationTheme] ?? INTEGRATION_THEME['6+3+']) : null
+
+  const nameA = (personA as { name?: string | null } | undefined)?.name || 'A'
+  const nameB = (personB as { name?: string | null } | undefined)?.name || 'B'
 
   return (
     <View style={c.root}>
@@ -95,7 +132,7 @@ export default function CompositeInfo({ chart }: { chart: Chart }) {
         ))}
       </View>
 
-      {result && theme && (
+      {theme && (
         <>
           {/* 整合主題 */}
           <View style={c.section}>
@@ -104,7 +141,7 @@ export default function CompositeInfo({ chart }: { chart: Chart }) {
               <View style={c.themeHeader}>
                 <Text style={c.themeLabel}>{theme.label}</Text>
                 <Text style={c.themeSub}>
-                  合圖定義 {result.compositeDefinedCount} / 9 中心 · 開放 {result.compositeOpenCount} 中心
+                  合圖定義 {compositeDefinedCount ?? '—'} / 9 中心 · 開放 {compositeOpenCount ?? '—'} 中心
                 </Text>
               </View>
               <View style={c.themePair}>
@@ -123,7 +160,13 @@ export default function CompositeInfo({ chart }: { chart: Chart }) {
           {/* 四種核心連結動力 */}
           <View style={c.section}>
             <Text style={c.sectionLabel}>四種核心連結動力</Text>
-            {(['electromagnetic', 'companionship', 'compromise', 'dominance'] as const).map(type => {
+            {!result ? (
+              <View style={c.card}>
+                {fetchLoading
+                  ? <ActivityIndicator color={Colors.sub} style={{ padding: Spacing.lg }} />
+                  : <Text style={c.connEmpty}>正在載入連結分析…</Text>}
+              </View>
+            ) : (['electromagnetic', 'companionship', 'compromise', 'dominance'] as const).map(type => {
               const items = result[type]
               const cfg   = CONN_CFG[type]
               return (
@@ -185,7 +228,9 @@ export default function CompositeInfo({ chart }: { chart: Chart }) {
                 <Text style={[c.profileLabel, { color: '#c8553d' }]}>{nameA} {personA?.profile}</Text>
                 <Text style={c.profileLabel}>{nameB} {personB?.profile}</Text>
               </View>
-              {result.profileResonance.length === 0 ? (
+              {!result ? (
+                <Text style={c.resonanceNone}>—</Text>
+              ) : result.profileResonance.length === 0 ? (
                 <Text style={c.resonanceNone}>兩人人生角色沒有共同爻線，各自的觀點框架較為不同。</Text>
               ) : result.profileResonance.map(line => {
                 const info = PROFILE_RESONANCE_DESC[line]

@@ -31,6 +31,9 @@ export default function ChartDetailScreen() {
   const [compositeFetched, setCompositeFetched]         = useState<CreateCompositeResult | null>(null)
   const [compositeFetchLoading, setCompositeFetchLoading] = useState(false)
 
+  // 切換圖表時清除舊的合圖補算結果，避免渲染過期資料
+  useEffect(() => { setCompositeFetched(null) }, [id])
+
   const loadChart = async () => {
     setLoading(true)
     setError(null)
@@ -73,15 +76,15 @@ export default function ChartDetailScreen() {
           personB: { name: pB.name ?? undefined, birthDate: pB.birthDate, birthTime: pB.birthTime, birthCity: pB.birthCity, timezone: pB.timezone },
         }
       }
-    } else if (chart.birthDate?.includes('|')) {
+    } else if (chart.birthDate?.includes('|') && chart.timezone) {
       const [dateA, dateB] = chart.birthDate.split('|')
       const [timeA, timeB] = chart.birthTime.split('|')
       const [cityA, cityB] = chart.birthCity.split('|')
-      const [tzA, tzB] = (chart.timezone ?? 'UTC|UTC').split('|')
-      if (dateA && dateB && timeA && timeB) {
+      const [tzA, tzB] = chart.timezone.split('|')
+      if (dateA && dateB && timeA && timeB && tzA && tzB) {
         payload = {
-          personA: { birthDate: dateA, birthTime: timeA, birthCity: cityA ?? '', timezone: tzA ?? 'UTC' },
-          personB: { birthDate: dateB, birthTime: timeB, birthCity: cityB ?? '', timezone: tzB ?? 'UTC' },
+          personA: { birthDate: dateA, birthTime: timeA, birthCity: cityA ?? '', timezone: tzA },
+          personB: { birthDate: dateB, birthTime: timeB, birthCity: cityB ?? '', timezone: tzB },
         }
       }
     }

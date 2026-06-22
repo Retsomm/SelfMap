@@ -58,7 +58,7 @@ function AuthGuard() {
     migrationRanRef.current = true
     getTokenRef.current().then(token => {
       if (token) migrateLocalProfilesToDb(token)
-    }).catch(() => undefined)
+    }).catch(err => console.warn('[AuthGuard] migration token error:', err))
   }, [isSignedIn])
 
   return null

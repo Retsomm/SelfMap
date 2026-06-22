@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     if (!isValidBirth(body?.personB))
       return NextResponse.json({ error: '請填寫人物 B 的完整出生資料（欄位需為字串）' }, { status: 400 })
 
-    const { personA, personB, name } = body as { personA: BirthPayload; personB: BirthPayload; name?: string }
+    const { personA, personB, name, previewOnly } = body as { personA: BirthPayload; personB: BirthPayload; name?: string; previewOnly?: boolean }
 
     let hdA, hdB
     try {
@@ -103,8 +103,8 @@ export async function POST(req: NextRequest) {
       },
     }
 
-    // 未登入：只回傳分析結果，不存 DB
-    if (!userId) {
+    // 未登入或 previewOnly：只回傳分析結果，不存 DB
+    if (!userId || previewOnly) {
       return NextResponse.json({
         chartId: null,
         ...compositeResult,

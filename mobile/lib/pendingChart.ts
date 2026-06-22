@@ -17,10 +17,10 @@ export type Variables = {
 }
 
 export type Arrows = {
-  topLeft:     boolean  // true = ←, false = →
-  bottomLeft:  boolean
-  topRight:    boolean
-  bottomRight: boolean
+  topLeft:     boolean  // Design 太陽（身體/飲食）：true = ←, false = →（紅色 / 潛意識）
+  bottomLeft:  boolean  // Design 北交點（環境）：true = ←, false = →（紅色 / 潛意識）
+  topRight:    boolean  // Personality 太陽（心智/動機）：true = ←, false = →（黑色 / 意識）
+  bottomRight: boolean  // Personality 北交點（觀點）：true = ←, false = →（黑色 / 意識）
 }
 
 export type PendingChart = {

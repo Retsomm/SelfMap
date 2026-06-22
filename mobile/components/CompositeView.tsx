@@ -144,9 +144,9 @@ export default function CompositeView() {
 
   const handleSave = async () => {
     if (!lastPayload || saveState !== 'idle') return
-    const token = await getToken()
-    if (!token) { Alert.alert('請先登入', '登入後才能儲存圖表'); return }
     setSaveState('loading')
+    const token = await getToken()
+    if (!token) { setSaveState('idle'); Alert.alert('請先登入', '登入後才能儲存圖表'); return }
     try {
       const saved = await createCompositeChart(token, lastPayload)
       setResult(saved)

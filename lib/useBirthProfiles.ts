@@ -39,7 +39,15 @@ export const useBirthProfiles = () => {
   const { isSignedIn, user } = useUser()
   const [profiles, setProfiles] = useState<BirthProfile[]>([])
   const [loading, setLoading] = useState(false)
-  const migrationRanRef = useRef(false)
+  const migrationRanRef = useRef<string | null>(null)
+
+  // ── 登出時清除狀態 ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isSignedIn) {
+      setProfiles([])
+      migrationRanRef.current = null
+    }
+  }, [isSignedIn])
 
   // ── 從 DB 讀取 ──────────────────────────────────────────────────────────
   const refresh = useCallback(async () => {
@@ -62,8 +70,8 @@ export const useBirthProfiles = () => {
 
   // ── 首次載入：從 DB 讀取；若 DB 空且 Clerk metadata 有舊資料 → 自動遷移 ──
   useEffect(() => {
-    if (!isSignedIn || !user || migrationRanRef.current) return
-    migrationRanRef.current = true
+    if (!isSignedIn || !user || migrationRanRef.current === user.id) return
+    migrationRanRef.current = user.id
 
     const run = async () => {
       const dbData = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')

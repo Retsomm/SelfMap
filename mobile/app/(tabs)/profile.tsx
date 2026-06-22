@@ -68,21 +68,21 @@ function PersonalView() {
       if (!token) return
       const { charts } = await getCharts(token)
       const personal = charts.filter(c => !c.chartKind || c.chartKind === 'personal')
-      console.log('[PersonalView] 個人圖數量:', personal.length, '| meta 存在:', personal.filter(c => c.meta).length)
+      if (__DEV__) console.log('[PersonalView] 個人圖數量:', personal.length, '| meta 存在:', personal.filter(c => c.meta).length)
       if (personal.length === 0) { setHdChart(null); return }
 
       const candidate = personal[0]
-      // 若 list 端點回傳的圖 meta 為 null，改用單筆 API 觸發 server 端懶補算
-      if (!candidate.meta?.incarnationCross) {
-        console.log('[PersonalView] list meta 缺失，改呼叫單筆 API 觸發補算, id=', candidate.id)
+      // 若 list 端點回傳的圖任一 meta 欄位缺失，改用單筆 API 觸發 server 端懶補算
+      if (!candidate.meta?.incarnationCross || !candidate.meta?.variables || !candidate.meta?.arrows) {
+        if (__DEV__) console.log('[PersonalView] list meta 缺失，改呼叫單筆 API 觸發補算')
         const { chart } = await getChart(token, candidate.id)
-        console.log('[PersonalView] 補算後 incarnationCross=', !!(chart.meta?.incarnationCross))
         setHdChart(chart)
       } else {
         setHdChart(candidate)
       }
     } catch (err) {
       console.error('[PersonalView] refreshHdChart 失敗:', err)
+      Alert.alert('載入失敗', '人類圖資料載入失敗，請稍後再試')
     } finally {
       setHdLoading(false)
     }
