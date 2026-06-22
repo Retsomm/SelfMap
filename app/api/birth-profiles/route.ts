@@ -1,4 +1,5 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
+import { after } from 'next/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
@@ -44,8 +45,27 @@ export async function GET() {
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     })
 
-    console.log(`[GET /api/birth-profiles] found=${profiles.length}`)
-    return NextResponse.json({ profiles })
+    // Deduplicate by (label, date, time, location) — keeps earliest record
+    const seen = new Set<string>()
+    const duplicateIds: string[] = []
+    const uniqueProfiles = profiles.filter(p => {
+      const key = `${p.label}|${p.date}|${p.time}|${p.location}`
+      if (seen.has(key)) { duplicateIds.push(p.id); return false }
+      seen.add(key)
+      return true
+    })
+
+    // Clean up duplicates from DB after response is sent
+    if (duplicateIds.length > 0) {
+      console.log(`[GET /api/birth-profiles] removing ${duplicateIds.length} duplicate(s)`)
+      after(async () => {
+        await prisma.birthProfile.deleteMany({ where: { id: { in: duplicateIds } } })
+          .catch(e => console.error('[GET /api/birth-profiles] dedup cleanup error:', e))
+      })
+    }
+
+    console.log(`[GET /api/birth-profiles] found=${profiles.length} unique=${uniqueProfiles.length}`)
+    return NextResponse.json({ profiles: uniqueProfiles })
   } catch (err) {
     console.error('[GET /api/birth-profiles]', err)
     return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 })

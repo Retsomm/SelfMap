@@ -35,17 +35,18 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
+// Module-level guard: survives component remounts (React StrictMode / nav back)
+const migratedUserIds = new Set<string>()
+
 export const useBirthProfiles = () => {
   const { isSignedIn, user } = useUser()
   const [profiles, setProfiles] = useState<BirthProfile[]>([])
   const [loading, setLoading] = useState(false)
-  const migrationRanRef = useRef<string | null>(null)
 
   // ── 登出時清除狀態 ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!isSignedIn) {
       setProfiles([])
-      migrationRanRef.current = null
     }
   }, [isSignedIn])
 
@@ -70,8 +71,7 @@ export const useBirthProfiles = () => {
 
   // ── 首次載入：從 DB 讀取；若 DB 空且 Clerk metadata 有舊資料 → 自動遷移 ──
   useEffect(() => {
-    if (!isSignedIn || !user || migrationRanRef.current === user.id) return
-    migrationRanRef.current = user.id
+    if (!isSignedIn || !user || migratedUserIds.has(user.id)) return
 
     const run = async () => {
       const dbData = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')
@@ -104,7 +104,7 @@ export const useBirthProfiles = () => {
       })))
     }
 
-    run().catch(err => console.error('[useBirthProfiles] migration error:', err))
+    run().then(() => migratedUserIds.add(user.id)).catch(err => console.error('[useBirthProfiles] migration error:', err))
   }, [isSignedIn, user])
 
   // ── CRUD ────────────────────────────────────────────────────────────────
