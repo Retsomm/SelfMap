@@ -1,6 +1,5 @@
-import { useAuth, useOAuth, useUser } from '@clerk/expo'
+import { useAuth, useUser } from '@clerk/expo'
 import { useLocalSearchParams } from 'expo-router'
-import * as Linking from 'expo-linking'
 import * as ImagePicker from 'expo-image-picker'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
@@ -11,6 +10,7 @@ import { SubTabBar } from '@/components/SubTabBar'
 import { InputModal } from '@/components/InputModal'
 import { BirthProfileSheet } from '@/components/BirthProfileSheet'
 import ChartListView from '@/components/ChartListView'
+import { useGoogleSignIn } from '@/hooks/useGoogleSignIn'
 import {
   type BirthProfile,
   loadProfiles,
@@ -347,23 +347,7 @@ function PersonalView() {
 // ─── 未登入提示 ──────────────────────────────────────────────────────────────
 
 function SignInPrompt() {
-  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' })
-  const isLoading = useRef(false)
-
-  async function handleGoogleSignIn() {
-    if (isLoading.current) return
-    isLoading.current = true
-    try {
-      const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL('/', { scheme: 'selfmap' }),
-      })
-      if (createdSessionId) await setActive?.({ session: createdSessionId })
-    } catch (err) {
-      Alert.alert('登入失敗', err instanceof Error ? err.message : '請稍後再試')
-    } finally {
-      isLoading.current = false
-    }
-  }
+  const { handleGoogleSignIn } = useGoogleSignIn()
 
   return (
     <View style={s.signInWrap}>

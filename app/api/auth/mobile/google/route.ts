@@ -5,6 +5,8 @@ async function verifyGoogleIdToken(idToken: string) {
   const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`)
   if (!res.ok) throw new Error('Google token 驗證失敗')
   const payload = await res.json()
+  const expectedAud = process.env.GOOGLE_CLIENT_ID
+  if (expectedAud && payload.aud !== expectedAud) throw new Error('Google token audience 不符')
   if (!payload.email_verified) throw new Error('Google email 未驗證')
   return payload as {
     sub: string
