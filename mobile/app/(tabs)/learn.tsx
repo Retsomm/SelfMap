@@ -1,12 +1,12 @@
 import { useRouter } from 'expo-router'
 import {
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 

@@ -2,13 +2,15 @@ import { useAuth, useUser } from '@clerk/expo'
 import { useLocalSearchParams } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { SubTabBar } from '@/components/SubTabBar'
 import { InputModal } from '@/components/InputModal'
 import { BirthProfileSheet } from '@/components/BirthProfileSheet'
 import ChartListView from '@/components/ChartListView'
+import { useGoogleSignIn } from '@/hooks/useGoogleSignIn'
 import {
   type BirthProfile,
   loadProfiles,
@@ -342,9 +344,26 @@ function PersonalView() {
   )
 }
 
+// ─── 未登入提示 ──────────────────────────────────────────────────────────────
+
+function SignInPrompt() {
+  const { handleGoogleSignIn } = useGoogleSignIn()
+
+  return (
+    <View style={s.signInWrap}>
+      <Text style={s.signInTitle}>登入以使用帳號功能</Text>
+      <Text style={s.signInSub}>儲存圖表、出生資料與個人設定</Text>
+      <Pressable style={s.signInBtn} onPress={handleGoogleSignIn}>
+        <Text style={s.signInBtnText}>使用 Google 登入</Text>
+      </Pressable>
+    </View>
+  )
+}
+
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
+  const { isSignedIn } = useAuth()
   const [outerTab, setOuterTab] = useState<OuterTab>('charts')
   const { chartTab: rawChartTab } = useLocalSearchParams<{ chartTab?: string }>()
   const VALID_CHART_TABS = ['personal', 'composite', 'transit'] as const
@@ -352,6 +371,15 @@ export default function ProfileScreen() {
   const chartTab: ChartTab | undefined = VALID_CHART_TABS.includes(rawChartTab as ChartTab)
     ? (rawChartTab as ChartTab)
     : undefined
+
+  if (!isSignedIn) {
+    return (
+      <SafeAreaView style={s.container}>
+        <ScreenHeader title="帳號" />
+        <SignInPrompt />
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={s.container}>
@@ -411,4 +439,10 @@ const s = StyleSheet.create({
   signOutBtn:   { borderWidth: 1, borderColor: Colors.red, borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center', marginTop: Spacing.sm },
   signOutText:  { color: Colors.red, fontSize: 15, fontWeight: '600' },
   btnDisabled:  { opacity: 0.5 },
+
+  signInWrap:    { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, gap: Spacing.md },
+  signInTitle:   { fontSize: 20, fontWeight: '700', color: Colors.text, textAlign: 'center' },
+  signInSub:     { fontSize: 14, color: Colors.sub, textAlign: 'center', lineHeight: 21 },
+  signInBtn:     { backgroundColor: Colors.accent, paddingVertical: 14, paddingHorizontal: 32, borderRadius: Radius.md, width: '100%', alignItems: 'center', marginTop: Spacing.lg },
+  signInBtnText: { color: Colors.surface, fontSize: 16, fontWeight: '600' },
 })

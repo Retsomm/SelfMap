@@ -1,33 +1,12 @@
-import { useOAuth } from '@clerk/expo'
-import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
-import { useRef } from 'react'
-import { Alert, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { useGoogleSignIn } from '@/hooks/useGoogleSignIn'
 
 export default function SignInScreen() {
-  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' })
   const router = useRouter()
-  const isLoading = useRef(false)
-
-  async function handleGoogleSignIn() {
-    if (isLoading.current) return
-    isLoading.current = true
-    try {
-      const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL('/', { scheme: 'selfmap' }),
-      })
-      if (createdSessionId) {
-        await setActive?.({ session: createdSessionId })
-        router.replace('/(tabs)')
-      }
-    } catch (err) {
-      console.error('OAuth error', err)
-      Alert.alert('登入失敗', err instanceof Error ? err.message : '請稍後再試')
-    } finally {
-      isLoading.current = false
-    }
-  }
+  const { handleGoogleSignIn } = useGoogleSignIn(() => router.replace('/(tabs)'))
 
   return (
     <SafeAreaView style={styles.container}>

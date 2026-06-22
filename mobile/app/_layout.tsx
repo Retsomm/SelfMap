@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store'
 import * as WebBrowser from 'expo-web-browser'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { useEffect, useRef } from 'react'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Colors } from '@/constants/tokens'
 import { migrateLocalProfilesToDb } from '@/lib/birthProfileMigration'
@@ -26,11 +27,8 @@ if (!publishableKey) {
   throw new Error('Missing required environment variable: EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY')
 }
 
-// 不需登入即可存取的路由
-function isPublicRoute(segments: string[]): boolean {
-  if (segments[0] === '(auth)') return true
-  if (segments[0] === '(tabs)' && (segments[1] === 'create' || segments[1] === 'index' || !segments[1])) return true
-  if (segments[0] === 'chart' && segments[1] === 'preview') return true
+// 需要強制跳轉登入的路由（目前無，帳號頁在 component 內部處理未登入狀態）
+function isProtectedRoute(_segments: string[]): boolean {
   return false
 }
 
@@ -42,7 +40,7 @@ function AuthGuard() {
 
   useEffect(() => {
     if (!isLoaded) return
-    if (!isSignedIn && !isPublicRoute(segments)) {
+    if (!isSignedIn && isProtectedRoute(segments)) {
       router.replace('/(auth)/sign-in')
     } else if (isSignedIn && segments[0] === '(auth)') {
       router.replace('/(tabs)')
@@ -66,6 +64,7 @@ function AuthGuard() {
 
 export default function RootLayout() {
   return (
+    <SafeAreaProvider>
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ErrorBoundary>
         <AuthGuard />
@@ -74,8 +73,10 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="chart/preview" options={{ headerShown: true, title: '圖表預覽', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
           <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
+          <Stack.Screen name="learn/[topic]" options={{ headerShown: false }} />
         </Stack>
       </ErrorBoundary>
     </ClerkProvider>
+    </SafeAreaProvider>
   )
 }
