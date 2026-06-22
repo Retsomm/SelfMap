@@ -3,12 +3,12 @@ import { useLocalSearchParams } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { type Chart, type StoredPlanet, type CreateCompositeResult, getChart, previewCompositeChart } from '@/lib/api'
 import { HD_CENTERS_INFO } from '@/lib/hd-chart-data'
 import { normalizeCenterId, normalizeChannelId, findChannelById } from '@/lib/hd-normalizers'
