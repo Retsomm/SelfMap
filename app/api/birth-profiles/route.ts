@@ -1,4 +1,5 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
+import { after } from 'next/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
@@ -54,12 +55,13 @@ export async function GET() {
       return true
     })
 
-    // Clean up duplicates from DB asynchronously (fire-and-forget)
+    // Clean up duplicates from DB after response is sent
     if (duplicateIds.length > 0) {
       console.log(`[GET /api/birth-profiles] removing ${duplicateIds.length} duplicate(s)`)
-      prisma.birthProfile.deleteMany({ where: { id: { in: duplicateIds } } }).catch(e =>
-        console.error('[GET /api/birth-profiles] dedup cleanup error:', e)
-      )
+      after(async () => {
+        await prisma.birthProfile.deleteMany({ where: { id: { in: duplicateIds } } })
+          .catch(e => console.error('[GET /api/birth-profiles] dedup cleanup error:', e))
+      })
     }
 
     console.log(`[GET /api/birth-profiles] found=${profiles.length} unique=${uniqueProfiles.length}`)

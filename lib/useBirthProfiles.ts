@@ -72,7 +72,6 @@ export const useBirthProfiles = () => {
   // ── 首次載入：從 DB 讀取；若 DB 空且 Clerk metadata 有舊資料 → 自動遷移 ──
   useEffect(() => {
     if (!isSignedIn || !user || migratedUserIds.has(user.id)) return
-    migratedUserIds.add(user.id)
 
     const run = async () => {
       const dbData = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')
@@ -105,7 +104,7 @@ export const useBirthProfiles = () => {
       })))
     }
 
-    run().catch(err => console.error('[useBirthProfiles] migration error:', err))
+    run().then(() => migratedUserIds.add(user.id)).catch(err => console.error('[useBirthProfiles] migration error:', err))
   }, [isSignedIn, user])
 
   // ── CRUD ────────────────────────────────────────────────────────────────
