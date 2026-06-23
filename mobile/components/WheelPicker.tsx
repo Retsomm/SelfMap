@@ -39,6 +39,10 @@ export default function WheelPicker({ items, selectedIndex, onSelect, width = 80
     }
   }, [unlockScroll])
 
+  useEffect(() => {
+    return () => { doUnlock() }
+  }, [doUnlock])
+
   const handleMomentumEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       doUnlock()

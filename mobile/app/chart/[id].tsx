@@ -65,7 +65,7 @@ export default function ChartDetailScreen() {
     const needsFetch = (chart.chartKind === 'composite' || isOldComposite) && !chart.meta?.compositeResult
     if (!needsFetch) return
 
-    let payload: Parameters<typeof previewCompositeChart>[1] | null = null
+    let payload: Parameters<typeof previewCompositeChart>[0] | null = null
 
     if (chart.meta?.personA && chart.meta?.personB) {
       const pA = chart.meta.personA
@@ -95,7 +95,7 @@ export default function ChartDetailScreen() {
       if (!token) { setCompositeFetchLoading(false); return }
       const p = payload
       if (!p) { setCompositeFetchLoading(false); return }
-      return previewCompositeChart(token, p)
+      return previewCompositeChart(p)
         .then(r => setCompositeFetched(r))
         .catch(e => { console.warn('[CompositeInfo] previewCompositeChart failed:', e) })
         .finally(() => setCompositeFetchLoading(false))
