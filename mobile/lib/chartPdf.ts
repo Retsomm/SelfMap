@@ -612,7 +612,8 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
   const aAllGates = result.personA.allGates ?? []
   const bAllGates = result.personB.allGates ?? []
   const fallbackGates: number[] = []
-  if (!aAllGates.length) {
+  const useFallback = !aAllGates.length && !bAllGates.length
+  if (useFallback) {
     for (const type of ['electromagnetic', 'companionship', 'compromise', 'dominance'] as const) {
       for (const conn of result[type]) {
         for (const g of conn.aGates) fallbackGates.push(g)
@@ -626,9 +627,9 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
     type: '', authority: '', profile: '', definition: '',
     centers: result.compositeDefinedCenterIds,
     channels: result.compositeDefinedChannelIds ?? [],
-    gates: aAllGates.length ? [...new Set([...aAllGates, ...bAllGates])] : [...new Set(fallbackGates)],
-    personalityGates: aAllGates.length ? aAllGates : [],
-    designGates: bAllGates.length ? bAllGates : [],
+    gates: useFallback ? [...new Set(fallbackGates)] : [...new Set([...aAllGates, ...bAllGates])],
+    personalityGates: useFallback ? [] : aAllGates,
+    designGates: useFallback ? [] : bAllGates,
   }
   const svgMarkup = buildBodyGraphSvg(svgChart)
 

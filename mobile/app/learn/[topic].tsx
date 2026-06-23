@@ -26,6 +26,7 @@ const TITLE: Record<string, string> = {
   transit:    '流日',
   composite:  '合圖分析',
 }
+const SUPPORTED_TOPICS = new Set(Object.keys(TITLE))
 
 export default function TopicScreen() {
   const { topic } = useLocalSearchParams<{ topic: string }>()
@@ -50,7 +51,7 @@ export default function TopicScreen() {
       {topic === 'gate'       && <GateList />}
       {topic === 'transit'    && <TransitLearn />}
       {topic === 'composite'  && <CompositeLearn />}
-      {!['type','authority','profile','definition','center','channel','gate','transit','composite'].includes(topic) && (
+      {!SUPPORTED_TOPICS.has(topic) && (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: Colors.sub, fontSize: 15 }}>此主題尚未支援</Text>
         </View>
