@@ -1,4 +1,5 @@
 import { useSSO } from '@clerk/expo'
+import * as AuthSession from 'expo-auth-session'
 import * as WebBrowser from 'expo-web-browser'
 import { useEffect } from 'react'
 
@@ -14,10 +15,15 @@ export function useGoogleSignIn(onSuccess?: () => void) {
 
   async function handleGoogleSignIn() {
     try {
-      const { createdSessionId, setActive } = await startSSOFlow({ strategy: 'oauth_google' })
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: 'oauth_google',
+        redirectUrl: AuthSession.makeRedirectUri(),
+      })
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId })
         onSuccess?.()
+      } else {
+        throw new Error('Google 登入未完成，請重試')
       }
     } catch (err) {
       console.error('[GoogleSignIn]', err)
