@@ -122,8 +122,8 @@ export default function CompositeInfo({
         {[
           { label: nameA, p: personA, color: '#c8553d' },
           { label: nameB, p: personB, color: C.text },
-        ].map(({ label, p, color }) => (
-          <View key={label} style={c.personCard}>
+        ].map(({ label, p, color }, idx) => (
+          <View key={idx} style={c.personCard}>
             <Text style={[c.personName, { color }]}>{label}</Text>
             <Text style={c.personSub}>{p?.birthDate ?? '—'}</Text>
             <Text style={c.personSub}>{p?.birthCity ?? '—'}</Text>
@@ -167,7 +167,7 @@ export default function CompositeInfo({
                   : <Text style={c.connEmpty}>正在載入連結分析…</Text>}
               </View>
             ) : (['electromagnetic', 'companionship', 'compromise', 'dominance'] as const).map(type => {
-              const items = result[type]
+              const items = result[type] ?? []
               const cfg   = CONN_CFG[type]
               return (
                 <View key={type} style={[c.connGroup, { borderColor: cfg.accentColor + '55' }]}>
@@ -251,8 +251,8 @@ export default function CompositeInfo({
             {[
               { label: `${nameA} 的權威`, p: personA, color: '#c8553d' },
               { label: `${nameB} 的權威`, p: personB, color: C.text },
-            ].map(({ label, p, color }) => (
-              <View key={label} style={[c.authorityCard, { borderLeftColor: color }]}>
+            ].map(({ label, p, color }, idx) => (
+              <View key={idx} style={[c.authorityCard, { borderLeftColor: color }]}>
                 <Text style={c.authorityLabel}>{label}</Text>
                 <Text style={[c.authorityName, { color }]}>{p?.authority ?? '—'}</Text>
                 {p?.authorityTip ? <Text style={c.authorityTip}>{p.authorityTip}</Text> : null}

@@ -167,14 +167,28 @@ export function deleteChart(token: string, id: string) {
 
 // ─── Composite create (兩份出生資料 → 一筆合圖) ─────────────────────────────
 
+export type CompositePlanet = {
+  name: string
+  blackGate: number
+  blackLine: number
+  redGate: number
+  redLine: number
+}
+
 export type CompositePersonMeta = {
   name: string | null
   birthDate: string
+  birthTime: string
   birthCity: string
+  timezone: string
   type: string
   profile: string
-  authority?: string
-  authorityTip?: string
+  authority: string
+  authorityTip: string
+  allGates: number[]
+  personalityGates: number[]
+  designGates: number[]
+  planets: CompositePlanet[]
 }
 
 export type CreateCompositeResult = {
@@ -183,6 +197,7 @@ export type CreateCompositeResult = {
   compositeDefinedCount: number
   compositeOpenCount: number
   compositeDefinedCenterIds: string[]
+  compositeDefinedChannelIds: string[]
   electromagnetic: ConnectionDynamic[]
   companionship: ConnectionDynamic[]
   compromise: ConnectionDynamic[]

@@ -67,40 +67,46 @@ export async function POST(req: NextRequest) {
     )
 
     const compositeResult = {
-      integrationTheme:          composite.integrationTheme,
-      compositeDefinedCount:     composite.compositeDefinedCount,
-      compositeOpenCount:        composite.compositeOpenCount,
-      compositeDefinedCenterIds: [...composite.compositeDefinedCenterIds],
-      electromagnetic:           composite.electromagnetic,
-      companionship:             composite.companionship,
-      compromise:                composite.compromise,
-      dominance:                 composite.dominance,
-      profileResonance:          composite.profileResonance,
+      integrationTheme:            composite.integrationTheme,
+      compositeDefinedCount:       composite.compositeDefinedCount,
+      compositeOpenCount:          composite.compositeOpenCount,
+      compositeDefinedCenterIds:   [...composite.compositeDefinedCenterIds],
+      compositeDefinedChannelIds:  composite.compositeDefinedChannels.map(ch => ch.id),
+      electromagnetic:             composite.electromagnetic,
+      companionship:               composite.companionship,
+      compromise:                  composite.compromise,
+      dominance:                   composite.dominance,
+      profileResonance:            composite.profileResonance,
     }
 
+    const buildPersonMeta = (
+      payload: BirthPayload,
+      hd: Awaited<ReturnType<typeof computeHdResultServer>>,
+    ) => ({
+      name:             payload.name || null,
+      birthDate:        payload.birthDate,
+      birthTime:        payload.birthTime,
+      birthCity:        payload.birthCity,
+      timezone:         payload.timezone,
+      type:             hd.type,
+      profile:          hd.profile.profile,
+      authority:        hd.authority.name,
+      authorityTip:     hd.authority.tip,
+      allGates:         [...hd.allGates],
+      personalityGates: hd.planets.map(p => p.black.gate),
+      designGates:      hd.planets.map(p => p.red.gate),
+      planets:          hd.planets.map(p => ({
+        name:      p.planetName,
+        blackGate: p.black.gate,
+        blackLine: p.black.line,
+        redGate:   p.red.gate,
+        redLine:   p.red.line,
+      })),
+    })
+
     const meta = {
-      personA: {
-        name:          personA.name   || null,
-        birthDate:     personA.birthDate,
-        birthTime:     personA.birthTime,
-        birthCity:     personA.birthCity,
-        timezone:      personA.timezone,
-        type:          hdA.type,
-        profile:       hdA.profile.profile,
-        authority:     hdA.authority.name,
-        authorityTip:  hdA.authority.tip,
-      },
-      personB: {
-        name:          personB.name   || null,
-        birthDate:     personB.birthDate,
-        birthTime:     personB.birthTime,
-        birthCity:     personB.birthCity,
-        timezone:      personB.timezone,
-        type:          hdB.type,
-        profile:       hdB.profile.profile,
-        authority:     hdB.authority.name,
-        authorityTip:  hdB.authority.tip,
-      },
+      personA: buildPersonMeta(personA, hdA),
+      personB: buildPersonMeta(personB, hdB),
     }
 
     // 未登入或 previewOnly：只回傳分析結果，不存 DB
