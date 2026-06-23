@@ -7,10 +7,12 @@ import {
   HD_PROFILE_CONTENT,
   HD_DEFINITION_CONTENT,
 } from '@/lib/hd-summary-data'
-import { SummaryList } from '@/components/learn/SummaryList'
-import { CenterList }  from '@/components/learn/CenterList'
-import { ChannelList } from '@/components/learn/ChannelList'
-import { GateList }    from '@/components/learn/GateList'
+import { SummaryList }    from '@/components/learn/SummaryList'
+import { CenterList }     from '@/components/learn/CenterList'
+import { ChannelList }    from '@/components/learn/ChannelList'
+import { GateList }       from '@/components/learn/GateList'
+import { TransitLearn }   from '@/components/learn/TransitLearn'
+import { CompositeLearn } from '@/components/learn/CompositeLearn'
 import { Colors, Spacing } from '@/constants/tokens'
 
 const TITLE: Record<string, string> = {
@@ -21,7 +23,10 @@ const TITLE: Record<string, string> = {
   center:     '九大中心',
   channel:    '通道',
   gate:       '閘門',
+  transit:    '流日',
+  composite:  '合圖分析',
 }
+const SUPPORTED_TOPICS = new Set(Object.keys(TITLE))
 
 export default function TopicScreen() {
   const { topic } = useLocalSearchParams<{ topic: string }>()
@@ -44,7 +49,9 @@ export default function TopicScreen() {
       {topic === 'center'     && <CenterList />}
       {topic === 'channel'    && <ChannelList />}
       {topic === 'gate'       && <GateList />}
-      {!['type','authority','profile','definition','center','channel','gate'].includes(topic) && (
+      {topic === 'transit'    && <TransitLearn />}
+      {topic === 'composite'  && <CompositeLearn />}
+      {!SUPPORTED_TOPICS.has(topic) && (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: Colors.sub, fontSize: 15 }}>此主題尚未支援</Text>
         </View>

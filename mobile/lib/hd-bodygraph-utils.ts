@@ -15,17 +15,25 @@ export interface BodyGraphProps {
  */
 export function buildCompositeBodyGraphProps(result: CreateCompositeResult): BodyGraphProps {
   const definedCenterIds  = new Set(result.compositeDefinedCenterIds.map(normalizeCenterId))
-  const definedChannelIds = new Set<string>([
-    ...result.electromagnetic.map(c => normalizeChannelId(c.channelId)),
-    ...result.companionship.map(c => normalizeChannelId(c.channelId)),
-    ...result.compromise.map(c => normalizeChannelId(c.channelId)),
-    ...result.dominance.map(c => normalizeChannelId(c.channelId)),
-  ])
+  const definedChannelIds = new Set(
+    (result.compositeDefinedChannelIds ?? [
+      ...result.electromagnetic.map(c => c.channelId),
+      ...result.companionship.map(c => c.channelId),
+      ...result.compromise.map(c => c.channelId),
+      ...result.dominance.map(c => c.channelId),
+    ]).map(normalizeChannelId)
+  )
   const activations: BodyGraphProps['activations'] = {}
-  for (const type of ['electromagnetic', 'companionship', 'compromise', 'dominance'] as const) {
-    for (const conn of result[type]) {
-      for (const g of conn.aGates) activations[g] = { ...activations[g], c: true }
-      for (const g of conn.bGates) activations[g] = { ...activations[g], u: true }
+  if (result.personA.allGates?.length && result.personB.allGates?.length) {
+    for (const g of result.personA.allGates) activations[g] = { ...activations[g], c: true }
+    for (const g of result.personB.allGates) activations[g] = { ...activations[g], u: true }
+  } else {
+    // Fallback for old API responses without allGates
+    for (const type of ['electromagnetic', 'companionship', 'compromise', 'dominance'] as const) {
+      for (const conn of result[type]) {
+        for (const g of conn.aGates) activations[g] = { ...activations[g], c: true }
+        for (const g of conn.bGates) activations[g] = { ...activations[g], u: true }
+      }
     }
   }
   return { definedCenterIds, definedChannelIds, activations }

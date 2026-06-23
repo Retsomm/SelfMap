@@ -35,18 +35,29 @@ import { Colors, Radius, Spacing } from '@/constants/tokens'
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 
 const CONN_CFG = {
-  electromagnetic: { label: '電磁連結', color: Colors.em,    bg: Colors.emDimBg,     icon: '⚡', desc: '兩人各有通道一半，在一起時被完整激活，帶來強烈吸引力。' },
-  companionship:   { label: '陪伴連結', color: Colors.comp,  bg: Colors.compDimBg,   icon: '🤝', desc: '兩人同時擁有完整通道，帶來穩定陪伴感。' },
-  compromise:      { label: '妥協連結', color: Colors.compro,bg: Colors.comproDimBg, icon: '⚖️', desc: '一方有完整通道，另一方只有一端，容易出現調整需求。' },
-  dominance:       { label: '支配連結', color: Colors.dom,   bg: Colors.domDimBg,    icon: '🎯', desc: '能量可能出現主導或覆蓋的動態。' },
+  electromagnetic: { label: '電磁關係 (Electromagnetic)', color: Colors.em,    bg: Colors.emDimBg,     desc: '互補吸引 — 一方有 A 閘門，另一方有 B 閘門，合力激活完整通道。最經典的「致命吸引力」，容易一見鍾情但也容易相愛相殺。' },
+  companionship:   { label: '陪伴關係 (Companionship)',   color: Colors.comp,  bg: Colors.compDimBg,   desc: '默契安全 — 兩人擁有相同的閘門或通道，相處起來最不費力，如靈魂伴侶或老朋友。' },
+  compromise:      { label: '妥協關係 (Compromise)',      color: Colors.compro,bg: Colors.comproDimBg, desc: '關係摩擦源 — 一方擁有完整通道，另一方只有其中一個閘門，長期易累積委屈與不平衡感。' },
+  dominance:       { label: '支配關係 (Dominance)',       color: Colors.dom,   bg: Colors.domDimBg,    desc: '單向引導 — 一方在某條通道有能量，另一方完全開放，空白的那方會單向受到能量制約。' },
 } as const
 
-const THEME_DESC: Record<string, string> = {
-  '9+0':  '你們合圖激活了全部 9 個中心，幾乎不需要外部補全。',
-  '8+1':  '你們合圖激活了 8 個中心，對外界保有一份彈性。',
-  '7+2':  '你們合圖激活了 7 個中心，對特定議題保有學習空間。',
-  '6+3+': '你們合圖激活了 6 個或更少中心，容易被第三方影響。',
+type IntegrationKey = 'theme9_0' | 'theme8_1' | 'theme7_2' | 'theme6_3'
+
+const THEME_CFG: Record<string, { key: IntegrationKey; label: string; love: string; work: string }> = {
+  '9+0':  { key: 'theme9_0', label: '全滿（9+0）— Nowhere to go',    love: '極度甜蜜與黏人。能量場完全自給自足，外人很難融入。兩人會深深沉浸在彼此的世界中，但也容易因為缺乏外在刺激而感到窒息或過度封閉。',         work: '過於封閉。團隊內部可能非常有默契，但極易忽略外部市場的變化或同事、客戶的客觀意見。' },
+  '8+1':  { key: 'theme8_1', label: '8+1 — Have some fun',            love: '最舒服的互動模式。彼此有足夠的能量連結，同時留有「空白」作為陽光照進來的窗口。雙方擁有各自呼吸與消化的空間，關係健康且長久。',             work: '黃金搭檔。既有共同努力的交集，又有一起去體驗、探索外部世界的窗口。' },
+  '7+2':  { key: 'theme7_2', label: '7+2 — Work to do',               love: '最舒服的互動模式之一。保有兩個空白中心，彼此連結同時仍有足夠的獨立呼吸空間，長期相處不易窒息。',                                             work: '黃金搭檔。既有共同努力的交集，又有兩扇開放的窗口迎接外在刺激與機會。' },
+  '6+3+': { key: 'theme6_3', label: '6+3+ — Better to be free',       love: '連結感較淡。兩人在一起時仍有太多未定因素，容易流於平淡或像朋友。通常需要藉由共同的興趣、小孩或外在媒介來維繫緊密感。',                     work: '適合團隊合作。保持高度的獨立性與自由度，不會對彼此造成過度制約，適合鬆散型的專案合作或大團隊中的平行分工。' },
 }
+
+const LINE_RESONANCE: { line: number; label: string; desc: string }[] = [
+  { line: 1, label: '1 爻共鳴', desc: '兩人都需要足夠的安全感與底層研究，能深深理解彼此打基礎的必要。' },
+  { line: 2, label: '2 爻共鳴', desc: '兩人都需要獨處與等待被呼喚的空間，彼此能體諒對方的隱士特質。' },
+  { line: 3, label: '3 爻共鳴', desc: '兩人都能理解試錯與碰撞的學習過程，不會因為失敗而互相責備。' },
+  { line: 4, label: '4 爻共鳴', desc: '兩人都重視人脈與穩定的社群，能在圈子建設上形成默契。' },
+  { line: 5, label: '5 爻共鳴', desc: '兩人都帶有被投射的特質，需要互相留意實際的期待落差。' },
+  { line: 6, label: '6 爻共鳴', desc: '兩人都有長遠的人生週期觀，能理解彼此不同階段的冷靜與退後。' },
+]
 
 
 
@@ -253,6 +264,26 @@ export default function CompositeView() {
         </>
       ) : (
         <>
+          {/* 人物資訊 header */}
+          {(() => {
+            const nameA = result.personA.name ?? 'A'
+            const nameB = result.personB.name ?? 'B'
+            return (
+              <View style={s.personHeader}>
+                <View style={s.personHeaderCol}>
+                  <Text style={[s.personHeaderName, { color: Colors.accent }]}>{nameA}</Text>
+                  <Text style={s.personHeaderDate}>{result.personA.birthDate} · {result.personA.birthTime}</Text>
+                  <Text style={s.personHeaderCity}>{result.personA.birthCity}</Text>
+                </View>
+                <View style={[s.personHeaderCol, { alignItems: 'flex-end' }]}>
+                  <Text style={s.personHeaderName}>{nameB}</Text>
+                  <Text style={s.personHeaderDate}>{result.personB.birthDate} · {result.personB.birthTime}</Text>
+                  <Text style={s.personHeaderCity}>{result.personB.birthCity}</Text>
+                </View>
+              </View>
+            )
+          })()}
+
           {/* 合圖 Body Graph */}
           {(() => {
             const { definedCenterIds, definedChannelIds, activations } = buildCompositeBodyGraphProps(result)
@@ -261,7 +292,7 @@ export default function CompositeView() {
                 <View style={s.graphCardHeader}>
                   <Text style={s.sectionLabel}>合圖 Body Graph</Text>
                   <Text style={s.muted}>
-                    黑色 = {result.personA.name ?? '人物 A'}　紅色 = {result.personB.name ?? '人物 B'}
+                    黑色 = {result.personA.name ?? 'A'}　紅色 = {result.personB.name ?? 'B'}
                   </Text>
                 </View>
                 <View style={s.graphContainer}>
@@ -276,62 +307,153 @@ export default function CompositeView() {
             )
           })()}
 
-          {/* 合圖整合主題 */}
-          <View style={s.card}>
-            <Text style={s.sectionLabel}>合圖整合主題</Text>
-            <Text style={s.bigNum}>{result.integrationTheme}</Text>
-            <Text style={[s.muted, { lineHeight: 20, marginBottom: 14 }]}>
-              {THEME_DESC[result.integrationTheme] ?? ''}
-            </Text>
-            <View style={s.statRow}>
-              <View style={s.statBox}>
-                <Text style={s.statNum}>{result.compositeDefinedCount}</Text>
-                <Text style={s.muted}>已定義中心</Text>
+          {/* 行星閘門對照 */}
+          {(result.personA.planets?.length ?? 0) > 0 && (
+            <View style={s.card}>
+              <Text style={[s.sectionLabel, { marginBottom: Spacing.md }]}>行星閘門對照</Text>
+              {/* Header */}
+              <View style={[s.planetRow, { borderBottomWidth: 1, borderBottomColor: Colors.border, paddingBottom: 6 }]}>
+                <Text style={[s.planetPlanetCol, s.planetHeaderText]}>行星</Text>
+                <Text style={[s.planetGateCol, s.planetHeaderText, { color: Colors.accent }]}>A（意識）</Text>
+                <Text style={[s.planetGateCol, s.planetHeaderText, { color: Colors.text }]}>B（意識）</Text>
               </View>
-              <View style={s.statBox}>
-                <Text style={[s.statNum, { color: Colors.muted }]}>{result.compositeOpenCount}</Text>
-                <Text style={s.muted}>開放中心</Text>
-              </View>
-              {result.profileResonance.length > 0 && (
-                <View style={s.statBox}>
-                  <Text style={[s.statNum, { color: Colors.em, fontSize: 16 }]}>
-                    {result.profileResonance.join('、')} 爻
-                  </Text>
-                  <Text style={s.muted}>共鳴角色</Text>
-                </View>
-              )}
+              {(result.personA.planets ?? []).map((p, i) => {
+                const pb = result.personB.planets?.[i]
+                return (
+                  <View key={p.name} style={[s.planetRow, i % 2 === 1 && s.planetRowAlt]}>
+                    <Text style={s.planetPlanetCol}>{p.name}</Text>
+                    <Text style={[s.planetGateCol, { color: Colors.accent }]}>{p.blackGate}.{p.blackLine}</Text>
+                    <Text style={[s.planetGateCol, { color: Colors.text }]}>{pb?.blackGate}.{pb?.blackLine}</Text>
+                  </View>
+                )
+              })}
             </View>
-          </View>
+          )}
 
-          {/* 連結動態 */}
-          {(['electromagnetic', 'companionship', 'compromise', 'dominance'] as const).map(type => {
-            const items = result[type]
-            if (items.length === 0) return null
-            const cfg = CONN_CFG[type]
+          {/* 能量場整合主題 */}
+          {(() => {
+            const theme = THEME_CFG[result.integrationTheme] ?? THEME_CFG['6+3+']
             return (
-              <View key={type} style={s.card}>
-                <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm }}>
-                  <Text style={{ fontSize: 20 }}>{cfg.icon}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[s.connLabel, { color: cfg.color }]}>
-                      {cfg.label}（{items.length}）
-                    </Text>
-                    <Text style={s.muted}>{cfg.desc}</Text>
+              <View style={s.card}>
+                <Text style={s.sectionLabel}>能量場整合主題</Text>
+                <View style={s.statRow}>
+                  <View style={s.statBox}>
+                    <Text style={s.statNum}>{result.integrationTheme}</Text>
+                    <Text style={s.muted}>整合主題</Text>
+                  </View>
+                  <View style={s.statBox}>
+                    <Text style={s.statNum}>{result.compositeDefinedCount}</Text>
+                    <Text style={s.muted}>已定義中心</Text>
+                  </View>
+                  <View style={s.statBox}>
+                    <Text style={[s.statNum, { color: Colors.muted }]}>{result.compositeOpenCount}</Text>
+                    <Text style={s.muted}>開放中心</Text>
                   </View>
                 </View>
-                <View style={{ borderTopWidth: 1, borderColor: cfg.color + '33', marginBottom: Spacing.sm }} />
-                {items.map(conn => (
-                  <View key={conn.channelId} style={[s.connRow, { backgroundColor: cfg.bg }]}>
-                    <Text style={[s.connId, { color: cfg.color }]}>{conn.channelId}</Text>
-                    <Text style={s.muted}>
-                      {result.personA.name ?? 'A'}：{conn.aGates.join('+')} ／{' '}
-                      {result.personB.name ?? 'B'}：{conn.bGates.join('+') || '—'}
-                    </Text>
+                <Text style={[s.themeLabel, { marginTop: Spacing.md }]}>{theme.label}</Text>
+                <View style={s.themeSplit}>
+                  <View style={s.themeBlock}>
+                    <Text style={s.themeBlockTitle}>戀愛關係</Text>
+                    <Text style={s.themeBlockText}>{theme.love}</Text>
+                  </View>
+                  <View style={s.themeBlock}>
+                    <Text style={s.themeBlockTitle}>工作夥伴</Text>
+                    <Text style={s.themeBlockText}>{theme.work}</Text>
+                  </View>
+                </View>
+              </View>
+            )
+          })()}
+
+          {/* 四種核心連結動力 */}
+          <View style={s.card}>
+            <Text style={[s.sectionLabel, { marginBottom: Spacing.md }]}>四種核心連結動力</Text>
+            {(['electromagnetic', 'companionship', 'compromise', 'dominance'] as const).map(type => {
+              const items = result[type] ?? []
+              const cfg = CONN_CFG[type]
+              return (
+                <View key={type} style={[s.connGroup, { borderColor: cfg.color + '55' }]}>
+                  <View style={[s.connGroupHeader, { backgroundColor: cfg.bg }]}>
+                    <Text style={[s.connLabel, { color: cfg.color }]}>{cfg.label}（{items.length}）</Text>
+                    <Text style={s.connDesc}>{cfg.desc}</Text>
+                  </View>
+                  {items.length === 0 ? (
+                    <Text style={[s.muted, { padding: Spacing.sm, fontSize: 12 }]}>無相關通道</Text>
+                  ) : (
+                    items.map((conn, i) => (
+                      <View key={conn.channelId} style={[s.connRow, i % 2 === 1 && { backgroundColor: Colors.altRowBg }]}>
+                        <Text style={[s.connId, { color: cfg.color, minWidth: 70 }]}>{conn.channelId}</Text>
+                        <View style={{ flex: 1 }}>
+                          <Text style={s.muted}>
+                            {result.personA.name ?? 'A'}：{conn.aGates.length > 0 ? conn.aGates.join(', ') : '—'}
+                          </Text>
+                          <Text style={s.muted}>
+                            {result.personB.name ?? 'B'}：{conn.bGates.length > 0 ? conn.bGates.join(', ') : '—'}
+                          </Text>
+                        </View>
+                      </View>
+                    ))
+                  )}
+                </View>
+              )
+            })}
+          </View>
+
+          {/* 合圖定義通道 */}
+          {(result.compositeDefinedChannelIds ?? []).length > 0 && (
+            <View style={s.card}>
+              <Text style={[s.sectionLabel, { marginBottom: Spacing.sm }]}>
+                合圖定義通道（{(result.compositeDefinedChannelIds ?? []).length}）
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {(result.compositeDefinedChannelIds ?? []).map(ch => (
+                  <View key={ch} style={s.channelTag}>
+                    <Text style={s.channelTagText}>{ch}</Text>
                   </View>
                 ))}
               </View>
-            )
-          })}
+            </View>
+          )}
+
+          {/* 人生角色共鳴 */}
+          <View style={s.card}>
+            <Text style={s.sectionLabel}>人生角色共鳴</Text>
+            <View style={{ flexDirection: 'row', gap: Spacing.md, marginVertical: Spacing.sm }}>
+              <Text style={[s.profileLabel, { color: Colors.accent }]}>
+                {result.personA.name ?? 'A'} {result.personA.profile}
+              </Text>
+              <Text style={s.profileLabel}>
+                {result.personB.name ?? 'B'} {result.personB.profile}
+              </Text>
+            </View>
+            {(result.profileResonance?.length ?? 0) === 0 ? (
+              <Text style={[s.muted, { lineHeight: 20 }]}>兩人人生角色沒有共同爻線，各自的觀點框架較為不同。</Text>
+            ) : (
+              LINE_RESONANCE.filter(lr => result.profileResonance?.includes(lr.line)).map(lr => (
+                <View key={lr.line} style={s.resonanceRow}>
+                  <Text style={s.resonanceLabel}>{lr.label}</Text>
+                  <Text style={[s.muted, { lineHeight: 20 }]}>{lr.desc}</Text>
+                </View>
+              ))
+            )}
+          </View>
+
+          {/* 策略與內在權威 */}
+          <View style={s.card}>
+            <Text style={[s.sectionLabel, { marginBottom: Spacing.md }]}>策略與內在權威</Text>
+            {([
+              { label: `${result.personA.name ?? 'A'} 的權威`, meta: result.personA, color: Colors.accent },
+              { label: `${result.personB.name ?? 'B'} 的權威`, meta: result.personB, color: Colors.text },
+            ] as const).map(({ label, meta, color }, idx) => (
+              <View key={idx} style={[s.authorityCard, { borderLeftColor: color }]}>
+                <Text style={s.authorityLabel}>{label}</Text>
+                <Text style={[s.authorityName, { color }]}>{meta.authority ?? ''}</Text>
+                {meta.authorityTip ? (
+                  <Text style={[s.muted, { lineHeight: 20 }]}>{meta.authorityTip}</Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
 
           {/* 三個行動按鈕 */}
           <View style={s.actionSection}>
@@ -379,13 +501,46 @@ const s = StyleSheet.create({
   graphCard:       { backgroundColor: Colors.surface, borderRadius: Radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border },
   graphCardHeader: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm },
   graphContainer:  { width: '100%', aspectRatio: 590 / 1030 },
-  bigNum:         { fontSize: 36, fontWeight: '800', color: Colors.accent, marginBottom: 6 },
   statRow:        { flexDirection: 'row', gap: Spacing.sm },
   statBox:        { flex: 1, backgroundColor: Colors.bg, borderRadius: Radius.md, padding: Spacing.md, alignItems: 'center' },
   statNum:        { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 2 },
-  connLabel:      { fontSize: 14, fontWeight: '700', marginBottom: 2 },
-  connRow:        { borderRadius: Radius.sm, padding: 10, marginBottom: 6 },
-  connId:         { fontSize: 14, fontWeight: '700', marginBottom: 3 },
+  // Person header
+  personHeader:     { flexDirection: 'row', backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border, gap: Spacing.md },
+  personHeaderCol:  { flex: 1 },
+  personHeaderName: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 2 },
+  personHeaderDate: { fontSize: 11, color: Colors.sub },
+  personHeaderCity: { fontSize: 11, color: Colors.muted },
+  // Planet table
+  planetRow:        { flexDirection: 'row', paddingVertical: 5 },
+  planetRowAlt:     { backgroundColor: Colors.altRowBg },
+  planetPlanetCol:  { flex: 1.2, fontSize: 12, color: Colors.sub },
+  planetGateCol:    { flex: 1, fontSize: 13, fontWeight: '700' },
+  planetHeaderText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: 0.5 },
+  // Theme
+  themeLabel:    { fontSize: 15, fontWeight: '700', color: Colors.accent, marginBottom: Spacing.sm },
+  themeSplit:    { gap: Spacing.sm },
+  themeBlock:    { backgroundColor: Colors.bg, borderRadius: Radius.md, padding: Spacing.md },
+  themeBlockTitle: { fontSize: 10, fontWeight: '700', color: Colors.muted, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 4 },
+  themeBlockText:  { fontSize: 13, color: Colors.sub, lineHeight: 20 },
+  // Connections
+  connGroup:       { borderWidth: 1, borderRadius: Radius.md, overflow: 'hidden', marginBottom: Spacing.sm },
+  connGroupHeader: { padding: Spacing.md },
+  connLabel:       { fontSize: 13, fontWeight: '700', marginBottom: 2 },
+  connDesc:        { fontSize: 12, color: Colors.sub, lineHeight: 18 },
+  connRow:         { flexDirection: 'row', padding: 10, gap: Spacing.sm },
+  connId:          { fontSize: 13, fontWeight: '700' },
+  // Channels
+  channelTag:     { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm, paddingHorizontal: 8, paddingVertical: 3 },
+  channelTagText: { fontSize: 12, color: Colors.text, fontWeight: '600' },
+  // Profile resonance
+  profileLabel:   { fontSize: 15, fontWeight: '700', color: Colors.text },
+  resonanceRow:   { marginTop: Spacing.sm, gap: 2 },
+  resonanceLabel: { fontSize: 13, fontWeight: '700', color: Colors.accent },
+  // Authority
+  authorityCard:  { borderLeftWidth: 3, paddingLeft: Spacing.md, marginBottom: Spacing.md, gap: 4 },
+  authorityLabel: { fontSize: 10, fontWeight: '700', color: Colors.muted, textTransform: 'uppercase' as const, letterSpacing: 0.8 },
+  authorityName:  { fontSize: 17, fontWeight: '700' },
+  // Buttons
   primaryBtn:     { backgroundColor: Colors.accent, borderRadius: Radius.lg, padding: 14, alignItems: 'center' },
   primaryBtnText: { color: Colors.bg, fontWeight: '700', fontSize: 15 },
   outlineBtn:     { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm, padding: Spacing.md, alignItems: 'center' },

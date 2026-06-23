@@ -4,7 +4,7 @@ import { findChannelById } from '@/lib/hd-normalizers'
 import { Colors, Spacing } from '@/constants/tokens'
 
 const LIB_CENTER_ZH: Record<string, string> = {
-  head: '頭腦中心', ajna: '心智中心', throat: '喉嚨中心', g: 'G 中心',
+  head: '頭腦中心', ajna: '邏輯中心', throat: '喉嚨中心', g: 'G 中心',
   ego: '意志力中心', heart: '意志力中心',
   solarPlexus: '情緒中心', solar: '情緒中心',
   spleen: '脾臟中心', sacral: '薦骨中心', root: '根部中心',
@@ -122,8 +122,8 @@ export default function CompositeInfo({
         {[
           { label: nameA, p: personA, color: '#c8553d' },
           { label: nameB, p: personB, color: C.text },
-        ].map(({ label, p, color }) => (
-          <View key={label} style={c.personCard}>
+        ].map(({ label, p, color }, idx) => (
+          <View key={idx} style={c.personCard}>
             <Text style={[c.personName, { color }]}>{label}</Text>
             <Text style={c.personSub}>{p?.birthDate ?? '—'}</Text>
             <Text style={c.personSub}>{p?.birthCity ?? '—'}</Text>
@@ -167,7 +167,7 @@ export default function CompositeInfo({
                   : <Text style={c.connEmpty}>正在載入連結分析…</Text>}
               </View>
             ) : (['electromagnetic', 'companionship', 'compromise', 'dominance'] as const).map(type => {
-              const items = result[type]
+              const items = result[type] ?? []
               const cfg   = CONN_CFG[type]
               return (
                 <View key={type} style={[c.connGroup, { borderColor: cfg.accentColor + '55' }]}>
@@ -251,8 +251,8 @@ export default function CompositeInfo({
             {[
               { label: `${nameA} 的權威`, p: personA, color: '#c8553d' },
               { label: `${nameB} 的權威`, p: personB, color: C.text },
-            ].map(({ label, p, color }) => (
-              <View key={label} style={[c.authorityCard, { borderLeftColor: color }]}>
+            ].map(({ label, p, color }, idx) => (
+              <View key={idx} style={[c.authorityCard, { borderLeftColor: color }]}>
                 <Text style={c.authorityLabel}>{label}</Text>
                 <Text style={[c.authorityName, { color }]}>{p?.authority ?? '—'}</Text>
                 {p?.authorityTip ? <Text style={c.authorityTip}>{p.authorityTip}</Text> : null}

@@ -27,7 +27,7 @@ const AUTHORITY_ZH_TO_KEY: Record<string, string> = {
   '脾中心權威':  'Splenic',
   '意志力權威':  'Ego',
   '自我投射權威': 'Self-Projected',
-  '心智權威':     'Mental',
+  '邏輯權威':     'Mental',
   '月亮週期權威': 'Lunar',
 }
 

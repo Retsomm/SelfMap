@@ -36,7 +36,7 @@ const PLANET_SYM: Record<string, string> = {
 }
 
 const CENTER_ZH: Record<string, string> = {
-  head: '頭頂', ajna: '心智', throat: '喉嚨', g: 'G',
+  head: '頭頂', ajna: '邏輯', throat: '喉嚨', g: 'G',
   ego: '意志力', sacral: '薦骨', solarPlexus: '情緒',
   spleen: '脾臟', root: '根部',
 }
@@ -249,19 +249,6 @@ export default function TransitView() {
             ))}
           </View>
 
-          {result.transit.definedCenterIds.length > 0 && (
-            <View style={s.card}>
-              <Text style={s.sectionLabel}>今日流日定義中心（{result.transit.definedCenterIds.length}）</Text>
-              <View style={s.chipRow}>
-                {result.transit.definedCenterIds.map(c => (
-                  <View key={c} style={[s.chip, { backgroundColor: Colors.transitChipBg }]}>
-                    <Text style={[s.chipText, { color: Colors.transit }]}>{CENTER_ZH[c] ?? c}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
           {/* 流日影響 */}
           {result.impact.layers.length === 0 ? (
             <View style={s.card}>
@@ -273,18 +260,25 @@ export default function TransitView() {
                 const layers = result.impact.layers.filter(l => l.kind === kind)
                 if (layers.length === 0) return null
                 const cfg = IMPACT_CFG[kind]
+                const SHARED_DESC: Record<typeof kind, string> = {
+                  'center-activated':   '這些原本開放的中心今天借到了「限定體驗卡」，可以善用這股暫時的能量去執行或創作，但不建議在這些地方做出長期承諾——能量退去後，條件會不同。',
+                  'new-channel':        '流日帶給你的限定天賦，可以借來執行任務、享受那股靈感。只是記得這件衣服明天會換掉，不要在它還穿著的時候做需要長久負責的承諾。',
+                  'completing-channel': '你本身擁有一半，今天流日借你補齊了另一半，讓你短暫體驗完整通道的感覺。這股能量來了可以好好享用，能量退潮後回到原本的節奏就好。',
+                }
                 return (
                   <View key={kind} style={[s.card, { borderLeftWidth: 3, borderLeftColor: cfg.color }]}>
                     <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: 8 }}>
                       <Text style={{ fontSize: 18 }}>{cfg.icon}</Text>
                       <Text style={[s.impactKind, { color: cfg.color, alignSelf: 'center' }]}>{cfg.label}</Text>
                     </View>
-                    {layers.map((layer, i) => (
-                      <View key={i} style={i > 0 ? { borderTopWidth: 1, borderTopColor: `${cfg.color}30`, marginTop: 8, paddingTop: 8 } : undefined}>
-                        <Text style={s.impactLabel}>{layer.label}</Text>
-                        <Text style={[s.muted, { marginTop: 3 }]}>{layer.detail}</Text>
-                      </View>
-                    ))}
+                    <View style={[s.chipRow, { marginBottom: 8 }]}>
+                      {layers.map((layer, i) => (
+                        <View key={i} style={[s.chip, { backgroundColor: `${cfg.color}22` }]}>
+                          <Text style={[s.chipText, { color: cfg.color }]}>{layer.label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                    <Text style={s.muted}>{SHARED_DESC[kind]}</Text>
                   </View>
                 )
               })

@@ -40,7 +40,7 @@ export const AUTHORITY_INFO: Record<Authority, AuthorityInfo> = {
   'Splenic':         { name: '脾中心權威', tip: '相信當下一閃而過的直覺，它不會說第二次' },
   'Ego':             { name: '意志力權威', tip: '只承諾你真心想要且能兌現的事' },
   'Self-Projected':  { name: '自我投射權威', tip: '對信任的人大聲說出想法，聆聽自己的聲音找到方向' },
-  'Mental':          { name: '心智權威', tip: '和不同的人討論，透過外在反饋找到清晰' },
+  'Mental':          { name: '邏輯權威', tip: '和不同的人討論，透過外在反饋找到清晰' },
   'Lunar':           { name: '月亮週期權威', tip: '等待完整的月亮週期（28天）再做重大決定' },
 }
 
@@ -94,7 +94,7 @@ export const CENTER_INFO: Record<CenterName, Omit<Center, 'id' | 'defined'>> = {
     suggestion: '學會識別哪些問題值得你思考，哪些只是雜訊',
   },
   ajna: {
-    name: '心智中心',
+    name: '邏輯中心',
     description: '概念化、分析與思維模式',
     summary: '理性分析中心，將靈感轉化為觀點',
     behavior: '你善於分析複雜問題，有獨特的思維框架',

@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
     const impactLayers = computeImpact(
       personalGates, personalCenterIds as Set<CenterName>, personalChannels,
       transitGateSet, transitCenterIds as Set<CenterName>, transitChannels,
+      combinedCenterIds as Set<CenterName>,
     )
 
     const result = {

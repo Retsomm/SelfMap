@@ -17,6 +17,7 @@ const TOPIC_DESCRIPTIONS: Record<string, string> = {
   channel: '人類圖 36 條通道連結九大中心，只有兩端閘門都激活才形成通道並定義對應中心。',
   gate: '人類圖 64 個閘門對應易經 64 卦，每個閘門代表一種特定的能量特質與潛能。',
   composite: '人類圖合圖分析：了解兩人之間的能量連結、電磁關係、陪伴關係與支配關係。',
+  transit: '流日是今日天空行星所在的閘門位置。了解它如何與你的出生圖互動，以及如何善用這份每天流動的暫時能量。',
 }
 
 export async function generateMetadata({
@@ -72,7 +73,7 @@ export default async function HumanDesignPage({
       </Suspense>
 
       <div className="max-w-360 mx-auto px-3 md:px-14 py-12 md:py-16">
-        <div className="max-w-2xl">
+        <div className="max-w-2xl mx-auto">
           <p className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-(--ink-soft) mb-4">
             人類圖介紹 · {topicMeta.label}
           </p>

@@ -16,7 +16,7 @@ export function normalizeChannelId(id: string): string {
 }
 
 export const CENTER_ZH: Record<string, string> = {
-  head: '頂輪', ajna: '邏輯', throat: '喉嚨', g: 'G 中心',
+  head: '頭腦', ajna: '邏輯', throat: '喉嚨', g: 'G 中心',
   heart: '意志力', spleen: '脾', sacral: '薦骨', solar: '情緒', root: '根部',
 }
 

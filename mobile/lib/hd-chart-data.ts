@@ -141,7 +141,7 @@ export interface ChartChannel {
 }
 
 export const HD_CHANNELS: ChartChannel[] = [
-  { id: 'c64-47', from: 64, to: 47, name: { zh: '抽象思考通道', en: 'Abstract Thinking' }, desc: { zh: '你的心智很享受和深奧問題搏鬥，對哲學、歷史、意識這些「太虛」的東西感到真正有趣。你的頓悟通常在放鬆時出現——發呆的瞬間突然就通了；你幫別人解決問題的能力往往比解決自己問題的能力還強。',  en: 'The mental pattern of finding meaning in chaos. Distilling stories from past experiences.' } },
+  { id: 'c64-47', from: 64, to: 47, name: { zh: '抽象思考通道', en: 'Abstract Thinking' }, desc: { zh: '你的邏輯思維很享受和深奧問題搏鬥，對哲學、歷史、意識這些「太虛」的東西感到真正有趣。你的頓悟通常在放鬆時出現——發呆的瞬間突然就通了；你幫別人解決問題的能力往往比解決自己問題的能力還強。',  en: 'The mental pattern of finding meaning in chaos. Distilling stories from past experiences.' } },
   { id: 'c61-24', from: 61, to: 24, name: { zh: '思想家通道',   en: 'The Thinker'    }, desc: { zh: '你的腦袋是一台永遠在轉的思考機器，想要把人生每一件事都搞清楚、都合理化。你的頓悟通常不在用力想的時候出現，而是放鬆的瞬間突然「叮」一聲就通了；你幫別人解決問題的能力往往比解決自己問題的能力還強。',              en: "The thinker's channel. A persistent curiosity about the unknown." } },
   { id: 'c63-4',  from: 63, to: 4,  name: { zh: '邏輯思考通道', en: 'The Logical Mind' }, desc: { zh: '你的腦袋是一台永遠關不掉的分析機器，天生就愛用邏輯拆解問題、推敲可能性。你幫別人解問題往往比解決自己的問題還順手，最重要的功課是在「認真分析」和「享受當下」之間找到平衡。',              en: 'The mental rhythm of doubt and answers. Requires time to verify.' } },
   { id: 'c17-62', from: 17, to: 62, name: { zh: '組織力通道',   en: 'The Organizer'  }, desc: { zh: '你天生善於把各種資訊、事實、細節整合在一起變成有說服力的論點，在需要策略、分析、說服人的場合特別能發揮。但你的腦袋不會停，要學會選擇時機，在真正想清楚且對方需要聽的時候再開口，影響力才能最大化。',              en: "The organizer's channel. Turning opinions into facts and details." } },
@@ -270,7 +270,7 @@ export interface ChartCenter {
 export const HD_CENTERS_INFO: Record<string, ChartCenter> = {
   head: {
     id: 'head',
-    name: { zh: '頂輪中心', en: 'Head Center' },
+    name: { zh: '頭腦中心', en: 'Head Center' },
     type: { zh: '靈感中心', en: 'Pressure Center' },
     color: 'mustard',
     summary: { zh: '靈感的接收天線，驅動你不斷追問的壓力源頭。', en: 'The source of inspiration, questions, and mental pressure.' },
@@ -286,11 +286,11 @@ export const HD_CENTERS_INFO: Record<string, ChartCenter> = {
     type: { zh: '覺察中心', en: 'Awareness Center' },
     color: 'olive',
     summary: { zh: '分析、思考與概念建構的腦袋運作中樞。', en: 'The hub of conceptualization, analysis, and meaning-making.' },
-    description: { zh: '心智中心負責把接收到的靈感不斷過濾、消化、拆解，試著搞清楚「這到底是什麼意思」。心智中心就是「腦袋轉不停」的來源地，過去、現在、未來都想串在一起。', en: 'The Ajna organizes inspiration into thoughts, concepts, and beliefs. It constantly filters, digests, and deconstructs incoming information, trying to make sense of everything.' },
-    definedContent: { zh: '你有固定的思考模式，做事條理分明，很適合做需要動腦的工作。但問題是，你的腦袋幾乎沒有休機的時候，甚至會拿一些根本還沒發生的事來煩惱——「萬一這樣怎麼辦？萬一那樣又怎麼辦？」那些事還沒發生耶。試試靜坐或冥想，讓腦袋稍微喘口氣，你會更清醒。', en: 'You have consistent thinking patterns and work methodically. But your brain almost never fully shuts off — you worry about things that haven\'t happened yet. Try meditation to give your mind breathing room. You\'ll think even more clearly when you do.' },
-    openContent: { zh: '你比較沒有固定的思考框架，反而能看到更多可能性，常常讓別人驚訝：「你怎麼知道我在想什麼！」這是你的超能力，因為你很能感受別人的思維。但也因為太開放，容易分心、健忘，記事本真的很重要。（愛因斯坦也是心智中心開放，所以你在很好的同伴裡。）', en: "You have no fixed thinking framework, which lets you see more possibilities. Others often wonder how you know what they're thinking — that's your gift. But this openness can make you scattered and forgetful. A notebook is your best friend." },
+    description: { zh: '邏輯中心負責把接收到的靈感不斷過濾、消化、拆解，試著搞清楚「這到底是什麼意思」。邏輯中心就是「腦袋轉不停」的來源地，過去、現在、未來都想串在一起。', en: 'The Ajna organizes inspiration into thoughts, concepts, and beliefs. It constantly filters, digests, and deconstructs incoming information, trying to make sense of everything.' },
+    definedContent: { zh: '你有固定的思考模式，做事條理分明，很適合做需要動腦的工作。但問題是，你的腦袋幾乎沒有休息的時候，甚至會拿一些根本還沒發生的事來煩惱——「萬一這樣怎麼辦？萬一那樣又怎麼辦？」那些事還沒發生耶。試試靜坐或冥想，讓腦袋稍微喘口氣，你會更清醒。', en: 'You have consistent thinking patterns and work methodically. But your brain almost never fully shuts off — you worry about things that haven\'t happened yet. Try meditation to give your mind breathing room. You\'ll think even more clearly when you do.' },
+    openContent: { zh: '你比較沒有固定的思考框架，反而能看到更多可能性，常常讓別人驚訝：「你怎麼知道我在想什麼！」這是你的超能力，因為你很能感受別人的思維。但也因為太開放，容易分心、健忘，記事本真的很重要。（愛因斯坦也是邏輯中心開放，所以你在很好的同伴裡。）', en: "You have no fixed thinking framework, which lets you see more possibilities. Others often wonder how you know what they're thinking — that's your gift. But this openness can make you scattered and forgetful. A notebook is your best friend." },
     gates: [47, 24, 4, 17, 43, 11],
-    keywords: { zh: ['思考', '理解', '概念', '心智'], en: ['Thinking', 'Understanding', 'Concepts', 'Mind'] },
+    keywords: { zh: ['思考', '理解', '概念', '邏輯'], en: ['Thinking', 'Understanding', 'Concepts', 'Logic'] },
   },
   throat: {
     id: 'throat',

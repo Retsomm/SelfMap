@@ -20,7 +20,7 @@ const CENTER_ORDER: CenterName[] = [
 
 const CENTER_ZH: Record<CenterName, string> = {
   head:        '頭腦',
-  ajna:        '心智',
+  ajna:        '邏輯',
   throat:      '喉嚨',
   g:           'G',
   ego:         '意志力',
@@ -78,9 +78,9 @@ const SectionHeader = ({ children }: { children: ReactNode }) => (
 
 // ── 中心 ────────────────────────────────────────────────────────────────────
 
-const CentersSection = ({ personal, transit }: { personal: HdResult; transit: TransitResult }) => {
+const CentersSection = ({ personal, transit, combinedCenterIds }: { personal: HdResult; transit: TransitResult; combinedCenterIds: Set<CenterName> }) => {
   const openActivatedCenters = CENTER_ORDER.filter(
-    cId => !personal.definedCenterIds.has(cId) && transit.definedCenterIds.has(cId),
+    cId => !personal.definedCenterIds.has(cId) && combinedCenterIds.has(cId),
   )
 
   return (
@@ -89,8 +89,7 @@ const CentersSection = ({ personal, transit }: { personal: HdResult; transit: Tr
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
         {CENTER_ORDER.map(cId => {
           const inPersonal = personal.definedCenterIds.has(cId)
-          const inTransit = transit.definedCenterIds.has(cId)
-          const openActivated = !inPersonal && inTransit
+          const openActivated = !inPersonal && combinedCenterIds.has(cId)
 
           return (
             <div
@@ -113,12 +112,12 @@ const CentersSection = ({ personal, transit }: { personal: HdResult; transit: Tr
                     個人
                   </span>
                 )}
-                {inTransit && (
+                {!inPersonal && combinedCenterIds.has(cId) && (
                   <span className="font-mono text-[12px] md:text-sm tracking-[0.05em] uppercase bg-[#d04830] text-white px-1.5 py-0.5">
                     流日
                   </span>
                 )}
-                {!inPersonal && !inTransit && (
+                {!inPersonal && !combinedCenterIds.has(cId) && (
                   <span className="font-mono text-[12px] md:text-sm tracking-[0.05em] uppercase text-(--ink)/40">
                     開放
                   </span>
@@ -135,8 +134,7 @@ const CentersSection = ({ personal, transit }: { personal: HdResult; transit: Tr
             今日被流日暫時啟動：{openActivatedCenters.map(cId => CENTER_INFO[cId].name).join('、')}
           </p>
           <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
-            以上原本開放的中心，今天因流日被暫時定義，可能帶來不熟悉的衝動或情緒底色。
-            這些能量不屬於你的設計，不需要跟隨它行動。
+            這些原本開放的中心今天借到了「限定體驗卡」。可以善用這股暫時的能量去執行、創作或衝刺，但不建議在這些地方做出長期承諾——能量退去後，條件會不同。
           </p>
         </div>
       )}
@@ -284,7 +282,7 @@ const ChannelsSection = ({ personal, transit }: { personal: HdResult; transit: T
                 ))}
               </div>
               <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
-                以上通道完全不屬於你原本的設計，你可能會想用這些頻率做事，但不適合據此做重要決定。
+                這些是今日流日帶給你的限定天賦，可以借來執行任務、享受那股靈感或動力。只是記得，這件衣服明天會換掉，不要在它還穿著的時候做需要長久負責的承諾。
               </p>
             </div>
           )}
@@ -309,7 +307,7 @@ const ChannelsSection = ({ personal, transit }: { personal: HdResult; transit: T
                 ))}
               </div>
               <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
-                你有以上通道的其中一端，流日補上另一端，會短暫感受到完整通道的感覺，但能量散去後容易有失落感。
+                你本身擁有一半，今天流日借你補齊了另一半，讓你短暫體驗完整通道的感覺。這股能量來了可以好好享用，能量退潮後回到原本的節奏就好。
               </p>
             </div>
           )}
@@ -463,7 +461,7 @@ export default function TransitView({ personal, transit, onRefresh, refreshing }
       )}
 
       {/* Three result sections */}
-      <CentersSection personal={personal} transit={transit} />
+      <CentersSection personal={personal} transit={transit} combinedCenterIds={combinedCenterIds} />
       <GatesSection personal={personal} transit={transit} />
       <ChannelsSection personal={personal} transit={transit} />
 
@@ -471,9 +469,7 @@ export default function TransitView({ personal, transit, onRefresh, refreshing }
       <div className="border border-(--ink)/20 bg-(--paper-deep) px-5 py-4">
         <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
           <span className="font-semibold text-(--ink)">關於流日的提醒：</span>
-          流日啟動的地方愈多，不代表運勢愈好。這些暫時被啟動的能量都不屬於你原本的設計，
-          容易讓你感覺被外在頻率推著走，甚至做出不適合自己的決策。
-          最重要的事，始終是回到自己的內在權威做決定。
+          把流日想像成宇宙每天發給你的「限定體驗卡」。被激活的能量雖然不是你本來的配備，卻是可以借來用的暫時天賦——拿來執行、創作、或體驗平時沒有的敏銳度都很好。只要掌握一個原則：盡情享受過程，但不要在被流日定義的地方做重大的長期承諾。始終以自己的內在權威做最終決定。
         </p>
       </div>
 
