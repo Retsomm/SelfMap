@@ -1,6 +1,6 @@
 import { ClerkProvider, useAuth } from '@clerk/expo'
-import * as SecureStore from 'expo-secure-store'
 import * as WebBrowser from 'expo-web-browser'
+import * as SecureStore from 'expo-secure-store'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
