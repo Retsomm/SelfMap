@@ -208,7 +208,7 @@ export default function CreateScreen() {
   const [subTab, setSubTab] = useState<SubTab>('personal')
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <ScreenHeader title="建立圖表" />
 
       <SubTabBar tabs={SUB_TABS} active={subTab} onSelect={setSubTab} />

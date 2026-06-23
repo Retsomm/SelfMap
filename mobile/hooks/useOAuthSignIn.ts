@@ -1,7 +1,6 @@
 import { useSSO } from '@clerk/expo'
 import * as AuthSession from 'expo-auth-session'
 import * as WebBrowser from 'expo-web-browser'
-import { useEffect } from 'react'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -9,11 +8,6 @@ type SSOStrategy = Exclude<Parameters<ReturnType<typeof useSSO>['startSSOFlow']>
 
 export function useOAuthSignIn(strategy: SSOStrategy, label: string, onSuccess?: () => void) {
   const { startSSOFlow } = useSSO()
-
-  useEffect(() => {
-    void WebBrowser.warmUpAsync()
-    return () => { void WebBrowser.coolDownAsync() }
-  }, [])
 
   async function handleSignIn() {
     try {

@@ -1,6 +1,7 @@
 import { useAuth, useUser } from '@clerk/expo'
 import { useLocalSearchParams } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
+import * as WebBrowser from 'expo-web-browser'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -348,6 +349,11 @@ function PersonalView() {
 function SignInPrompt() {
   const { handleGoogleSignIn } = useGoogleSignIn()
   const { handleLineSignIn } = useLineSignIn()
+
+  useEffect(() => {
+    void WebBrowser.warmUpAsync()
+    return () => { void WebBrowser.coolDownAsync() }
+  }, [])
   const [loadingGoogle, setLoadingGoogle] = useState(false)
   const [loadingLine, setLoadingLine] = useState(false)
   const isLoading = loadingGoogle || loadingLine
@@ -400,9 +406,13 @@ export default function ProfileScreen() {
     : undefined
   const [outerTab, setOuterTab] = useState<OuterTab>(chartTab !== undefined ? 'charts' : 'personal')
 
+  useEffect(() => {
+    if (chartTab !== undefined) setOuterTab('charts')
+  }, [chartTab])
+
   if (!isSignedIn) {
     return (
-      <SafeAreaView style={s.container}>
+      <SafeAreaView style={s.container} edges={['top', 'left', 'right']}>
         <ScreenHeader title="帳號" />
         <SignInPrompt />
       </SafeAreaView>
@@ -410,7 +420,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={s.container}>
+    <SafeAreaView style={s.container} edges={['top', 'left', 'right']}>
       <ScreenHeader title="帳號" />
       <SubTabBar tabs={OUTER_TABS} active={outerTab} onSelect={setOuterTab} />
 

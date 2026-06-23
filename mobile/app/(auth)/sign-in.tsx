@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import * as WebBrowser from 'expo-web-browser'
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
@@ -9,6 +10,11 @@ import { useLineSignIn } from '@/hooks/useLineSignIn'
 export default function SignInScreen() {
   const router = useRouter()
   const [loadingGoogle, setLoadingGoogle] = useState(false)
+
+  useEffect(() => {
+    void WebBrowser.warmUpAsync()
+    return () => { void WebBrowser.coolDownAsync() }
+  }, [])
   const [loadingLine, setLoadingLine] = useState(false)
   const { handleGoogleSignIn } = useGoogleSignIn(() => router.replace('/(tabs)'))
   const { handleLineSignIn } = useLineSignIn(() => router.replace('/(tabs)'))
