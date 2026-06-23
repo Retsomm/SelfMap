@@ -93,8 +93,8 @@ export async function POST(req: NextRequest) {
       authority:        hd.authority.name,
       authorityTip:     hd.authority.tip,
       allGates:         [...hd.allGates],
-      personalityGates: hd.planets.map(p => p.black.gate),
-      designGates:      hd.planets.map(p => p.red.gate),
+      personalityGates: [...new Set(hd.planets.map(p => p.black.gate))],
+      designGates:      [...new Set(hd.planets.map(p => p.red.gate))],
       planets:          hd.planets.map(p => ({
         name:      p.planetName,
         blackGate: p.black.gate,

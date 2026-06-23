@@ -219,6 +219,10 @@ function buildBodyGraphSvg(chart: PendingChart): string {
 
 // ─── HTML template ─────────────────────────────────────────────────────────────
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
 function buildHtml(chart: PendingChart): string {
   const bg      = '#efe5d0'
   const ink     = '#2b1f14'
@@ -586,8 +590,22 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
   const border  = '#c8b99a'
   const dimBg   = '#e7d9bd'
 
-  const nameA = result.personA.name ?? 'A'
-  const nameB = result.personB.name ?? 'B'
+  const nameA = escapeHtml(result.personA.name ?? 'A')
+  const nameB = escapeHtml(result.personB.name ?? 'B')
+  const aDate    = escapeHtml(result.personA.birthDate)
+  const aTime    = escapeHtml(result.personA.birthTime)
+  const aCity    = escapeHtml(result.personA.birthCity)
+  const aType    = escapeHtml(result.personA.type)
+  const aProfile = escapeHtml(result.personA.profile)
+  const aAuth    = escapeHtml(result.personA.authority)
+  const aAuthTip = result.personA.authorityTip ? escapeHtml(result.personA.authorityTip) : ''
+  const bDate    = escapeHtml(result.personB.birthDate)
+  const bTime    = escapeHtml(result.personB.birthTime)
+  const bCity    = escapeHtml(result.personB.birthCity)
+  const bType    = escapeHtml(result.personB.type)
+  const bProfile = escapeHtml(result.personB.profile)
+  const bAuth    = escapeHtml(result.personB.authority)
+  const bAuthTip = result.personB.authorityTip ? escapeHtml(result.personB.authorityTip) : ''
 
   // Bodygraph: use full allGates for each person
   // Fallback for old API responses without allGates
@@ -690,11 +708,11 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
         `<div class="tags">${definedChIds.map(ch => `<span class="tag">${ch}</span>`).join('')}</div>`)
     : ''
 
-  const resonanceItems = COMPOSITE_LINE_RESONANCE.filter(lr => result.profileResonance.includes(lr.line))
+  const resonanceItems = COMPOSITE_LINE_RESONANCE.filter(lr => result.profileResonance?.includes(lr.line))
   const resonanceSection = section('人生角色共鳴',
     `<div class="profile-names">
-      <span style="color:${crimson};font-weight:700">${nameA} ${result.personA.profile}</span>
-      <span style="font-weight:700">${nameB} ${result.personB.profile}</span>
+      <span style="color:${crimson};font-weight:700">${nameA} ${aProfile}</span>
+      <span style="font-weight:700">${nameB} ${bProfile}</span>
     </div>` + (resonanceItems.length === 0
       ? `<p class="resonance-none">兩人人生角色沒有共同爻線，各自的觀點框架較為不同。</p>`
       : resonanceItems.map(lr =>
@@ -707,13 +725,13 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
     `<div class="authority-grid">
       <div class="authority-card" style="border-left-color:${crimson}">
         <div class="authority-meta">${nameA} 的權威</div>
-        <div class="authority-name" style="color:${crimson}">${result.personA.authority}</div>
-        ${result.personA.authorityTip ? `<p class="authority-tip">${result.personA.authorityTip}</p>` : ''}
+        <div class="authority-name" style="color:${crimson}">${aAuth}</div>
+        ${aAuthTip ? `<p class="authority-tip">${aAuthTip}</p>` : ''}
       </div>
       <div class="authority-card" style="border-left-color:${ink}">
         <div class="authority-meta">${nameB} 的權威</div>
-        <div class="authority-name">${result.personB.authority}</div>
-        ${result.personB.authorityTip ? `<p class="authority-tip">${result.personB.authorityTip}</p>` : ''}
+        <div class="authority-name">${bAuth}</div>
+        ${bAuthTip ? `<p class="authority-tip">${bAuthTip}</p>` : ''}
       </div>
     </div>`)
 
@@ -779,15 +797,15 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
   <div class="person-header">
     <div>
       <div class="person-header-name" style="color:${crimson}">${nameA}</div>
-      <div class="person-header-meta">${result.personA.birthDate} · ${result.personA.birthTime}</div>
-      <div class="person-header-meta">${result.personA.birthCity}</div>
-      <div class="person-header-meta">${result.personA.type} · ${result.personA.profile}</div>
+      <div class="person-header-meta">${aDate} · ${aTime}</div>
+      <div class="person-header-meta">${aCity}</div>
+      <div class="person-header-meta">${aType} · ${aProfile}</div>
     </div>
     <div>
       <div class="person-header-name">${nameB}</div>
-      <div class="person-header-meta">${result.personB.birthDate} · ${result.personB.birthTime}</div>
-      <div class="person-header-meta">${result.personB.birthCity}</div>
-      <div class="person-header-meta">${result.personB.type} · ${result.personB.profile}</div>
+      <div class="person-header-meta">${bDate} · ${bTime}</div>
+      <div class="person-header-meta">${bCity}</div>
+      <div class="person-header-meta">${bType} · ${bProfile}</div>
     </div>
   </div>
 

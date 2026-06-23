@@ -369,7 +369,7 @@ export default function CompositeView() {
           <View style={s.card}>
             <Text style={[s.sectionLabel, { marginBottom: Spacing.md }]}>四種核心連結動力</Text>
             {(['electromagnetic', 'companionship', 'compromise', 'dominance'] as const).map(type => {
-              const items = result[type]
+              const items = result[type] ?? []
               const cfg = CONN_CFG[type]
               return (
                 <View key={type} style={[s.connGroup, { borderColor: cfg.color + '55' }]}>
@@ -426,10 +426,10 @@ export default function CompositeView() {
                 {result.personB.name ?? 'B'} {result.personB.profile}
               </Text>
             </View>
-            {result.profileResonance.length === 0 ? (
+            {(result.profileResonance?.length ?? 0) === 0 ? (
               <Text style={[s.muted, { lineHeight: 20 }]}>兩人人生角色沒有共同爻線，各自的觀點框架較為不同。</Text>
             ) : (
-              LINE_RESONANCE.filter(lr => result.profileResonance.includes(lr.line)).map(lr => (
+              LINE_RESONANCE.filter(lr => result.profileResonance?.includes(lr.line)).map(lr => (
                 <View key={lr.line} style={s.resonanceRow}>
                   <Text style={s.resonanceLabel}>{lr.label}</Text>
                   <Text style={[s.muted, { lineHeight: 20 }]}>{lr.desc}</Text>
@@ -447,7 +447,7 @@ export default function CompositeView() {
             ] as const).map(({ label, meta, color }, idx) => (
               <View key={idx} style={[s.authorityCard, { borderLeftColor: color }]}>
                 <Text style={s.authorityLabel}>{label}</Text>
-                <Text style={[s.authorityName, { color }]}>{meta.authority}</Text>
+                <Text style={[s.authorityName, { color }]}>{meta.authority ?? ''}</Text>
                 {meta.authorityTip ? (
                   <Text style={[s.muted, { lineHeight: 20 }]}>{meta.authorityTip}</Text>
                 ) : null}
