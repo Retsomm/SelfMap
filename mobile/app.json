@@ -20,6 +20,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.selfmap.app",
+      "versionCode": 3,
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ]
@@ -38,8 +39,7 @@
           "photosPermission": "SelfMap 需要存取您的相片庫以上傳大頭貼。"
         }
       ],
-      "expo-sharing",
-      "@react-native-google-signin/google-signin"
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true
