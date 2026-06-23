@@ -102,8 +102,8 @@ export default function ChartDetailScreen() {
     }).catch(e => { console.warn('[CompositeInfo] getToken failed:', e); setCompositeFetchLoading(false) })
   }, [chart])
 
-  if (loading) return <SafeAreaView style={styles.container}><LoadingView /></SafeAreaView>
-  if (error || !chart) return <SafeAreaView style={styles.container}><ErrorView message={error ?? '找不到圖表'} onRetry={loadChart} /></SafeAreaView>
+  if (loading) return <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}><LoadingView /></SafeAreaView>
+  if (error || !chart) return <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}><ErrorView message={error ?? '找不到圖表'} onRetry={loadChart} /></SafeAreaView>
 
   const typeMeta        = getTypeMeta(chart.type)
   const transitSnapshot = chart.chartKind === 'transit' ? chart.meta?.transitSnapshot : undefined
@@ -188,7 +188,7 @@ export default function ChartDetailScreen() {
   const open = (target: SheetTarget) => setSheetTarget(target)
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.inner}>
 
         {/* Body Graph */}

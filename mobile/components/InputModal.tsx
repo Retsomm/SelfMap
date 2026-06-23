@@ -1,5 +1,5 @@
 import { type RefObject } from 'react'
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 type Props = {
@@ -34,6 +34,10 @@ export function InputModal({
       animationType="fade"
       onRequestClose={onCancel}
     >
+      <KeyboardAvoidingView
+        style={styles.kavWrapper}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <Pressable style={styles.overlay} onPress={onCancel}>
         <Pressable style={styles.sheet} onPress={() => {}}>
           <Text style={styles.title}>{title}</Text>
@@ -62,11 +66,13 @@ export function InputModal({
           </View>
         </Pressable>
       </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }
 
 const styles = StyleSheet.create({
+  kavWrapper:  { flex: 1 },
   overlay:     { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   sheet:       { backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: Spacing.xl, width: '100%' },
   title:       { color: Colors.text, fontSize: 18, fontWeight: '700', marginBottom: Spacing.lg },

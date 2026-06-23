@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Alert,
   Clipboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -160,8 +162,16 @@ export default function CompositeView() {
     }
   }
 
+  function handleCityFocus() {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350)
+  }
+
   return (
     <ScrollLockContext.Provider value={scrollLockCtx}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
     <ScrollView
       ref={scrollRef}
       contentContainerStyle={s.inner}
@@ -189,6 +199,7 @@ export default function CompositeView() {
                 namePlaceholder="例如：自己"
                 fieldError={errorA}
                 onClearError={() => setErrorA(null)}
+                onCityFocus={handleCityFocus}
               />
             )}
           </View>
@@ -211,6 +222,7 @@ export default function CompositeView() {
                 namePlaceholder="例如：對方"
                 fieldError={errorB}
                 onClearError={() => setErrorB(null)}
+                onCityFocus={handleCityFocus}
               />
             )}
           </View>
@@ -350,6 +362,7 @@ export default function CompositeView() {
         </>
       )}
     </ScrollView>
+    </KeyboardAvoidingView>
     </ScrollLockContext.Provider>
   )
 }

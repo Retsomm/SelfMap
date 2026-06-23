@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 
 WebBrowser.maybeCompleteAuthSession()
 
-export function useGoogleSignIn(onSuccess?: () => void) {
+export function useLineSignIn(onSuccess?: () => void) {
   const { startSSOFlow } = useSSO()
 
   useEffect(() => {
@@ -13,12 +13,12 @@ export function useGoogleSignIn(onSuccess?: () => void) {
     return () => { void WebBrowser.coolDownAsync() }
   }, [])
 
-  async function handleGoogleSignIn() {
+  async function handleLineSignIn() {
     try {
       const redirectUrl = AuthSession.makeRedirectUri({ path: 'oauth-native-callback' })
-      console.log('[GoogleSignIn] redirectUrl:', redirectUrl)
+      console.log('[LineSignIn] redirectUrl:', redirectUrl)
       const { createdSessionId, setActive } = await startSSOFlow({
-        strategy: 'oauth_google',
+        strategy: 'oauth_line',
         redirectUrl,
       })
       if (createdSessionId && setActive) {
@@ -27,10 +27,10 @@ export function useGoogleSignIn(onSuccess?: () => void) {
       }
       // createdSessionId 為 null 代表使用者取消，不視為錯誤
     } catch (err) {
-      console.error('[GoogleSignIn]', err)
+      console.error('[LineSignIn]', err)
       throw err
     }
   }
 
-  return { handleGoogleSignIn }
+  return { handleLineSignIn }
 }

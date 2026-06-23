@@ -34,6 +34,7 @@ type Props = {
   namePlaceholder?: string
   fieldError?: string | null
   onClearError?: () => void
+  onCityFocus?: () => void
 }
 
 export default function BirthDataForm({
@@ -42,6 +43,7 @@ export default function BirthDataForm({
   namePlaceholder = '例如：本人',
   fieldError,
   onClearError,
+  onCityFocus,
 }: Props) {
   const birthDate = `${value.date.year}-${String(value.date.month).padStart(2, '0')}-${String(value.date.day).padStart(2, '0')}`
   const birthTime = `${String(value.time.hour).padStart(2, '0')}:${String(value.time.minute).padStart(2, '0')}`
@@ -80,6 +82,7 @@ export default function BirthDataForm({
             onChange({ ...value, city, timezone })
             onClearError?.()
           }}
+          onFocus={onCityFocus}
         />
         {fieldError ? <Text style={s.errorText}>{fieldError}</Text> : null}
       </View>

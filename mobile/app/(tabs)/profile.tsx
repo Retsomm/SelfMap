@@ -11,6 +11,7 @@ import { InputModal } from '@/components/InputModal'
 import { BirthProfileSheet } from '@/components/BirthProfileSheet'
 import ChartListView from '@/components/ChartListView'
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn'
+import { useLineSignIn } from '@/hooks/useLineSignIn'
 import {
   type BirthProfile,
   loadProfiles,
@@ -195,7 +196,7 @@ function PersonalView() {
     }
   }
 
-  const SUPPORTED_PROVIDERS = new Set(['google'])
+  const SUPPORTED_PROVIDERS = new Set(['google', 'line'])
   const oauthAccounts = (user?.externalAccounts ?? []).filter(
     acct => SUPPORTED_PROVIDERS.has(acct.provider) && acct.verification?.status === 'verified'
   )
@@ -348,13 +349,44 @@ function PersonalView() {
 
 function SignInPrompt() {
   const { handleGoogleSignIn } = useGoogleSignIn()
+  const { handleLineSignIn } = useLineSignIn()
+  const [loadingGoogle, setLoadingGoogle] = useState(false)
+  const [loadingLine, setLoadingLine] = useState(false)
+  const isLoading = loadingGoogle || loadingLine
+
+  console.log('[SignInPrompt] 渲染，isLoading:', isLoading)
+
+  async function onGooglePress() {
+    if (isLoading) return
+    setLoadingGoogle(true)
+    try { await handleGoogleSignIn() }
+    catch { Alert.alert('登入失敗', '請稍後再試') }
+    finally { setLoadingGoogle(false) }
+  }
+
+  async function onLinePress() {
+    if (isLoading) return
+    setLoadingLine(true)
+    try { await handleLineSignIn() }
+    catch { Alert.alert('登入失敗', '請稍後再試') }
+    finally { setLoadingLine(false) }
+  }
 
   return (
     <View style={s.signInWrap}>
       <Text style={s.signInTitle}>登入以使用帳號功能</Text>
       <Text style={s.signInSub}>儲存圖表、出生資料與個人設定</Text>
-      <Pressable style={s.signInBtn} onPress={handleGoogleSignIn}>
-        <Text style={s.signInBtnText}>使用 Google 登入</Text>
+      <Pressable style={[s.signInBtn, isLoading && s.btnDisabled]} onPress={onGooglePress} disabled={isLoading}>
+        {loadingGoogle
+          ? <ActivityIndicator color={Colors.surface} />
+          : <Text style={s.signInBtnText}>使用 Google 登入</Text>
+        }
+      </Pressable>
+      <Pressable style={[s.signInBtn, s.lineBtn, isLoading && s.btnDisabled]} onPress={onLinePress} disabled={isLoading}>
+        {loadingLine
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={s.signInBtnText}>使用 LINE 登入</Text>
+        }
       </Pressable>
     </View>
   )
@@ -364,7 +396,7 @@ function SignInPrompt() {
 
 export default function ProfileScreen() {
   const { isSignedIn } = useAuth()
-  const [outerTab, setOuterTab] = useState<OuterTab>('charts')
+  const [outerTab, setOuterTab] = useState<OuterTab>('personal')
   const { chartTab: rawChartTab } = useLocalSearchParams<{ chartTab?: string }>()
   const VALID_CHART_TABS = ['personal', 'composite', 'transit'] as const
   type ChartTab = typeof VALID_CHART_TABS[number]
@@ -444,5 +476,6 @@ const s = StyleSheet.create({
   signInTitle:   { fontSize: 20, fontWeight: '700', color: Colors.text, textAlign: 'center' },
   signInSub:     { fontSize: 14, color: Colors.sub, textAlign: 'center', lineHeight: 21 },
   signInBtn:     { backgroundColor: Colors.accent, paddingVertical: 14, paddingHorizontal: 32, borderRadius: Radius.md, width: '100%', alignItems: 'center', marginTop: Spacing.lg },
+  lineBtn:       { backgroundColor: '#06C755', marginTop: Spacing.sm },
   signInBtnText: { color: Colors.surface, fontSize: 16, fontWeight: '600' },
 })
