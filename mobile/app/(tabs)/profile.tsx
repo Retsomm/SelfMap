@@ -71,13 +71,11 @@ function PersonalView() {
       if (!token) return
       const { charts } = await getCharts(token)
       const personal = charts.filter(c => !c.chartKind || c.chartKind === 'personal')
-      if (__DEV__) console.log('[PersonalView] 個人圖數量:', personal.length, '| meta 存在:', personal.filter(c => c.meta).length)
       if (personal.length === 0) { setHdChart(null); return }
 
       const candidate = personal[0]
       // 若 list 端點回傳的圖任一 meta 欄位缺失，改用單筆 API 觸發 server 端懶補算
       if (!candidate.meta?.incarnationCross || !candidate.meta?.variables || !candidate.meta?.arrows) {
-        if (__DEV__) console.log('[PersonalView] list meta 缺失，改呼叫單筆 API 觸發補算')
         const { chart } = await getChart(token, candidate.id)
         setHdChart(chart)
       } else {
@@ -354,8 +352,6 @@ function SignInPrompt() {
   const [loadingLine, setLoadingLine] = useState(false)
   const isLoading = loadingGoogle || loadingLine
 
-  console.log('[SignInPrompt] 渲染，isLoading:', isLoading)
-
   async function onGooglePress() {
     if (isLoading) return
     setLoadingGoogle(true)
@@ -396,13 +392,13 @@ function SignInPrompt() {
 
 export default function ProfileScreen() {
   const { isSignedIn } = useAuth()
-  const [outerTab, setOuterTab] = useState<OuterTab>('personal')
   const { chartTab: rawChartTab } = useLocalSearchParams<{ chartTab?: string }>()
   const VALID_CHART_TABS = ['personal', 'composite', 'transit'] as const
   type ChartTab = typeof VALID_CHART_TABS[number]
   const chartTab: ChartTab | undefined = VALID_CHART_TABS.includes(rawChartTab as ChartTab)
     ? (rawChartTab as ChartTab)
     : undefined
+  const [outerTab, setOuterTab] = useState<OuterTab>(chartTab !== undefined ? 'charts' : 'personal')
 
   if (!isSignedIn) {
     return (

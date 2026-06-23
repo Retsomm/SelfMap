@@ -7,7 +7,6 @@ import { useGoogleSignIn } from '@/hooks/useGoogleSignIn'
 import { useLineSignIn } from '@/hooks/useLineSignIn'
 
 export default function SignInScreen() {
-  console.log('[SignIn] 元件載入，版本含 LINE 按鈕')
   const router = useRouter()
   const [loadingGoogle, setLoadingGoogle] = useState(false)
   const [loadingLine, setLoadingLine] = useState(false)

@@ -265,7 +265,6 @@ export default function ChartPreviewScreen() {
             gatesLabel:     ic.gatesLabel,
             sunGate:        ic.sunGate,
           }
-          console.log('[preview] incarnationCross sunGate=', ic.sunGate, 'crossType=', ic.crossType)
           return (
             <Pressable onPress={() => open(sheetTarget)} style={({ pressed }) => [styles.crossCard, pressed && styles.crossCardPressed]}>
               <Text style={styles.crossCardTitle}>輪迴交叉</Text>

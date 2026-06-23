@@ -71,7 +71,7 @@ export default function CitySearchField({ city, timezone, onSelect, onFocus }: P
           scrollEnabled={false}
           style={styles.dropdown}
           renderItem={({ item }) => (
-            <Pressable style={styles.option} onPressIn={() => { isSelectingRef.current = true }} onPress={() => handleSelect(item)}>
+            <Pressable style={styles.option} onPressIn={() => { isSelectingRef.current = true }} onPressOut={() => { isSelectingRef.current = false }} onPress={() => handleSelect(item)}>
               <Text style={styles.optionCity}>{item.display}</Text>
               <Text style={styles.optionTz}>{item.timezone}</Text>
             </Pressable>
