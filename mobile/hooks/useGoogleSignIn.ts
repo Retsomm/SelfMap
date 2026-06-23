@@ -15,9 +15,11 @@ export function useGoogleSignIn(onSuccess?: () => void) {
 
   async function handleGoogleSignIn() {
     try {
+      const redirectUrl = AuthSession.makeRedirectUri({ path: 'oauth-native-callback' })
+      console.log('[GoogleSignIn] redirectUrl:', redirectUrl)
       const { createdSessionId, setActive } = await startSSOFlow({
         strategy: 'oauth_google',
-        redirectUrl: AuthSession.makeRedirectUri(),
+        redirectUrl,
       })
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId })

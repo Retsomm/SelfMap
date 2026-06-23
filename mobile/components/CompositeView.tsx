@@ -30,6 +30,7 @@ import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
 import { type BirthProfile } from '@/lib/birthProfiles'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 
 const CONN_CFG = {
   electromagnetic: { label: '電磁連結', color: Colors.em,    bg: Colors.emDimBg,     icon: '⚡', desc: '兩人各有通道一半，在一起時被完整激活，帶來強烈吸引力。' },
@@ -52,6 +53,7 @@ export default function CompositeView() {
   const { getToken } = useAuth()
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
+  const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
 
   const [formA, setFormA] = useState<BirthFormData>(defaultBirthFormData)
   const [formB, setFormB] = useState<BirthFormData>(defaultBirthFormData)
@@ -159,10 +161,12 @@ export default function CompositeView() {
   }
 
   return (
+    <ScrollLockContext.Provider value={scrollLockCtx}>
     <ScrollView
       ref={scrollRef}
       contentContainerStyle={s.inner}
       keyboardShouldPersistTaps="handled"
+      scrollEnabled={scrollEnabled}
       nestedScrollEnabled
     >
       {!result ? (
@@ -346,6 +350,7 @@ export default function CompositeView() {
         </>
       )}
     </ScrollView>
+    </ScrollLockContext.Provider>
   )
 }
 

@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
         crossName:      result.incarnationCross.crossName,
         gatesLabel:     result.incarnationCross.gatesLabel,
         variant:        result.incarnationCross.variant,
+        sunGate:        result.incarnationCross.persSunGate,
       }
       variables = {
         digestion:   result.variables.digestion,

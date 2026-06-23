@@ -42,7 +42,7 @@ function AuthGuard() {
     if (!isLoaded) return
     if (!isSignedIn && isProtectedRoute(segments)) {
       router.replace('/(auth)/sign-in')
-    } else if (isSignedIn && segments[0] === '(auth)') {
+    } else if (isSignedIn && (segments[0] === '(auth)' || segments[0] === 'oauth-native-callback')) {
       router.replace('/(tabs)')
     }
   }, [isLoaded, isSignedIn, segments])
@@ -74,6 +74,7 @@ export default function RootLayout() {
           <Stack.Screen name="chart/preview" options={{ headerShown: true, title: '圖表預覽', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
           <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
           <Stack.Screen name="learn/[topic]" options={{ headerShown: false }} />
+          <Stack.Screen name="oauth-native-callback" options={{ headerShown: false }} />
         </Stack>
       </ErrorBoundary>
     </ClerkProvider>

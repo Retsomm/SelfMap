@@ -254,14 +254,29 @@ export default function ChartPreviewScreen() {
         </SectionCard>
 
         {/* 輪迴交叉 */}
-        {chart.incarnationCross && (
-          <SectionCard title="輪迴交叉">
-            <Row label="交叉類型" value={chart.incarnationCross.crossTypeLabel} accent />
-            <Row label="交叉名稱" value={`${chart.incarnationCross.crossBaseName}${chart.incarnationCross.variant}`} />
-            <Row label="完整名稱" value={`${chart.incarnationCross.crossTypeLabel}之${chart.incarnationCross.crossBaseName}${chart.incarnationCross.variant}`} />
-            <Row label="閘門組合" value={chart.incarnationCross.gatesLabel} />
-          </SectionCard>
-        )}
+        {chart.incarnationCross && (() => {
+          const ic = chart.incarnationCross!
+          const sheetTarget = {
+            kind: 'incarnationCross' as const,
+            crossType:      ic.crossType,
+            crossTypeLabel: ic.crossTypeLabel,
+            crossBaseName:  ic.crossBaseName,
+            variant:        ic.variant,
+            gatesLabel:     ic.gatesLabel,
+            sunGate:        ic.sunGate,
+          }
+          console.log('[preview] incarnationCross sunGate=', ic.sunGate, 'crossType=', ic.crossType)
+          return (
+            <Pressable onPress={() => open(sheetTarget)} style={({ pressed }) => [styles.crossCard, pressed && styles.crossCardPressed]}>
+              <Text style={styles.crossCardTitle}>輪迴交叉</Text>
+              <Text style={styles.crossFullName}>
+                {ic.crossTypeLabel}之{ic.crossBaseName}{ic.variant}
+              </Text>
+              <Text style={styles.crossGates}>閘門組合：{ic.gatesLabel}</Text>
+              <Text style={styles.crossHint}>點擊查看說明 ›</Text>
+            </Pressable>
+          )
+        })()}
 
         {/* 四箭頭（Variables） */}
         {chart.variables && chart.arrows && (
@@ -396,4 +411,11 @@ const styles = StyleSheet.create({
   actionBtnTextOutline: { color: Colors.accent },
 
   loginHint: { textAlign: 'center', fontSize: 12, color: Colors.muted, marginTop: Spacing.xs },
+
+  crossCard:        { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border, gap: 6 },
+  crossCardPressed: { borderColor: Colors.accent, backgroundColor: Colors.accentD },
+  crossCardTitle:   { color: Colors.sub, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
+  crossFullName:    { color: Colors.accent, fontSize: 16, fontWeight: '700' },
+  crossGates:       { color: Colors.sub, fontSize: 13 },
+  crossHint:        { color: Colors.muted, fontSize: 12, alignSelf: 'flex-end' } as const,
 })
