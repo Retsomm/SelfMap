@@ -18,6 +18,8 @@ const TOPICS = [
   { id: 'center',     label: '九大中心',  icon: '❖', sub: '九個能量處理中心，已定義與開放的意義', count: '9 個中心' },
   { id: 'channel',    label: '通道',      icon: '⟷', sub: '36 條通道定義你的核心特質',         count: '36 條通道' },
   { id: 'gate',       label: '閘門',      icon: '⬡', sub: '64 個閘門，你的能量節點與天賦',     count: '64 個閘門' },
+  { id: 'transit',    label: '流日',      icon: '☽', sub: '宇宙每天發給你的限定體驗卡',        count: '今日星象' },
+  { id: 'composite',  label: '合圖分析',  icon: '⊕', sub: '兩人能量場交會，解讀關係的動力地圖', count: '4 種連結' },
 ] as const
 
 export default function LearnScreen() {

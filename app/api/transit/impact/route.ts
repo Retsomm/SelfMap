@@ -48,9 +48,13 @@ export async function POST(req: NextRequest) {
     const channelIdSet      = new Set<string>(chart.channels as string[])
     const personalChannels  = CHANNEL_DEFS.filter(ch => channelIdSet.has(ch.id))
 
+    const combinedGates = new Set([...personalGates, ...transitGates])
+    const { definedCenterIds: combinedCenterIds } = calculateCentersAndChannels(combinedGates)
+
     const layers = computeImpact(
       personalGates, personalCenterIds, personalChannels,
       transitGates, transitCenterIds as Set<CenterName>, transitChannels,
+      combinedCenterIds as Set<CenterName>,
     )
 
     return NextResponse.json({ layers, computedAt: now.toISOString() })

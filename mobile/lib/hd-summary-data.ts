@@ -268,7 +268,7 @@ export const HD_AUTHORITY_CONTENT: Record<string, SummaryContent> = {
     highlights: [{ label: '核心原則', text: '說出來才知道答案——找信任的人傾聽自己說話的過程' }],
   },
   'Mental': {
-    title: '心智權威',
+    title: '邏輯權威',
     subtitle: 'Mental / No Inner Authority',
     intro: '你需要先分析，再去「感覺」答案。',
     paragraphs: [

@@ -4,7 +4,7 @@ import { findChannelById } from '@/lib/hd-normalizers'
 import { Colors, Spacing } from '@/constants/tokens'
 
 const LIB_CENTER_ZH: Record<string, string> = {
-  head: '頭腦中心', ajna: '心智中心', throat: '喉嚨中心', g: 'G 中心',
+  head: '頭腦中心', ajna: '邏輯中心', throat: '喉嚨中心', g: 'G 中心',
   ego: '意志力中心', heart: '意志力中心',
   solarPlexus: '情緒中心', solar: '情緒中心',
   spleen: '脾臟中心', sacral: '薦骨中心', root: '根部中心',

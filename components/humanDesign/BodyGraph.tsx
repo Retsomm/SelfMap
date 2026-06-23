@@ -37,7 +37,7 @@ export interface AnnotationLabels {
 }
 
 const DEFAULT_ANNOTATION_LABELS: AnnotationLabels = {
-  head: '頂輪',
+  head: '頭腦中心',
   ajna: '邏輯中心',
   throat: '喉嚨中心',
   g: 'G 中心',

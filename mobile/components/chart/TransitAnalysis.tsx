@@ -5,7 +5,7 @@ import { normalizeCenterId } from '@/lib/hd-normalizers'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 const CENTER_SHORT_ZH: Record<string, string> = {
-  head: '頭腦', ajna: '心智', throat: '喉嚨', g: 'G',
+  head: '頭腦', ajna: '邏輯', throat: '喉嚨', g: 'G',
   heart: '意志力', spleen: '脾', sacral: '薦骨', solar: '情緒', root: '根部',
 }
 
@@ -26,11 +26,12 @@ export default function TransitAnalysis({
   const sharedGates       = snapshot.planets.filter(p => personalGateSet.has(p.gate))
   const transitOnlyGates  = snapshot.planets.filter(p => !personalGateSet.has(p.gate))
 
-  const transitChartCenterSet = new Set(snapshot.definedCenterIds.map(normalizeCenterId))
+  const combinedChartCenterSet = new Set(snapshot.combinedDefinedCenterIds.map(normalizeCenterId))
 
   const activatedByTransit = CENTER_ORDER.filter(
-    k => !personalChartCenterIds.has(k) && transitChartCenterSet.has(k),
+    k => !personalChartCenterIds.has(k) && combinedChartCenterSet.has(k),
   )
+
 
   const seenPairs = new Set<string>()
   const newChannels: typeof HD_CHANNELS = []
@@ -57,35 +58,17 @@ export default function TransitAnalysis({
 
   return (
     <>
-      {/* 中心 */}
-      <View style={[s.card, { gap: 8 }]}>
-        <Text style={s.cardTitle}>中心</Text>
-        {CENTER_ORDER.map(k => {
-          const inP  = personalChartCenterIds.has(k)
-          const inT  = transitChartCenterSet.has(k)
-          const name = CENTER_SHORT_ZH[k] ?? k
-          return (
-            <View key={k} style={t.centerRow}>
-              <Text style={t.centerName}>{name}</Text>
-              <View style={t.badges}>
-                {!inP && !inT && <View style={[t.badge, t.badgeOpen]}><Text style={t.badgeOpenText}>開放</Text></View>}
-                {inP  && <View style={[t.badge, t.badgePersonal]}><Text style={t.badgePersonalText}>個人</Text></View>}
-                {inT  && <View style={[t.badge, t.badgeTransit]}><Text style={t.badgeTransitText}>流日</Text></View>}
-              </View>
-            </View>
-          )
-        })}
-        {activatedByTransit.length > 0 && (
-          <View style={t.highlight}>
-            <Text style={t.highlightTitle}>
-              今日被流日暫時啟動：{activatedByTransit.map(k => CENTER_SHORT_ZH[k] ?? k).join('、')}中心
-            </Text>
-            <Text style={t.highlightBody}>
-              以上原本開放的中心，今天因流日被暫時定義，可能帶來不熟悉的衝動或情緒底色。這些能量不屬於你的設計，不需要跟隨它行動。
-            </Text>
-          </View>
-        )}
-      </View>
+      {/* 空白中心被激活 */}
+      {activatedByTransit.length > 0 && (
+        <View style={t.highlight}>
+          <Text style={t.highlightTitle}>
+            今日被流日暫時啟動：{activatedByTransit.map(k => CENTER_SHORT_ZH[k] ?? k).join('、')}中心
+          </Text>
+          <Text style={t.highlightBody}>
+            以上原本開放的中心，今天因流日被暫時定義，可能帶來不熟悉的衝動或情緒底色。這些能量不屬於你的設計，不需要跟隨它行動。
+          </Text>
+        </View>
+      )}
 
       {/* 閘門 */}
       <View style={s.card}>
@@ -134,7 +117,7 @@ export default function TransitAnalysis({
                 </View>
               ))}
               <Text style={t.channelNote}>
-                以上通道完全不屬於你原本的設計，你可能會想用這些頻率做事，但不適合據此做重要決定。
+                這些是今日流日帶給你的限定天賦，可以借來執行任務、享受那股靈感或動力。只是記得，這件衣服明天會換掉，不要在它還穿著的時候做需要長久負責的承諾。
               </Text>
             </>
           )}
@@ -151,7 +134,7 @@ export default function TransitAnalysis({
                 </View>
               ))}
               <Text style={t.channelNote}>
-                你有以上通道的其中一端，流日補上另一端，會短暫感受到完整通道的感覺，但能量散去後容易有失落感。
+                你本身擁有一半，今天流日借你補齊了另一半，讓你短暫體驗完整通道的感覺。這股能量來了可以好好享用，能量退潮後回到原本的節奏就好。
               </Text>
             </>
           )}
@@ -161,7 +144,7 @@ export default function TransitAnalysis({
       {/* 提醒 */}
       <View style={[s.card, { borderLeftWidth: 3, borderLeftColor: Colors.transit }]}>
         <Text style={t.reminderText}>
-          關於流日的提醒：流日啟動的地方愈多，不代表運勢愈好。這些暫時被啟動的能量都不屬於你原本的設計，容易讓你感覺被外在頻率推著走，甚至做出不適合自己的決策。最重要的事，始終是回到自己的內在權威做決定。
+          把流日想像成宇宙每天發給你的「限定體驗卡」。被激活的能量雖然不是你本來的配備，卻是可以借來用的暫時天賦——拿來執行、創作、或體驗平時沒有的敏銳度都很好。只要掌握一個原則：盡情享受過程，但不要在被流日定義的地方做重大的長期承諾。始終以自己的內在權威做最終決定。
         </Text>
       </View>
     </>
@@ -187,19 +170,9 @@ const s = StyleSheet.create({
 })
 
 const t = StyleSheet.create({
-  centerRow:  { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  centerName: { flex: 1, fontSize: 14, color: Colors.text },
-  badges:     { flexDirection: 'row', gap: 6 },
   badge:            { borderRadius: 5, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeOpen:        { backgroundColor: Colors.gateBg },
-  badgeOpenText:    { fontSize: 11, color: Colors.muted },
-  badgePersonal:    { backgroundColor: Colors.accentD },
-  badgePersonalText:{ fontSize: 11, color: Colors.accent, fontWeight: '600' },
-  badgeTransit:     { backgroundColor: Colors.transitChipBg },
-  badgeTransitText: { fontSize: 11, color: Colors.transit, fontWeight: '600' },
 
   highlight: {
-    marginTop: 12,
     backgroundColor: Colors.transitHighlightBg,
     borderRadius: Radius.md,
     padding: 12,

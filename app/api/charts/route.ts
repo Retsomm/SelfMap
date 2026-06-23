@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       arrows = {
         topLeft:     (result.planets[0]?.red.tone   ?? 1) <= 3,  // Design 太陽（身體/飲食）
         bottomLeft:  (result.planets[3]?.red.tone   ?? 1) <= 3,  // Design 北交點（環境）
-        topRight:    (result.planets[0]?.black.tone ?? 1) <= 3,  // Personality 太陽（心智/動機）
+        topRight:    (result.planets[0]?.black.tone ?? 1) <= 3,  // Personality 太陽（邏輯/動機）
         bottomRight: (result.planets[3]?.black.tone ?? 1) <= 3,  // Personality 北交點（觀點）
       }
     } else {
