@@ -34,6 +34,7 @@ export const saveChart = async ({ result, date, time, locationLabel, timezone }:
         crossName:      result.incarnationCross.crossName,
         gatesLabel:     result.incarnationCross.gatesLabel,
         variant:        result.incarnationCross.variant,
+        sunGate:        result.incarnationCross.persSunGate,
       },
       variables: {
         digestion:   result.variables.digestion,

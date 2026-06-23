@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
+import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { previewChart, type CreateChartPayload } from '@/lib/api'
 import { setPendingChart } from '@/lib/pendingChart'
@@ -36,6 +37,7 @@ const SUB_TABS = [
 function CreatePersonalView() {
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
+  const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
 
   const [name, setName] = useState('')
   const [date, setDate] = useState({ year: TODAY.getFullYear() - 30, month: 1, day: 1 })
@@ -105,10 +107,12 @@ function CreatePersonalView() {
   }
 
   return (
+    <ScrollLockContext.Provider value={scrollLockCtx}>
     <ScrollView
       ref={scrollRef}
       contentContainerStyle={styles.inner}
       keyboardShouldPersistTaps="handled"
+      scrollEnabled={scrollEnabled}
       nestedScrollEnabled
     >
       {savedProfiles.length > 0 && !appliedProfile && (
@@ -173,6 +177,7 @@ function CreatePersonalView() {
         onClose={() => setPickerVisible(false)}
       />
     </ScrollView>
+    </ScrollLockContext.Provider>
   )
 }
 

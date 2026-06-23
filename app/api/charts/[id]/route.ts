@@ -51,6 +51,7 @@ export async function GET(
                 crossName:      result.incarnationCross.crossName,
                 gatesLabel:     result.incarnationCross.gatesLabel,
                 variant:        result.incarnationCross.variant,
+                sunGate:        result.incarnationCross.persSunGate,
               },
               variables: {
                 digestion:   result.variables.digestion,

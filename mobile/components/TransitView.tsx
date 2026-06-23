@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native'
 import { type CreateTransitResult, previewTransitChart, createTransitChart } from '@/lib/api'
+import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 import { downloadTransitPdf, generateTransitAiPrompt } from '@/lib/chartPdf'
 import { buildTransitBodyGraphProps } from '@/lib/hd-bodygraph-utils'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
@@ -49,6 +50,7 @@ export default function TransitView() {
   const { getToken } = useAuth()
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
+  const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
 
   const [form, setForm]               = useState<BirthFormData>(defaultBirthFormData)
   const [fieldError, setFieldError]   = useState<string | null>(null)
@@ -138,10 +140,12 @@ export default function TransitView() {
     new Date(iso).toLocaleString('zh-TW', { hour12: false, timeZone: 'Asia/Taipei' })
 
   return (
+    <ScrollLockContext.Provider value={scrollLockCtx}>
     <ScrollView
       ref={scrollRef}
       contentContainerStyle={s.inner}
       keyboardShouldPersistTaps="handled"
+      scrollEnabled={scrollEnabled}
       nestedScrollEnabled
     >
       {!result ? (
@@ -257,21 +261,26 @@ export default function TransitView() {
               <Text style={s.muted}>今日流日對此圖表影響不顯著</Text>
             </View>
           ) : (
-            result.impact.layers.map((layer, i) => {
-              const cfg = IMPACT_CFG[layer.kind]
-              return (
-                <View key={i} style={[s.card, { borderLeftWidth: 3, borderLeftColor: cfg.color }]}>
-                  <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: 6 }}>
-                    <Text style={{ fontSize: 18 }}>{cfg.icon}</Text>
-                    <View>
-                      <Text style={[s.impactKind, { color: cfg.color }]}>{cfg.label}</Text>
-                      <Text style={s.impactLabel}>{layer.label}</Text>
+            (['center-activated', 'new-channel', 'completing-channel'] as const)
+              .map(kind => {
+                const layers = result.impact.layers.filter(l => l.kind === kind)
+                if (layers.length === 0) return null
+                const cfg = IMPACT_CFG[kind]
+                return (
+                  <View key={kind} style={[s.card, { borderLeftWidth: 3, borderLeftColor: cfg.color }]}>
+                    <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: 8 }}>
+                      <Text style={{ fontSize: 18 }}>{cfg.icon}</Text>
+                      <Text style={[s.impactKind, { color: cfg.color, alignSelf: 'center' }]}>{cfg.label}</Text>
                     </View>
+                    {layers.map((layer, i) => (
+                      <View key={i} style={i > 0 ? { borderTopWidth: 1, borderTopColor: `${cfg.color}30`, marginTop: 8, paddingTop: 8 } : undefined}>
+                        <Text style={s.impactLabel}>{layer.label}</Text>
+                        <Text style={[s.muted, { marginTop: 3 }]}>{layer.detail}</Text>
+                      </View>
+                    ))}
                   </View>
-                  <Text style={s.muted}>{layer.detail}</Text>
-                </View>
-              )
-            })
+                )
+              })
           )}
 
           {/* 三個行動按鈕 */}
@@ -303,6 +312,7 @@ export default function TransitView() {
         </>
       )}
     </ScrollView>
+    </ScrollLockContext.Provider>
   )
 }
 

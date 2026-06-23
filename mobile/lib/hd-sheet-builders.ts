@@ -10,6 +10,7 @@ import {
   HD_PROFILE_CONTENT,
   HD_DEFINITION_CONTENT,
 } from '@/lib/hd-summary-data'
+import { HD_CROSS_CONTENT } from '@/lib/hd-cross-data'
 import { centerZh } from '@/lib/hd-normalizers'
 
 export interface SheetContent {
@@ -180,6 +181,62 @@ export function buildDefinitionContent(definitionKey: string): SheetContent {
     subtitle: d.subtitle ?? '定義',
     sections: [{ body: d.intro }, ...d.paragraphs.map(p => ({ body: p }))],
     highlights: d.highlights,
+    keywords: [],
+  }
+}
+
+const CROSS_TYPE_KEY: Record<string, 'RAC' | 'JC' | 'LAC'> = {
+  RAC: 'RAC',
+  JC:  'JC',
+  LAC: 'LAC',
+}
+
+export function buildIncarnationCrossContent(params: {
+  crossType: string
+  crossTypeLabel: string
+  crossBaseName: string
+  variant: string | number
+  gatesLabel: string
+  sunGate?: number
+}): SheetContent {
+  const { crossType, crossTypeLabel, crossBaseName, variant, gatesLabel } = params
+  const ctKey = CROSS_TYPE_KEY[crossType] ?? 'RAC'
+  const title = `${crossTypeLabel}之${crossBaseName}${variant}`
+
+  // sunGate 優先用 API 傳的值，fallback 從 gatesLabel 第一個數字解析（格式："11/12 | 6/36"）
+  const resolvedSunGate: number = params.sunGate ?? parseInt(gatesLabel.split('/')[0], 10)
+  console.log('[buildIncarnationCross] resolvedSunGate=', resolvedSunGate, 'ctKey=', ctKey)
+
+  const gateContent = HD_CROSS_CONTENT[resolvedSunGate]
+  if (!gateContent) {
+    return {
+      title,
+      subtitle: gatesLabel,
+      sections: [{ body: '這個閘門的輪迴交叉內容暫時未收錄。' }],
+      keywords: [],
+    }
+  }
+
+  const entry = gateContent[ctKey]
+  const sections: SheetContent['sections'] = []
+
+  if (gateContent.intro) sections.push({ body: gateContent.intro })
+
+  if (entry) {
+    const paragraphs = entry.body.split('\n').filter(Boolean)
+    paragraphs.forEach((p, i) => {
+      sections.push({ label: i === 0 ? `${crossTypeLabel}・${entry.title}` : undefined, body: p })
+    })
+  } else {
+    sections.push({ body: '此交叉類型的說明暫未收錄。' })
+  }
+
+  sections.push({ label: '閘門組合', body: gatesLabel })
+
+  return {
+    title,
+    subtitle: gatesLabel,
+    sections,
     keywords: [],
   }
 }

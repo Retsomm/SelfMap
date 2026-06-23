@@ -198,12 +198,11 @@ export type CreateCompositePayload = {
   name?: string
 }
 
-/** 帶 token + previewOnly:true — 只計算合圖不存 DB，chartId 回傳 null */
-export function previewCompositeChart(token: string, payload: CreateCompositePayload) {
+/** previewOnly:true — 只計算合圖不存 DB，chartId 回傳 null（不需 token） */
+export function previewCompositeChart(payload: CreateCompositePayload) {
   return request<CreateCompositeResult>('/api/composite/create', {
     method: 'POST',
     body: JSON.stringify({ ...payload, previewOnly: true }),
-    token,
   })
 }
 

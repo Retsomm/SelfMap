@@ -65,7 +65,7 @@ export default function ChartDetailScreen() {
     const needsFetch = (chart.chartKind === 'composite' || isOldComposite) && !chart.meta?.compositeResult
     if (!needsFetch) return
 
-    let payload: Parameters<typeof previewCompositeChart>[1] | null = null
+    let payload: Parameters<typeof previewCompositeChart>[0] | null = null
 
     if (chart.meta?.personA && chart.meta?.personB) {
       const pA = chart.meta.personA
@@ -95,7 +95,7 @@ export default function ChartDetailScreen() {
       if (!token) { setCompositeFetchLoading(false); return }
       const p = payload
       if (!p) { setCompositeFetchLoading(false); return }
-      return previewCompositeChart(token, p)
+      return previewCompositeChart(p)
         .then(r => setCompositeFetched(r))
         .catch(e => { console.warn('[CompositeInfo] previewCompositeChart failed:', e) })
         .finally(() => setCompositeFetchLoading(false))
@@ -320,14 +320,29 @@ export default function ChartDetailScreen() {
             )}
 
             {/* 輪迴交叉 */}
-            {chart.meta?.incarnationCross && (
-              <SectionCard title="輪迴交叉">
-                <Row label="交叉類型" value={chart.meta.incarnationCross.crossTypeLabel} accent />
-                <Row label="交叉名稱" value={`${chart.meta.incarnationCross.crossBaseName}${chart.meta.incarnationCross.variant}`} />
-                <Row label="完整名稱" value={`${chart.meta.incarnationCross.crossTypeLabel}之${chart.meta.incarnationCross.crossBaseName}${chart.meta.incarnationCross.variant}`} />
-                <Row label="閘門組合" value={chart.meta.incarnationCross.gatesLabel} />
-              </SectionCard>
-            )}
+            {chart.meta?.incarnationCross && (() => {
+              const ic = chart.meta!.incarnationCross!
+              const sheetTarget = {
+                kind: 'incarnationCross' as const,
+                crossType:      ic.crossType,
+                crossTypeLabel: ic.crossTypeLabel,
+                crossBaseName:  ic.crossBaseName,
+                variant:        ic.variant,
+                gatesLabel:     ic.gatesLabel,
+                sunGate:        ic.sunGate,
+              }
+              console.log('[chart] incarnationCross sunGate=', ic.sunGate, 'crossType=', ic.crossType)
+              return (
+                <Pressable onPress={() => open(sheetTarget)} style={({ pressed }) => [styles.crossCard, pressed && styles.crossCardPressed]}>
+                  <Text style={styles.crossCardTitle}>輪迴交叉</Text>
+                  <Text style={styles.crossFullName}>
+                    {ic.crossTypeLabel}之{ic.crossBaseName}{ic.variant}
+                  </Text>
+                  <Text style={styles.crossGates}>閘門組合：{ic.gatesLabel}</Text>
+                  <Text style={styles.crossHint}>點擊查看說明 ›</Text>
+                </Pressable>
+              )
+            })()}
 
             {/* 四箭頭 */}
             {chart.meta?.variables && chart.meta?.arrows && (
@@ -441,4 +456,11 @@ const styles = StyleSheet.create({
   arrowCategory: { fontSize: 10, color: Colors.sub, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
   arrowLabel:    { fontSize: 13, color: Colors.text, fontWeight: '700' },
   arrowDesc:     { fontSize: 11, color: Colors.sub, lineHeight: 15 },
+
+  crossCard:        { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border, gap: 6 },
+  crossCardPressed: { borderColor: Colors.accent, backgroundColor: Colors.accentD },
+  crossCardTitle:   { color: Colors.sub, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
+  crossFullName:    { color: Colors.accent, fontSize: 16, fontWeight: '700' },
+  crossGates:       { color: Colors.sub, fontSize: 13 },
+  crossHint:        { color: Colors.muted, fontSize: 12, alignSelf: 'flex-end' } as const,
 })

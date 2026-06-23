@@ -15,17 +15,19 @@ import {
   buildAuthorityContent,
   buildProfileContent,
   buildDefinitionContent,
+  buildIncarnationCrossContent,
 } from '@/lib/hd-sheet-builders'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 export type SheetTarget =
-  | { kind: 'center';     id: string }
-  | { kind: 'gate';       num: number }
-  | { kind: 'channel';    channel: ChartChannel }
-  | { kind: 'type';       typeKey: string }
-  | { kind: 'authority';  authorityKey: string }
-  | { kind: 'profile';    profile: string }
-  | { kind: 'definition'; definitionKey: string }
+  | { kind: 'center';            id: string }
+  | { kind: 'gate';              num: number }
+  | { kind: 'channel';           channel: ChartChannel }
+  | { kind: 'type';              typeKey: string }
+  | { kind: 'authority';         authorityKey: string }
+  | { kind: 'profile';           profile: string }
+  | { kind: 'definition';        definitionKey: string }
+  | { kind: 'incarnationCross';  crossType: string; crossTypeLabel: string; crossBaseName: string; variant: string | number; gatesLabel: string; sunGate?: number }
 
 interface Props {
   target: SheetTarget | null
@@ -36,13 +38,14 @@ export default function DetailBottomSheet({ target, onClose }: Props) {
   if (!target) return null
 
   const content =
-    target.kind === 'center'     ? buildCenterContent(target.id) :
-    target.kind === 'gate'       ? buildGateContent(target.num) :
-    target.kind === 'channel'    ? buildChannelContent(target.channel) :
-    target.kind === 'type'       ? buildTypeContent(target.typeKey) :
-    target.kind === 'authority'  ? buildAuthorityContent(target.authorityKey) :
-    target.kind === 'profile'    ? buildProfileContent(target.profile) :
-    /* definition */               buildDefinitionContent(target.definitionKey)
+    target.kind === 'center'           ? buildCenterContent(target.id) :
+    target.kind === 'gate'             ? buildGateContent(target.num) :
+    target.kind === 'channel'          ? buildChannelContent(target.channel) :
+    target.kind === 'type'             ? buildTypeContent(target.typeKey) :
+    target.kind === 'authority'        ? buildAuthorityContent(target.authorityKey) :
+    target.kind === 'profile'          ? buildProfileContent(target.profile) :
+    target.kind === 'incarnationCross' ? buildIncarnationCrossContent(target) :
+    /* definition */                     buildDefinitionContent(target.definitionKey)
 
   if (!content) return null
 

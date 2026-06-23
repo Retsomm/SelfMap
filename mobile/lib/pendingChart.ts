@@ -7,6 +7,7 @@ export type IncarnationCross = {
   crossName: string
   gatesLabel: string
   variant: number
+  sunGate?: number
 }
 
 export type Variables = {

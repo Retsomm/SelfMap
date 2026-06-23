@@ -3,6 +3,7 @@ import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/compo
 import { type BirthProfile, makeProfileId } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 import { useState, useEffect } from 'react'
+import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 
 type Props = {
   visible: boolean
@@ -27,6 +28,7 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
   const [form, setForm] = useState<BirthFormData>(defaultBirthFormData)
   const [fieldError, setFieldError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
 
   useEffect(() => {
     if (visible) {
@@ -72,9 +74,11 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
           </Pressable>
         </View>
 
+        <ScrollLockContext.Provider value={scrollLockCtx}>
         <ScrollView
           contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled"
+          scrollEnabled={scrollEnabled}
         >
           <BirthDataForm
             value={form}
@@ -84,6 +88,7 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
             onClearError={() => setFieldError(null)}
           />
         </ScrollView>
+        </ScrollLockContext.Provider>
       </View>
     </Modal>
   )

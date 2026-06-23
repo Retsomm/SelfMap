@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react'
 import { ScrollView, Text, View, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native'
 import { Colors } from '@/constants/tokens'
+import { useScrollLock } from '@/contexts/ScrollLockContext'
 
 const ITEM_H = 44
 const VISIBLE = 5  // 顯示 5 行，中間那行是選中的
@@ -15,6 +16,8 @@ type Props = {
 export default function WheelPicker({ items, selectedIndex, onSelect, width = 80 }: Props) {
   const ref = useRef<ScrollView>(null)
   const isMounting = useRef(true)
+  const isLocked = useRef(false)
+  const { lockScroll, unlockScroll } = useScrollLock()
 
   useEffect(() => {
     const offset = selectedIndex * ITEM_H
@@ -22,14 +25,33 @@ export default function WheelPicker({ items, selectedIndex, onSelect, width = 80
     isMounting.current = false
   }, [selectedIndex])
 
+  const doLock = useCallback(() => {
+    if (!isLocked.current) {
+      isLocked.current = true
+      lockScroll()
+    }
+  }, [lockScroll])
+
+  const doUnlock = useCallback(() => {
+    if (isLocked.current) {
+      isLocked.current = false
+      unlockScroll()
+    }
+  }, [unlockScroll])
+
+  useEffect(() => {
+    return () => { doUnlock() }
+  }, [doUnlock])
+
   const handleMomentumEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      doUnlock()
       const y = e.nativeEvent.contentOffset.y
       const idx = Math.round(y / ITEM_H)
       const clamped = Math.max(0, Math.min(idx, items.length - 1))
       onSelect(clamped)
     },
-    [items.length, onSelect],
+    [items.length, onSelect, doUnlock],
   )
 
   return (
@@ -42,6 +64,9 @@ export default function WheelPicker({ items, selectedIndex, onSelect, width = 80
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_H}
         decelerationRate="fast"
+        nestedScrollEnabled
+        onScrollBeginDrag={doLock}
+        onScrollEndDrag={doUnlock}
         onMomentumScrollEnd={handleMomentumEnd}
         contentContainerStyle={{ paddingVertical: ITEM_H * 2 }}
         style={{ height: ITEM_H * VISIBLE }}
