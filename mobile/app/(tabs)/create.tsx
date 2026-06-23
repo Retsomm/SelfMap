@@ -1,6 +1,8 @@
 import { useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
 import {
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -106,8 +108,16 @@ function CreatePersonalView() {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80)
   }
 
+  function handleCityFocus() {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350)
+  }
+
   return (
     <ScrollLockContext.Provider value={scrollLockCtx}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
     <ScrollView
       ref={scrollRef}
       contentContainerStyle={styles.inner}
@@ -150,6 +160,7 @@ function CreatePersonalView() {
               city={city}
               timezone={timezone}
               onSelect={(c, tz) => { setCity(c); setTimezone(tz); setFieldError(null) }}
+              onFocus={handleCityFocus}
             />
             {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}
           </Section>
@@ -177,6 +188,7 @@ function CreatePersonalView() {
         onClose={() => setPickerVisible(false)}
       />
     </ScrollView>
+    </KeyboardAvoidingView>
     </ScrollLockContext.Provider>
   )
 }
@@ -196,7 +208,7 @@ export default function CreateScreen() {
   const [subTab, setSubTab] = useState<SubTab>('personal')
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <ScreenHeader title="建立圖表" />
 
       <SubTabBar tabs={SUB_TABS} active={subTab} onSelect={setSubTab} />

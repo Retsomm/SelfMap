@@ -1,6 +1,7 @@
 import { useAuth, useUser } from '@clerk/expo'
 import { useLocalSearchParams } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
+import * as WebBrowser from 'expo-web-browser'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -11,6 +12,7 @@ import { InputModal } from '@/components/InputModal'
 import { BirthProfileSheet } from '@/components/BirthProfileSheet'
 import ChartListView from '@/components/ChartListView'
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn'
+import { useLineSignIn } from '@/hooks/useLineSignIn'
 import {
   type BirthProfile,
   loadProfiles,
@@ -70,13 +72,11 @@ function PersonalView() {
       if (!token) return
       const { charts } = await getCharts(token)
       const personal = charts.filter(c => !c.chartKind || c.chartKind === 'personal')
-      if (__DEV__) console.log('[PersonalView] 個人圖數量:', personal.length, '| meta 存在:', personal.filter(c => c.meta).length)
       if (personal.length === 0) { setHdChart(null); return }
 
       const candidate = personal[0]
       // 若 list 端點回傳的圖任一 meta 欄位缺失，改用單筆 API 觸發 server 端懶補算
       if (!candidate.meta?.incarnationCross || !candidate.meta?.variables || !candidate.meta?.arrows) {
-        if (__DEV__) console.log('[PersonalView] list meta 缺失，改呼叫單筆 API 觸發補算')
         const { chart } = await getChart(token, candidate.id)
         setHdChart(chart)
       } else {
@@ -195,7 +195,7 @@ function PersonalView() {
     }
   }
 
-  const SUPPORTED_PROVIDERS = new Set(['google'])
+  const SUPPORTED_PROVIDERS = new Set(['google', 'line'])
   const oauthAccounts = (user?.externalAccounts ?? []).filter(
     acct => SUPPORTED_PROVIDERS.has(acct.provider) && acct.verification?.status === 'verified'
   )
@@ -348,13 +348,47 @@ function PersonalView() {
 
 function SignInPrompt() {
   const { handleGoogleSignIn } = useGoogleSignIn()
+  const { handleLineSignIn } = useLineSignIn()
+
+  useEffect(() => {
+    void WebBrowser.warmUpAsync()
+    return () => { void WebBrowser.coolDownAsync() }
+  }, [])
+  const [loadingGoogle, setLoadingGoogle] = useState(false)
+  const [loadingLine, setLoadingLine] = useState(false)
+  const isLoading = loadingGoogle || loadingLine
+
+  async function onGooglePress() {
+    if (isLoading) return
+    setLoadingGoogle(true)
+    try { await handleGoogleSignIn() }
+    catch { Alert.alert('登入失敗', '請稍後再試') }
+    finally { setLoadingGoogle(false) }
+  }
+
+  async function onLinePress() {
+    if (isLoading) return
+    setLoadingLine(true)
+    try { await handleLineSignIn() }
+    catch { Alert.alert('登入失敗', '請稍後再試') }
+    finally { setLoadingLine(false) }
+  }
 
   return (
     <View style={s.signInWrap}>
       <Text style={s.signInTitle}>登入以使用帳號功能</Text>
       <Text style={s.signInSub}>儲存圖表、出生資料與個人設定</Text>
-      <Pressable style={s.signInBtn} onPress={handleGoogleSignIn}>
-        <Text style={s.signInBtnText}>使用 Google 登入</Text>
+      <Pressable style={[s.signInBtn, isLoading && s.btnDisabled]} onPress={onGooglePress} disabled={isLoading}>
+        {loadingGoogle
+          ? <ActivityIndicator color={Colors.surface} />
+          : <Text style={s.signInBtnText}>使用 Google 登入</Text>
+        }
+      </Pressable>
+      <Pressable style={[s.signInBtn, s.lineBtn, isLoading && s.btnDisabled]} onPress={onLinePress} disabled={isLoading}>
+        {loadingLine
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={s.signInBtnText}>使用 LINE 登入</Text>
+        }
       </Pressable>
     </View>
   )
@@ -364,17 +398,21 @@ function SignInPrompt() {
 
 export default function ProfileScreen() {
   const { isSignedIn } = useAuth()
-  const [outerTab, setOuterTab] = useState<OuterTab>('charts')
   const { chartTab: rawChartTab } = useLocalSearchParams<{ chartTab?: string }>()
   const VALID_CHART_TABS = ['personal', 'composite', 'transit'] as const
   type ChartTab = typeof VALID_CHART_TABS[number]
   const chartTab: ChartTab | undefined = VALID_CHART_TABS.includes(rawChartTab as ChartTab)
     ? (rawChartTab as ChartTab)
     : undefined
+  const [outerTab, setOuterTab] = useState<OuterTab>(chartTab !== undefined ? 'charts' : 'personal')
+
+  useEffect(() => {
+    if (chartTab !== undefined) setOuterTab('charts')
+  }, [chartTab])
 
   if (!isSignedIn) {
     return (
-      <SafeAreaView style={s.container}>
+      <SafeAreaView style={s.container} edges={['top', 'left', 'right']}>
         <ScreenHeader title="帳號" />
         <SignInPrompt />
       </SafeAreaView>
@@ -382,7 +420,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={s.container}>
+    <SafeAreaView style={s.container} edges={['top', 'left', 'right']}>
       <ScreenHeader title="帳號" />
       <SubTabBar tabs={OUTER_TABS} active={outerTab} onSelect={setOuterTab} />
 
@@ -444,5 +482,6 @@ const s = StyleSheet.create({
   signInTitle:   { fontSize: 20, fontWeight: '700', color: Colors.text, textAlign: 'center' },
   signInSub:     { fontSize: 14, color: Colors.sub, textAlign: 'center', lineHeight: 21 },
   signInBtn:     { backgroundColor: Colors.accent, paddingVertical: 14, paddingHorizontal: 32, borderRadius: Radius.md, width: '100%', alignItems: 'center', marginTop: Spacing.lg },
+  lineBtn:       { backgroundColor: '#06C755', marginTop: Spacing.sm },
   signInBtnText: { color: Colors.surface, fontSize: 16, fontWeight: '600' },
 })

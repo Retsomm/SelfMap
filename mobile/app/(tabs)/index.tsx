@@ -19,7 +19,7 @@ const HD_INTRO = [
 
 export default function AboutScreen() {
   return (
-    <SafeAreaView style={s.container}>
+    <SafeAreaView style={s.container} edges={['top', 'left', 'right']}>
       <ScreenHeader title="關於" />
       <ScrollView contentContainerStyle={s.inner} showsVerticalScrollIndicator={false}>
 

@@ -1,8 +1,9 @@
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import { type BirthProfile, makeProfileId } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 
 type Props = {
@@ -29,6 +30,7 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
   const [fieldError, setFieldError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
+  const scrollRef = useRef<ScrollView>(null)
 
   useEffect(() => {
     if (visible) {
@@ -61,7 +63,7 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onCancel}>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
           <Pressable onPress={onCancel} style={styles.headerBtn}>
             <Text style={styles.cancelText}>取消</Text>
@@ -74,8 +76,13 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
           </Pressable>
         </View>
 
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
         <ScrollLockContext.Provider value={scrollLockCtx}>
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled"
           scrollEnabled={scrollEnabled}
@@ -86,10 +93,12 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
             namePlaceholder="例如：本人、媽媽"
             fieldError={fieldError}
             onClearError={() => setFieldError(null)}
+            onCityFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350)}
           />
         </ScrollView>
         </ScrollLockContext.Provider>
-      </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </Modal>
   )
 }

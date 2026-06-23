@@ -42,8 +42,6 @@ export default function ChartDetailScreen() {
       if (!token) { setError('未登入，請重新登入'); return }
       const data = await getChart(token, id)
       const c = data.chart
-      console.log(`[ChartDetail] id=${c.id} chartKind=${c.chartKind}`)
-      console.log(`[ChartDetail] meta存在=${!!c.meta} incarnationCross=${!!(c.meta?.incarnationCross)} variables=${!!(c.meta?.variables)} arrows=${!!(c.meta?.arrows)}`)
       if (!c.meta?.incarnationCross) console.warn('[ChartDetail] ⚠️ meta.incarnationCross 不存在，輪迴交叉無法顯示')
       if (!c.meta?.variables || !c.meta?.arrows) console.warn('[ChartDetail] ⚠️ meta.variables/arrows 不存在，四箭頭無法顯示')
       setChart(c)
@@ -102,8 +100,8 @@ export default function ChartDetailScreen() {
     }).catch(e => { console.warn('[CompositeInfo] getToken failed:', e); setCompositeFetchLoading(false) })
   }, [chart])
 
-  if (loading) return <SafeAreaView style={styles.container}><LoadingView /></SafeAreaView>
-  if (error || !chart) return <SafeAreaView style={styles.container}><ErrorView message={error ?? '找不到圖表'} onRetry={loadChart} /></SafeAreaView>
+  if (loading) return <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}><LoadingView /></SafeAreaView>
+  if (error || !chart) return <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}><ErrorView message={error ?? '找不到圖表'} onRetry={loadChart} /></SafeAreaView>
 
   const typeMeta        = getTypeMeta(chart.type)
   const transitSnapshot = chart.chartKind === 'transit' ? chart.meta?.transitSnapshot : undefined
@@ -188,7 +186,7 @@ export default function ChartDetailScreen() {
   const open = (target: SheetTarget) => setSheetTarget(target)
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.inner}>
 
         {/* Body Graph */}
@@ -331,7 +329,6 @@ export default function ChartDetailScreen() {
                 gatesLabel:     ic.gatesLabel,
                 sunGate:        ic.sunGate,
               }
-              console.log('[chart] incarnationCross sunGate=', ic.sunGate, 'crossType=', ic.crossType)
               return (
                 <Pressable onPress={() => open(sheetTarget)} style={({ pressed }) => [styles.crossCard, pressed && styles.crossCardPressed]}>
                   <Text style={styles.crossCardTitle}>輪迴交叉</Text>

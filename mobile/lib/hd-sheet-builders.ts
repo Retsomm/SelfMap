@@ -205,8 +205,6 @@ export function buildIncarnationCrossContent(params: {
 
   // sunGate 優先用 API 傳的值，fallback 從 gatesLabel 第一個數字解析（格式："11/12 | 6/36"）
   const resolvedSunGate: number = params.sunGate ?? parseInt(gatesLabel.split('/')[0], 10)
-  console.log('[buildIncarnationCross] resolvedSunGate=', resolvedSunGate, 'ctKey=', ctKey)
-
   const gateContent = HD_CROSS_CONTENT[resolvedSunGate]
   if (!gateContent) {
     return {

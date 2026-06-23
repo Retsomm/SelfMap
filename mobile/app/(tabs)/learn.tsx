@@ -24,7 +24,7 @@ export default function LearnScreen() {
   const router = useRouter()
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <ScreenHeader title="學習" />
       <ScrollView contentContainerStyle={styles.inner}>
         <Text style={styles.intro}>探索人類圖的核心概念，了解自己的設計藍圖</Text>

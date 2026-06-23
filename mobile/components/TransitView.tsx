@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Alert,
   Clipboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -141,6 +143,10 @@ export default function TransitView() {
 
   return (
     <ScrollLockContext.Provider value={scrollLockCtx}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
     <ScrollView
       ref={scrollRef}
       contentContainerStyle={s.inner}
@@ -166,6 +172,7 @@ export default function TransitView() {
               namePlaceholder="例如：本人"
               fieldError={fieldError}
               onClearError={() => setFieldError(null)}
+              onCityFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350)}
             />
           )}
 
@@ -312,6 +319,7 @@ export default function TransitView() {
         </>
       )}
     </ScrollView>
+    </KeyboardAvoidingView>
     </ScrollLockContext.Provider>
   )
 }

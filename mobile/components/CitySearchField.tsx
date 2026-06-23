@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import {
   View,
   Text,
@@ -14,12 +14,14 @@ type Props = {
   city: string
   timezone: string
   onSelect: (city: string, timezone: string) => void
+  onFocus?: () => void
 }
 
-export default function CitySearchField({ city, timezone, onSelect }: Props) {
+export default function CitySearchField({ city, timezone, onSelect, onFocus }: Props) {
   const [query, setQuery] = useState(city)
   const [results, setResults] = useState<City[]>([])
   const [focused, setFocused] = useState(false)
+  const isSelectingRef = useRef(false)
 
   const handleChange = useCallback((text: string) => {
     setQuery(text)
@@ -28,6 +30,7 @@ export default function CitySearchField({ city, timezone, onSelect }: Props) {
   }, [onSelect])
 
   const handleSelect = useCallback((c: City) => {
+    isSelectingRef.current = false
     setQuery(c.display)
     setResults([])
     setFocused(false)
@@ -47,8 +50,8 @@ export default function CitySearchField({ city, timezone, onSelect }: Props) {
           style={styles.input}
           value={query}
           onChangeText={handleChange}
-          onFocus={() => { setFocused(true); setResults(searchCities(query)) }}
-          onBlur={() => setTimeout(() => setFocused(false), 150)}
+          onFocus={() => { setFocused(true); setResults(searchCities(query)); onFocus?.() }}
+          onBlur={() => setTimeout(() => { if (!isSelectingRef.current) setFocused(false) }, 150)}
           placeholder="輸入城市名稱…"
           placeholderTextColor={Colors.muted}
           autoCapitalize="none"
@@ -68,7 +71,7 @@ export default function CitySearchField({ city, timezone, onSelect }: Props) {
           scrollEnabled={false}
           style={styles.dropdown}
           renderItem={({ item }) => (
-            <Pressable style={styles.option} onPress={() => handleSelect(item)}>
+            <Pressable style={styles.option} onPressIn={() => { isSelectingRef.current = true }} onPressOut={() => { isSelectingRef.current = false }} onPress={() => handleSelect(item)}>
               <Text style={styles.optionCity}>{item.display}</Text>
               <Text style={styles.optionTz}>{item.timezone}</Text>
             </Pressable>
