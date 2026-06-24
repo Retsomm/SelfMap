@@ -97,6 +97,71 @@ ${planetRows}
 請從類型策略、人生角色、決策權威、輪迴交叉等角度綜合解讀，並給出實際生活中可應用的建議。`
 }
 
+export interface TransitAiInput {
+  planets: { planetName: string; gate: number; line: number; full: string }[]
+  allGates: Set<number>
+  definedCenterIds: Set<CenterName>
+  definedChannels: ChannelDef[]
+  computedAt: string
+}
+
+/** 將個人圖 + 流日資料組合成可直接貼給 AI 的流日解讀 prompt。 */
+export const buildTransitAiPrompt = (personal: HdResult, transit: TransitAiInput): string => {
+  const personalDefinedCenters = (Object.keys(CENTER_INFO) as CenterName[]).filter(id => personal.definedCenterIds.has(id))
+  const personalChannels = personal.definedChannels
+    .map(ch => `${ch.id}（${fmtCenterName(CENTER_INFO[ch.centerA].name)}—${fmtCenterName(CENTER_INFO[ch.centerB].name)}）`)
+    .join('、') || '無'
+
+  const openActivated = (Object.keys(CENTER_INFO) as CenterName[]).filter(
+    id => !personal.definedCenterIds.has(id) && transit.definedCenterIds.has(id)
+  )
+  const sharedGates = [...transit.allGates].filter(g => personal.allGates.has(g)).sort((a, b) => a - b)
+  const transitOnlyGates = [...transit.allGates].filter(g => !personal.allGates.has(g)).sort((a, b) => a - b)
+  const transitChannels = transit.definedChannels
+    .map(ch => `${ch.id}（${fmtCenterName(CENTER_INFO[ch.centerA].name)}—${fmtCenterName(CENTER_INFO[ch.centerB].name)}）`)
+    .join('、') || '無'
+
+  const transitDate = (() => {
+    try {
+      return new Date(transit.computedAt).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+    } catch { return transit.computedAt }
+  })()
+
+  return `以下是我的人類圖資料與今日流日疊加分析，請給我深度的流日解讀：
+
+【我的個人人類圖】
+類型：${personal.type}（${TYPE_LABELS[personal.type] ?? ''}）
+人生角色：${personal.profile.profile}（${PROFILE_LABELS[personal.profile.profile] ?? '—'}）
+決策權威：${personal.authority.name}
+已定義中心：${personalDefinedCenters.map(id => CENTER_INFO[id].name).join('、') || '無'}
+已定義通道：${personalChannels}
+
+【今日流日時間】
+${transitDate}（台北時間）
+
+【流日行星閘門】
+${transit.planets.map(p => `  ${p.planetName}：閘門 ${p.full}`).join('\n')}
+
+【個人圖 & 流日共有閘門】
+${sharedGates.length > 0 ? sharedGates.join('、') : '無'}
+
+【流日專屬閘門】
+${transitOnlyGates.length > 0 ? transitOnlyGates.join('、') : '無'}
+
+【流日形成的通道】
+${transitChannels}
+
+【流日暫時激活的開放中心】
+${openActivated.length > 0 ? openActivated.map(id => CENTER_INFO[id].name).join('、') : '無'}
+
+請根據以上資料，分析今日流日對我的影響：
+1. 哪些能量是今天特別被強化的？
+2. 哪些開放中心今天有暫時的能量體驗？
+3. 流日閘門與我個人閘門的共鳴點在哪裡？
+4. 今天適合做什麼，需要注意什麼？
+請以實用、具體的建議方式呈現。`
+}
+
 /** 將兩份 HdResult 組合成可直接貼給 AI 的合圖解讀 prompt。 */
 export const buildCompositeAiPrompt = (a: HdResult, b: HdResult): string => {
   const fmt = (r: HdResult, label: string) => {

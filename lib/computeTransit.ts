@@ -1,5 +1,5 @@
 import { initSwissEph, Planet, LunarPoint } from '@/lib/swissEph'
-import { calculatePlanetGates, calculateCentersAndChannels, toActivations } from '@/lib/humanDesign'
+import { calculatePlanetGates, calculateCentersAndChannels } from '@/lib/humanDesign'
 import type { CenterName } from '@/lib/humanDesign/types'
 import type { ChannelDef } from '@/lib/humanDesign/types'
 import type { Activations } from '@/lib/humanDesign/types'
@@ -78,9 +78,8 @@ export const buildCombinedActivations = (
   transit: TransitResult,
 ): Activations => {
   const out: Activations = {}
-  const personalActivations = toActivations(personal.planets)
   for (const g of personal.allGates) {
-    out[g] = { c: personalActivations[g]?.c ?? false, u: personalActivations[g]?.u ?? false }
+    out[g] = { c: true, u: false }
   }
   for (const g of transit.allGates) {
     out[g] = { c: out[g]?.c ?? false, u: true }

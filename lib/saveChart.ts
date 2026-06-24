@@ -64,6 +64,77 @@ export const saveChart = async ({ result, date, time, locationLabel, timezone }:
   if (!res.ok) throw new Error(json.error ?? '儲存失敗')
 }
 
+export interface SaveTransitChartParams {
+  personal: HdResult
+  transitComputedAt: string
+  transitAllGates: Set<number>
+  transitDefinedCenterIds: Set<CenterName>
+  transitDefinedChannels: ChannelDef[]
+}
+
+/** 將流日圖存成 Chart 記錄，type 取個人類型，chartKind='transit'。 */
+export const saveTransitChart = async (p: SaveTransitChartParams): Promise<void> => {
+  // Convert UTC ISO to Taipei time (UTC+8) without relying on toLocaleString
+  const taipeiDate = (() => {
+    try { return new Date(new Date(p.transitComputedAt).getTime() + 8 * 60 * 60 * 1000) }
+    catch { return new Date(Date.now() + 8 * 60 * 60 * 1000) }
+  })()
+  const transitDate = taipeiDate.toISOString().slice(0, 10)
+  const transitTime = `${String(taipeiDate.getUTCHours()).padStart(2, '0')}:${String(taipeiDate.getUTCMinutes()).padStart(2, '0')}`
+
+  const res = await fetch('/api/charts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: `流日圖 · ${transitDate}`,
+      birthDate: transitDate,
+      birthTime: transitTime,
+      birthCity: '流日',
+      timezone: 'Asia/Taipei',
+      type: p.personal.type,
+      authority: p.personal.authority.name,
+      profile: p.personal.profile.profile,
+      definition: p.personal.definition.label,
+      centers: [...p.transitDefinedCenterIds],
+      channels: p.transitDefinedChannels.map(ch => ch.id),
+      gates: [...p.transitAllGates],
+      chartKind: 'transit',
+      incarnationCross: {
+        crossType:      p.personal.incarnationCross.crossType,
+        crossTypeLabel: CROSS_TYPE_LABELS[p.personal.incarnationCross.crossType] ?? p.personal.incarnationCross.crossType,
+        crossBaseName:  p.personal.incarnationCross.crossBaseName,
+        crossName:      p.personal.incarnationCross.crossName,
+        gatesLabel:     p.personal.incarnationCross.gatesLabel,
+        variant:        p.personal.incarnationCross.variant,
+        sunGate:        p.personal.incarnationCross.persSunGate,
+      },
+      variables: {
+        digestion:   p.personal.variables.digestion,
+        environment: p.personal.variables.environment,
+        perspective: p.personal.variables.perspective,
+        motivation:  p.personal.variables.motivation,
+      },
+      arrows: {
+        topLeft:     (p.personal.planets[0]?.red.tone   ?? 1) <= 3,
+        bottomLeft:  (p.personal.planets[3]?.red.tone   ?? 1) <= 3,
+        topRight:    (p.personal.planets[0]?.black.tone ?? 1) <= 3,
+        bottomRight: (p.personal.planets[3]?.black.tone ?? 1) <= 3,
+      },
+      planets: (p.personal.planets ?? []).map(pl => ({
+        name:      pl.planetName,
+        blackGate: pl.black.gate,
+        blackLine: pl.black.line,
+        redGate:   pl.red.gate,
+        redLine:   pl.red.line,
+      })),
+      personalityGates: (p.personal.planets ?? []).map(pl => pl.black.gate),
+      designGates:      (p.personal.planets ?? []).map(pl => pl.red.gate),
+    }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? '儲存失敗')
+}
+
 export interface SaveCompositeChartParams {
   resultA: HdResult
   resultB: HdResult

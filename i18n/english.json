@@ -259,5 +259,19 @@
     "keyTraits": "Key Traits",
     "crossGateNotFound": "Cross content for this gate is not yet available.",
     "crossNotFound": "Cross explanation for this gate is not yet available."
+  },
+  "transit": {
+    "download": "↓ Download Transit Analysis",
+    "downloading": "Downloading…",
+    "downloadSignIn": "↓ Sign In to Download",
+    "copyPrompt": "⎘ Copy Transit Prompt",
+    "copyPromptSignIn": "⎘ Sign In to Copy Prompt",
+    "copied": "✓ Copied!",
+    "saveChart": "⊕ Save Transit Snapshot",
+    "saveChartSignIn": "⊕ Sign In to Save",
+    "chartSaved": "Transit snapshot saved",
+    "saveFailed": "Save failed, please try again",
+    "downloadFailed": "Download failed, please try again",
+    "copyFailed": "Copy failed, please try again"
   }
 }

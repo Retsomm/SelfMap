@@ -259,5 +259,19 @@
     "keyTraits": "關鍵特質",
     "crossGateNotFound": "此閘門的輪迴交叉內容暫未收錄。",
     "crossNotFound": "此閘門的輪迴交叉說明暫未收錄，敬請期待。"
+  },
+  "transit": {
+    "download": "↓ 下載流日分析",
+    "downloading": "下載中…",
+    "downloadSignIn": "↓ 登入後下載",
+    "copyPrompt": "⎘ 複製流日提示詞",
+    "copyPromptSignIn": "⎘ 登入後複製提示詞",
+    "copied": "✓ 已複製！",
+    "saveChart": "⊕ 儲存流日圖",
+    "saveChartSignIn": "⊕ 登入後儲存",
+    "chartSaved": "流日圖已儲存",
+    "saveFailed": "儲存失敗，請稍後再試",
+    "downloadFailed": "下載失敗，請稍後再試",
+    "copyFailed": "複製失敗，請稍後再試"
   }
 }

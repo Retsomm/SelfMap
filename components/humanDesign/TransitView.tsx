@@ -1,16 +1,22 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useCallback } from 'react'
 import type { ReactNode } from 'react'
+import { useUser, useClerk } from '@clerk/nextjs'
 import BodyGraph from '@/components/humanDesign/BodyGraph'
 import { CENTER_INFO, CHANNEL_DEFS, calculateCentersAndChannels } from '@/lib/humanDesign'
 import type { HdResult } from '@/lib/buildAiPrompt'
+import { buildTransitAiPrompt } from '@/lib/buildAiPrompt'
 import {
   buildCombinedActivations,
   type TransitResult,
 } from '@/lib/computeTransit'
 import { toActivations } from '@/lib/humanDesign'
 import type { CenterName, Activations, ChannelDef } from '@/lib/humanDesign/types'
+import { downloadChart } from '@/lib/downloadChart'
+import { saveTransitChart } from '@/lib/saveChart'
+import toast from 'react-hot-toast'
+import { useLang } from '@/i18n'
 
 type ViewMode = 'separate' | 'combined'
 
@@ -324,10 +330,18 @@ interface TransitViewProps {
   transit: TransitResult
   onRefresh: () => void
   refreshing: boolean
+  onSaved?: () => void
 }
 
-export default function TransitView({ personal, transit, onRefresh, refreshing }: TransitViewProps) {
+export default function TransitView({ personal, transit, onRefresh, refreshing, onSaved }: TransitViewProps) {
+  const { isSignedIn } = useUser()
+  const { openSignIn } = useClerk()
+  const { t } = useLang()
+  const printAreaRef = useRef<HTMLDivElement>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('combined')
+  const [downloading, setDownloading] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const personalActivations = useMemo(() => toActivations(personal.planets), [personal])
   const transitActivations = useMemo(() => buildTransitActivations(transit), [transit])
@@ -337,8 +351,50 @@ export default function TransitView({ personal, transit, onRefresh, refreshing }
     return calculateCentersAndChannels(mergedGates).definedCenterIds
   }, [personal.allGates, transit.allGates])
 
+  const handleDownload = useCallback(async () => {
+    const el = printAreaRef.current
+    if (!el) return
+    setDownloading(true)
+    window.umami?.track('transit-download')
+    try {
+      await downloadChart(el)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('transit.downloadFailed'))
+    } finally {
+      setDownloading(false)
+    }
+  }, [t])
+
+  const handleCopyPrompt = useCallback(() => {
+    window.umami?.track('transit-copy-prompt')
+    navigator.clipboard.writeText(buildTransitAiPrompt(personal, transit)).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => toast.error(t('transit.copyFailed')))
+  }, [personal, transit, t])
+
+  const handleSave = useCallback(async () => {
+    setSaving(true)
+    window.umami?.track('transit-save')
+    try {
+      await saveTransitChart({
+        personal,
+        transitComputedAt: transit.computedAt,
+        transitAllGates: transit.allGates,
+        transitDefinedCenterIds: transit.definedCenterIds,
+        transitDefinedChannels: transit.definedChannels,
+      })
+      toast.success(t('transit.chartSaved'))
+      onSaved?.()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('transit.saveFailed'))
+    } finally {
+      setSaving(false)
+    }
+  }, [personal, transit, onSaved, t])
+
   return (
-    <div className="flex flex-col gap-6">
+    <div ref={printAreaRef} className="flex flex-col gap-6">
 
       {/* Header: time + refresh */}
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -471,6 +527,30 @@ export default function TransitView({ personal, transit, onRefresh, refreshing }
           <span className="font-semibold text-(--ink)">關於流日的提醒：</span>
           把流日想像成宇宙每天發給你的「限定體驗卡」。被激活的能量雖然不是你本來的配備，卻是可以借來用的暫時天賦——拿來執行、創作、或體驗平時沒有的敏銳度都很好。只要掌握一個原則：盡情享受過程，但不要在被流日定義的地方做重大的長期承諾。始終以自己的內在權威做最終決定。
         </p>
+      </div>
+
+      {/* Action buttons */}
+      <div className="hd-print-hide flex gap-3 flex-wrap items-center">
+        <button
+          onClick={isSignedIn ? handleDownload : () => openSignIn()}
+          disabled={isSignedIn ? downloading : false}
+          className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--paper) bg-(--ink) border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--crimson) hover:border-(--crimson) disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSignedIn ? (downloading ? t('transit.downloading') : t('transit.download')) : t('transit.downloadSignIn')}
+        </button>
+        <button
+          onClick={isSignedIn ? handleCopyPrompt : () => openSignIn()}
+          className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper)"
+        >
+          {isSignedIn ? (copied ? t('transit.copied') : t('transit.copyPrompt')) : t('transit.copyPromptSignIn')}
+        </button>
+        <button
+          onClick={isSignedIn ? handleSave : () => openSignIn()}
+          disabled={isSignedIn ? saving : false}
+          className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper) disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSignedIn ? (saving ? t('account.saving') : t('transit.saveChart')) : t('transit.saveChartSignIn')}
+        </button>
       </div>
 
     </div>

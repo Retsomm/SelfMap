@@ -226,6 +226,7 @@ export default function TransitTab({ initialLang }: { initialLang: Lang }) {
           transit={transit}
           onRefresh={fetchTransit}
           refreshing={loadingTransit}
+          onSaved={() => { window.location.href = '/account?section=humandesign' }}
         />
       )}
 

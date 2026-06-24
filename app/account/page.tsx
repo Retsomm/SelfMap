@@ -84,16 +84,18 @@ export default function AccountPage() {
     setChartsLoading(true)
     try {
       const res = await fetch('/api/charts')
+      if (!res.ok) return
       const json = await res.json()
       const list: SavedChart[] = json.charts ?? []
       setCharts(list)
       if (list.length > 0) setActiveChartId(prev => prev ?? list[0].id)
-    } catch {}
-    finally {
+    } catch (err) {
+      console.error('[account] fetchCharts error:', err)
+    } finally {
       setChartsLoading(false)
       setChartsFetched(true)
     }
-  }, [])
+  }, [isSignedIn, isLoaded])
 
   const [editingName, setEditingName] = useState(false)
   const [displayName, setDisplayName] = useState('')
@@ -205,11 +207,20 @@ export default function AccountPage() {
     }
   }
 
+  // Reset chartsFetched whenever URL searchParams change (e.g., redirect back after save)
+  // This ensures the list re-fetches instead of showing a stale empty state
   useEffect(() => {
-    if (activeSection === 'humandesign' && !chartsFetched && !chartsLoading) {
+    if (searchParams.get('section') === 'humandesign') {
+      setChartsFetched(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  useEffect(() => {
+    if (activeSection === 'humandesign' && !chartsFetched && !chartsLoading && isSignedIn) {
       startTransition(() => { fetchCharts() })
     }
-  }, [activeSection, chartsFetched, chartsLoading, fetchCharts])
+  }, [activeSection, chartsFetched, chartsLoading, fetchCharts, isSignedIn])
 
   useEffect(() => {
     if (!activeChartId) return
