@@ -76,8 +76,8 @@ export interface SaveTransitChartParams {
 export const saveTransitChart = async (p: SaveTransitChartParams): Promise<void> => {
   // Convert UTC ISO to Taipei time (UTC+8) without relying on toLocaleString
   const taipeiDate = (() => {
-    try { return new Date(new Date(p.transitComputedAt).getTime() + 8 * 60 * 60 * 1000) }
-    catch { return new Date(Date.now() + 8 * 60 * 60 * 1000) }
+    const d = new Date(new Date(p.transitComputedAt).getTime() + 8 * 60 * 60 * 1000)
+    return isNaN(d.getTime()) ? new Date(Date.now() + 8 * 60 * 60 * 1000) : d
   })()
   const transitDate = taipeiDate.toISOString().slice(0, 10)
   const transitTime = `${String(taipeiDate.getUTCHours()).padStart(2, '0')}:${String(taipeiDate.getUTCMinutes()).padStart(2, '0')}`

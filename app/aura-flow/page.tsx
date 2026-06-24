@@ -85,8 +85,10 @@ export default function AuraFlowPage() {
 
   const loadCharts = useCallback(async () => {
     const r = await fetch('/api/charts')
+    if (!r.ok) throw new Error('無法載入圖表清單')
     const json = await r.json()
-    const personal = (json.charts as ChartItem[]).filter(c => !c.chartKind || c.chartKind === 'personal')
+    const personal = (Array.isArray(json.charts) ? json.charts as ChartItem[] : [])
+      .filter(c => !c.chartKind || c.chartKind === 'personal')
     setCharts(personal)
     return personal
   }, [])
@@ -106,6 +108,7 @@ export default function AuraFlowPage() {
   const fetchAuraFlow = useCallback(async (chartId: string) => {
     setLoading(true)
     setError(null)
+    setData(null)
     try {
       const res = await fetch(`/api/aura-flow?chartId=${chartId}`)
       if (!res.ok) throw new Error((await res.json()).error ?? '載入失敗')
@@ -164,8 +167,8 @@ export default function AuraFlowPage() {
       <div className="pt-13 mt-3 px-6 py-3 flex items-start justify-between shrink-0 ">
         {/* 左上：時鐘 */}
         <div className="flex flex-col gap-0.5 select-none">
-          <span className="text-(--ink-soft) text-xs tracking-widest font-mono">{dateStr}</span>
-          <span className="text-(--ink) text-2xl font-thin font-mono tracking-widest">{timeStr}</span>
+          <span className="text-(--ink-soft) text-xs tracking-widest font-mono" suppressHydrationWarning>{dateStr}</span>
+          <span className="text-(--ink) text-2xl font-thin font-mono tracking-widest" suppressHydrationWarning>{timeStr}</span>
         </div>
 
         {/* 右上：圖表選擇 + 新增按鈕 */}

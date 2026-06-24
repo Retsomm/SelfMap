@@ -89,11 +89,11 @@ export default function AccountPage() {
       const list: SavedChart[] = json.charts ?? []
       setCharts(list)
       if (list.length > 0) setActiveChartId(prev => prev ?? list[0].id)
+      setChartsFetched(true)
     } catch (err) {
       console.error('[account] fetchCharts error:', err)
     } finally {
       setChartsLoading(false)
-      setChartsFetched(true)
     }
   }, [isSignedIn, isLoaded])
 

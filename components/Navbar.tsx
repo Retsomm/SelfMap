@@ -20,7 +20,6 @@ export default function Navbar() {
     { href: '/', label: t('nav.home') },
     { href: '/human-design', label: t('nav.humanDesign') },
     { href: '/about', label: t('nav.about') },
-    { href: '/aura-flow', label: 'Aura Flow' },
   ]
 
   useEffect(() => {
