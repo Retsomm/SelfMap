@@ -10,14 +10,10 @@ import { saveCompositeChart } from '@/lib/saveChart'
 import type { Activations, CenterName } from '@/lib/humanDesign'
 import { toActivations } from '@/lib/humanDesign'
 import { downloadChart } from '@/lib/downloadChart'
-import { useLang } from '@/i18n'
 import {
   TYPE_LABELS,
-  TYPE_LABELS_EN,
   PROFILE_LABELS,
-  PROFILE_LABELS_EN,
   CENTER_INFO,
-  CENTER_NAMES_EN,
 } from '@/lib/humanDesign'
 import toast from 'react-hot-toast'
 
@@ -33,8 +29,7 @@ const buildCompositeActivations = (a: HdResult, b: HdResult): Activations => {
   return map
 }
 
-const centerLabel = (id: CenterName, lang: string) =>
-  lang === 'en' ? (CENTER_NAMES_EN[id] ?? CENTER_INFO[id]?.name ?? id) : (CENTER_INFO[id]?.name ?? id)
+const centerLabel = (id: CenterName) => CENTER_INFO[id]?.name ?? id
 
 // ── CompositePlanetPanel ────────────────────────────────────────────────────
 
@@ -81,18 +76,15 @@ interface MiniChartPanelProps {
 }
 
 const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: MiniChartPanelProps) => {
-  const { t, lang } = useLang()
   const activations = useMemo(() => toActivations(result.planets), [result])
-  const typeLabel = lang === 'en' ? (TYPE_LABELS_EN[result.type] ?? result.type) : TYPE_LABELS[result.type]
-  const profileLabel = lang === 'en' ? (PROFILE_LABELS_EN[result.profile.profile] ?? '—') : (PROFILE_LABELS[result.profile.profile] ?? '—')
+  const typeLabel = TYPE_LABELS[result.type]
+  const profileLabel = PROFILE_LABELS[result.profile.profile] ?? '—'
 
   const annotationLabels = useMemo(() => ({
-    head: t('chart.annotations.head'), ajna: t('chart.annotations.ajna'),
-    throat: t('chart.annotations.throat'), g: t('chart.annotations.g'),
-    ego: t('chart.annotations.ego'), spleen: t('chart.annotations.spleen'),
-    sacral: t('chart.annotations.sacral'), solarPlexus: t('chart.annotations.solarPlexus'),
-    root: t('chart.annotations.root'),
-  }), [t])
+    head: '頭', ajna: '阿賈那', throat: '喉輪', g: 'G',
+    ego: '自我', spleen: '脾', sacral: '骶髂',
+    solarPlexus: '太陽神經叢', root: '根',
+  }), [])
 
   const arrowTones = useMemo(() => ({
     topLeft:     result.planets[0]?.red.tone   ?? 1,
@@ -115,7 +107,7 @@ const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: Min
       {/* Chart row */}
       <div className="hd-chart-row hd-chart-row--mini">
         <aside className="hd-planets-side hd-planets-side--design">
-          <div className="hd-planets-side-header">{t('chart.designLabel')}</div>
+          <div className="hd-planets-side-header">設計</div>
           <div className="hd-planet-rows">
             {result.planets.map(p => (
               <div key={p.planetName} className="hd-planet-row hd-planet-row--left">
@@ -157,7 +149,7 @@ const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: Min
         </aside>
 
         <aside className="hd-planets-side hd-planets-side--personality">
-          <div className="hd-planets-side-header">{t('chart.personalityLabel')}</div>
+          <div className="hd-planets-side-header">人格</div>
           <div className="hd-planet-rows">
             {result.planets.map(p => (
               <div key={p.planetName} className="hd-planet-row hd-planet-row--right">
@@ -172,9 +164,9 @@ const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: Min
       {/* Stats */}
       <div className="mt-2 pt-2 border-t border-dotted border-[rgba(43,31,20,0.3)] grid grid-cols-3 gap-1">
         {[
-          { label: t('chart.typeCard'), value: typeLabel },
-          { label: t('chart.profileCard'), value: result.profile.profile + ' ' + profileLabel },
-          { label: t('chart.authorityCard'), value: result.authority.name },
+          { label: '類型', value: typeLabel },
+          { label: '配置', value: result.profile.profile + ' ' + profileLabel },
+          { label: '權威', value: result.authority.name },
         ].map(item => (
           <div key={item.label} className="min-w-0">
             <div className="font-mono text-[8px] tracking-[0.1em] uppercase text-[var(--ink-soft)]">{item.label}</div>
@@ -198,7 +190,6 @@ interface ConnectionGroupProps {
 }
 
 const ConnectionGroup = ({ title, desc, connections, colorClass, labelA, labelB }: ConnectionGroupProps) => {
-  const { t, lang } = useLang()
   return (
     <div className="border border-[var(--ink)]">
       <div className={`px-4 py-2.5 border-b border-[var(--ink)] ${colorClass}`}>
@@ -206,7 +197,7 @@ const ConnectionGroup = ({ title, desc, connections, colorClass, labelA, labelB 
         <div className="font-sans text-[11px] md:text-[12px] text-[var(--ink-soft)] mt-0.5 leading-snug">{desc}</div>
       </div>
       {connections.length === 0 ? (
-        <div className="px-4 py-3 font-mono text-[11px] md:text-[12px] text-[var(--ink-soft)]">{t('composite.noConnections')}</div>
+        <div className="px-4 py-3 font-mono text-[11px] md:text-[12px] text-[var(--ink-soft)]">目前尚無連結動態</div>
       ) : (
         <div className="divide-y divide-dotted divide-[rgba(43,31,20,0.2)]">
           {connections.map(conn => (
@@ -214,7 +205,7 @@ const ConnectionGroup = ({ title, desc, connections, colorClass, labelA, labelB 
               <div className="font-mono font-bold text-[var(--ink)]">
                 {conn.channelId}
                 <div className="font-normal text-[10px] text-[var(--ink-soft)] leading-tight">
-                  {centerLabel(conn.centerA, lang)}—{centerLabel(conn.centerB, lang)}
+                  {centerLabel(conn.centerA)}—{centerLabel(conn.centerB)}
                 </div>
               </div>
               <div className="font-mono text-[var(--ink-soft)]">
@@ -259,7 +250,6 @@ export default function CompositeView({
 }: CompositeViewProps) {
   const { isSignedIn } = useUser()
   const { openSignIn } = useClerk()
-  const { t, lang } = useLang()
   const printAreaRef = useRef<HTMLDivElement>(null)
   const [downloading, setDownloading] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -267,27 +257,59 @@ export default function CompositeView({
   const [chartMode, setChartMode] = useState<ChartMode>('merged')
 
   const analysis = useMemo(() => analyzeComposite(resultA, resultB), [resultA, resultB])
-  const labelA = t('composite.personA')
-  const labelB = t('composite.personB')
+  const labelA = '人物 A'
+  const labelB = '人物 B'
 
   const compositeActivations = useMemo(() => buildCompositeActivations(resultA, resultB), [resultA, resultB])
 
   const annotationLabels = useMemo(() => ({
-    head:        t('chart.annotations.head'),
-    ajna:        t('chart.annotations.ajna'),
-    throat:      t('chart.annotations.throat'),
-    g:           t('chart.annotations.g'),
-    ego:         t('chart.annotations.ego'),
-    spleen:      t('chart.annotations.spleen'),
-    sacral:      t('chart.annotations.sacral'),
-    solarPlexus: t('chart.annotations.solarPlexus'),
-    root:        t('chart.annotations.root'),
-  }), [t])
+    head:        '頭',
+    ajna:        '阿賈那',
+    throat:      '喉輪',
+    g:           'G',
+    ego:         '自我',
+    spleen:      '脾',
+    sacral:      '骶髂',
+    solarPlexus: '太陽神經叢',
+    root:        '根',
+  }), [])
 
   const integrationKey = analysis.integrationTheme === '9+0' ? 'theme9_0'
     : analysis.integrationTheme === '8+1' ? 'theme8_1'
     : analysis.integrationTheme === '7+2' ? 'theme7_2'
     : 'theme6_3'
+
+  const INTEGRATION_CONTENT: Record<string, { label: string; love: string; work: string }> = {
+    theme9_0: {
+      label: '九加零',
+      love: '極度甜蜜與黏人。能量場完全自給自足，外人很難融入。兩人會深深沉浸在彼此的世界中，但也容易因為缺乏外在刺激而感到窒息或過度封閉。',
+      work: '過於封閉。團隊內部可能非常有默契，但極易忽略外部市場的變化或同事、客戶的客觀意見。',
+    },
+    theme8_1: {
+      label: '八加一',
+      love: '最舒服的互動模式。彼此有足夠的能量連結，同時留有「空白」作為陽光照進來的窗口。雙方擁有各自呼吸與消化的空間，關係健康且長久。',
+      work: '黃金搭檔。既有共同努力的交集，又有一起去體驗、探索外部世界的窗口。',
+    },
+    theme7_2: {
+      label: '七加二',
+      love: '最舒服的互動模式之一。保有兩個空白中心，彼此連結同時仍有足夠的獨立呼吸空間，長期相處不易窒息。',
+      work: '黃金搭檔。既有共同努力的交集，又有兩扇開放的窗口迎接外在刺激與機會。',
+    },
+    theme6_3: {
+      label: '六加三',
+      love: '連結感較淡。兩人在一起時仍有太多未定因素，容易流於平淡或像朋友。通常需要藉由共同的興趣、小孩或外在媒介來維繫緊密感。',
+      work: '適合團隊合作。保持高度的獨立性與自由度，不會對彼此造成過度制約，適合鬆散型的專案合作或大團隊中的平行分工。',
+    },
+  }
+
+  const LINE_RESONANCE: Record<string, { label: string; desc: string }> = {
+    line1: { label: '第一線', desc: '這是你在關係中最自然的表達方式。' },
+    line2: { label: '第二線', desc: '這是你在關係中需要穩定與支持的方式。' },
+    line3: { label: '第三線', desc: '這是你在關係中帶來創新與試探的方式。' },
+    line4: { label: '第四線', desc: '這是你在關係中建立安全與秩序的方式。' },
+    line5: { label: '第五線', desc: '這是你在關係中展現自由與洞察的方式。' },
+    line6: { label: '第六線', desc: '這是你在關係中整合與學習的方式。' },
+  }
 
   const LINE_RESONANCE_KEYS = ['line1', 'line2', 'line3', 'line4', 'line5', 'line6'] as const
 
@@ -298,18 +320,18 @@ export default function CompositeView({
     try {
       await downloadChart(el)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('chart.downloadFailed'))
+      toast.error(err instanceof Error ? err.message : '下載失敗')
     } finally {
       setDownloading(false)
     }
-  }, [t])
+  }, [])
 
   const handleCopyPrompt = useCallback(() => {
     window.umami?.track('composite-copy-prompt')
     navigator.clipboard.writeText(buildCompositeAiPrompt(resultA, resultB)).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    }).catch(err => { console.error(err); toast.error(t('composite.copyFailed')) })
+    }).catch(err => { console.error(err); toast.error('複製失敗') })
   }, [resultA, resultB])
 
   const handleSaveCharts = useCallback(async () => {
@@ -324,14 +346,14 @@ export default function CompositeView({
         compositeDefinedChannels: analysis.compositeDefinedChannels,
         compositeAllGates: new Set([...resultA.allGates, ...resultB.allGates]),
       })
-      toast.success(t('composite.chartsSaved'))
+      toast.success('合圖已儲存')
       onSaved?.()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('composite.saveFailed'))
+      toast.error(err instanceof Error ? err.message : '合圖儲存失敗')
     } finally {
       setSaving(false)
     }
-  }, [resultA, resultB, dateA, timeA, locationA, timezoneA, dateB, timeB, locationB, timezoneB, analysis, onSaved, t])
+  }, [resultA, resultB, dateA, timeA, locationA, timezoneA, dateB, timeB, locationB, timezoneB, analysis, onSaved])
 
   return (
     <div ref={printAreaRef} className="flex flex-col gap-8">
@@ -355,8 +377,8 @@ export default function CompositeView({
       {/* Chart mode toggle buttons */}
       <div className="hd-print-hide flex gap-0 border border-[var(--ink)] self-start">
         {([
-          { mode: 'merged' as ChartMode, label: lang === 'zh' ? '合併顯示' : 'Merged' },
-          { mode: 'sideBySide' as ChartMode, label: lang === 'zh' ? '並排顯示' : 'Side by Side' },
+          { mode: 'merged' as ChartMode, label: '合併顯示' },
+          { mode: 'sideBySide' as ChartMode, label: '並排顯示' },
         ] as const).map(({ mode, label }) => (
           <button
             key={mode}
@@ -437,40 +459,40 @@ export default function CompositeView({
       <section className="border-t border-[var(--ink)] pt-8">
         <div className="flex items-baseline gap-4 mb-6">
           <h2 className="font-serif italic font-medium text-[clamp(24px,2.5vw,36px)] leading-none m-0 text-[var(--ink)]">
-            {t('composite.title')}
+            合圖分析
           </h2>
           <span className="font-mono text-[11px] md:text-[13px] tracking-[0.2em] uppercase text-[var(--ink-soft)]">
-            {t('composite.subtitle')}
+            兩張圖的整合關係
           </span>
         </div>
 
         {/* Integration theme */}
         <div className="mb-6">
           <div className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
-            {t('composite.integrationTitle')}
+            整合主題
           </div>
           <div className="border border-[var(--ink)] bg-[var(--paper-deep)]">
             <div className="px-5 py-3 border-b border-[var(--ink)] flex flex-wrap items-center gap-4">
               <span className="font-serif italic font-medium text-[22px] md:text-[26px] text-[var(--ink)]">
-                {t(`composite.${integrationKey}_label`)}
+                {INTEGRATION_CONTENT[integrationKey]?.label}
               </span>
               <span className="font-mono text-[11px] tracking-[0.1em] text-[var(--ink-soft)]">
-                {t('composite.definedCenters', { count: analysis.compositeDefinedCount })}
+                {analysis.compositeDefinedCount} 個已定義中心
                 {' · '}
-                {t('composite.openCenters', { count: analysis.compositeOpenCount })}
+                {analysis.compositeOpenCount} 個開放中心
               </span>
             </div>
             <div className="px-5 py-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">{t('composite.loveLabel')}</div>
+                <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">愛與關係</div>
                 <p className="font-sans text-[12px] md:text-[13px] text-[var(--ink)] leading-[1.65] m-0">
-                  {t(`composite.${integrationKey}_love`)}
+                  {INTEGRATION_CONTENT[integrationKey]?.love}
                 </p>
               </div>
               <div>
-                <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">{t('composite.workLabel')}</div>
+                <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">工作與成長</div>
                 <p className="font-sans text-[12px] md:text-[13px] text-[var(--ink)] leading-[1.65] m-0">
-                  {t(`composite.${integrationKey}_work`)}
+                  {INTEGRATION_CONTENT[integrationKey]?.work}
                 </p>
               </div>
             </div>
@@ -480,33 +502,33 @@ export default function CompositeView({
         {/* Connection dynamics */}
         <div className="mb-6">
           <div className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
-            {t('composite.connectionTitle')}
+            連結動態
           </div>
           <div className="flex flex-col gap-2">
             <ConnectionGroup
-              title={t('composite.electromagnetic')}
-              desc={t('composite.electromagneticDesc')}
+              title="電磁力"
+              desc="兩人間的吸引與衝突節點"
               connections={analysis.electromagnetic}
               colorClass="bg-[rgba(200,85,61,0.08)]"
               labelA={labelA} labelB={labelB}
             />
             <ConnectionGroup
-              title={t('composite.companionship')}
-              desc={t('composite.companionshipDesc')}
+              title="同伴關係"
+              desc="彼此支持與陪伴的方式"
               connections={analysis.companionship}
               colorClass="bg-[rgba(168,192,101,0.12)]"
               labelA={labelA} labelB={labelB}
             />
             <ConnectionGroup
-              title={t('composite.compromise')}
-              desc={t('composite.compromiseDesc')}
+              title="妥協與協調"
+              desc="如何在不同節奏與需求中找到平衡"
               connections={analysis.compromise}
               colorClass="bg-[rgba(217,194,94,0.12)]"
               labelA={labelA} labelB={labelB}
             />
             <ConnectionGroup
-              title={t('composite.dominance')}
-              desc={t('composite.dominanceDesc')}
+              title="主導與掌控"
+              desc="誰更容易主導節奏與方向"
               connections={analysis.dominance}
               colorClass="bg-[rgba(43,31,20,0.05)]"
               labelA={labelA} labelB={labelB}
@@ -518,14 +540,14 @@ export default function CompositeView({
         {analysis.compositeDefinedChannels.length > 0 && (
           <div className="mb-6">
             <div className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-2">
-              {t('composite.compositeChannelsTitle')}（{analysis.compositeDefinedChannels.length}）
+              合圖形成的通道（{analysis.compositeDefinedChannels.length}）
             </div>
             <div className="flex flex-wrap gap-1.5">
               {analysis.compositeDefinedChannels.map(ch => (
                 <span key={ch.id} className="font-mono text-[11px] tracking-[0.04em] border border-[var(--ink)] py-[3px] px-2 text-[var(--ink)] bg-[var(--paper-deep)]">
                   {ch.id}
                   <span className="ml-1.5 opacity-60 text-[10px]">
-                    {centerLabel(ch.centerA, lang)}—{centerLabel(ch.centerB, lang)}
+                    {centerLabel(ch.centerA)}—{centerLabel(ch.centerB)}
                   </span>
                 </span>
               ))}
@@ -536,7 +558,7 @@ export default function CompositeView({
         {/* Profile resonance */}
         <div className="mb-6">
           <div className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
-            {t('composite.profileResonanceTitle')}
+            配置共鳴
           </div>
           <div className="border border-[var(--ink)] px-5 py-4">
             <div className="flex items-baseline gap-4 mb-3">
@@ -545,7 +567,7 @@ export default function CompositeView({
             </div>
             {analysis.profileResonance.length === 0 ? (
               <p className="font-sans text-[12px] md:text-[13px] text-[var(--ink-soft)] m-0 leading-[1.65]">
-                {t('composite.profileResonanceNone')}
+                目前沒有明顯的配置共鳴
               </p>
             ) : (
               <div className="flex flex-col gap-2">
@@ -557,10 +579,10 @@ export default function CompositeView({
                   return (
                     <div key={line} className="flex gap-3 items-start">
                       <span className="font-mono text-[11px] font-bold tracking-[0.06em] text-[var(--ink)] shrink-0 pt-0.5">
-                        {t(`composite.${key}`)}
+                        {LINE_RESONANCE[key]?.label}
                       </span>
                       <span className="font-sans text-[12px] md:text-[13px] text-[var(--ink-soft)] leading-[1.65]">
-                        {t(`composite.${key}Desc`)}
+                        {LINE_RESONANCE[key]?.desc}
                       </span>
                     </div>
                   )
@@ -573,12 +595,12 @@ export default function CompositeView({
         {/* Authority interaction */}
         <div className="mb-6">
           <div className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
-            {t('composite.authorityTitle')}
+            權威互動
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
-              { label: t('composite.authorityA'), result: resultA, accentColor: '#c8553d' },
-              { label: t('composite.authorityB'), result: resultB, accentColor: 'var(--ink)' },
+              { label: 'A 的權威', result: resultA, accentColor: '#c8553d' },
+              { label: 'B 的權威', result: resultB, accentColor: 'var(--ink)' },
             ].map(({ label, result: r, accentColor }) => (
               <div key={label} className="border border-[var(--ink)] border-l-4 px-4 py-3" style={{ borderLeftColor: accentColor }}>
                 <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">{label}</div>
@@ -597,14 +619,14 @@ export default function CompositeView({
             className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--paper) bg-(--ink) border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--crimson) hover:border-(--crimson) disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSignedIn
-              ? (downloading ? t('composite.downloading') : t('composite.download'))
-              : t('composite.downloadSignIn')}
+              ? (downloading ? '下載中…' : '下載合圖')
+              : '先登入再下載'}
           </button>
           <button
             onClick={isSignedIn ? handleCopyPrompt : () => openSignIn()}
             className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper)"
           >
-            {isSignedIn ? (copied ? t('composite.copied') : t('composite.copyPrompt')) : t('composite.copyPromptSignIn')}
+            {isSignedIn ? (copied ? '已複製' : '複製合圖提示') : '先登入再複製'}
           </button>
           {!hideSaveButton && (
             <button
@@ -612,7 +634,7 @@ export default function CompositeView({
               disabled={isSignedIn ? saving : false}
               className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper) disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSignedIn ? (saving ? t('account.saving') : t('composite.saveCharts')) : t('composite.saveChartsSignIn')}
+              {isSignedIn ? (saving ? '儲存中…' : '儲存合圖') : '先登入再儲存'}
             </button>
           )}
         </div>

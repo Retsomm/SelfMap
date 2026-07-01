@@ -2,12 +2,10 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Cormorant_Garamond, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
-import { zhTW, enUS } from '@clerk/localizations'
+import { zhTW } from '@clerk/localizations'
 import { Toaster } from 'react-hot-toast'
-import { cookies } from 'next/headers'
 import { clerkAppearance } from '@/lib/clerkAppearance'
 import Navbar from '@/components/Navbar'
-import { LanguageProvider, type Lang, type LangDict } from '@/i18n'
 import './globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -100,24 +98,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const cookieStore = await cookies()
-  const rawLang = cookieStore.get('selfmap_lang')?.value
-  const initialLang: Lang = rawLang === 'en' ? 'en' : 'zh'
-
-  const initialDict: LangDict = initialLang === 'en'
-    ? (await import('@/i18n/english.json')).default as unknown as LangDict
-    : (await import('@/i18n/chinese.json')).default as unknown as LangDict
-
   return (
-    <html lang={initialLang === 'en' ? 'en' : 'zh-TW'} className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="zh-TW" className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full" suppressHydrationWarning>
         <Script defer src="https://cloud.umami.is/script.js" data-website-id="757127df-87af-47d5-a73b-9feb455d6867" />
-        <ClerkProvider appearance={clerkAppearance} localization={initialLang === 'zh' ? zhTW : enUS}>
-          <LanguageProvider initialLang={initialLang} initialDict={initialDict}>
-            <Navbar />
-            {children}
-            <Toaster position="bottom-center" toastOptions={{ duration: 3500 }} />
-          </LanguageProvider>
+        <ClerkProvider appearance={clerkAppearance} localization={zhTW}>
+          <Navbar />
+          {children}
+          <Toaster position="bottom-center" toastOptions={{ duration: 3500 }} />
         </ClerkProvider>
       </body>
     </html>

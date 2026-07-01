@@ -8,7 +8,6 @@ import DateSelect from '@/components/humanDesign/DateSelect'
 import dayjs, { type Dayjs } from 'dayjs'
 import LocationPicker from '@/components/humanDesign/LocationPicker'
 import type { HdResult } from '@/lib/buildAiPrompt'
-import { useLang, type Lang } from '@/i18n'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { useBirthProfiles, type BirthProfile } from '@/lib/useBirthProfiles'
 
@@ -67,17 +66,13 @@ const DEFAULT_INPUTS = {
   timezone: 'Asia/Taipei',
 }
 
-const getDefaultLocationLabel = (lang: Lang): string =>
-  lang === 'en' ? 'Taipei, Taiwan' : '台北, 台灣'
-
-export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
-  const { t } = useLang()
+export default function PersonalTab() {
   const router = useRouter()
   const { profiles, isSignedIn } = useBirthProfiles()
 
   const [inputs, setInputs] = useState<FormInputs>(() => ({
     ...DEFAULT_INPUTS,
-    locationLabel: getDefaultLocationLabel(initialLang),
+    locationLabel: '台北, 台灣',
   }))
   const { birthDate, birthTime, timezone, locationLabel } = inputs
   const date = birthDate.format('YYYY-MM-DD')
@@ -161,14 +156,14 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
     } catch (err) {
       if (requestId !== requestIdRef.current) return
       console.error('[calculate]', err)
-      setError(t('home.calculationError'))
+      setError('計算失敗，請稍後再試')
     } finally {
       if (requestId === requestIdRef.current) {
         setLoading(false)
         setIsRestoring(false)
       }
     }
-  }, [date, time, timezone, locationLabel, t])
+  }, [date, time, timezone, locationLabel])
 
   useEffect(() => {
     if (!triggerCalcRef.current) return
@@ -182,7 +177,7 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
         {isSignedIn && profiles.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-[11px] tracking-[0.1em] uppercase text-(--ink-soft)">
-              {t('home.loadFromProfile')}:
+              從個人檔案載入:
             </span>
             {profiles.map(p => (
               <button
@@ -191,22 +186,22 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
                 disabled={loading}
                 className="font-mono text-[11px] tracking-[0.08em] border border-(--ink-soft) px-2 py-0.5 text-(--ink-soft) hover:text-(--ink) hover:border-(--ink) transition-colors duration-120 cursor-pointer bg-transparent disabled:opacity-45 disabled:cursor-not-allowed"
               >
-                {p.label}
+                {(!p.label || p.label === '未命名') ? `${p.location} · ${p.date}` : p.label}
               </button>
             ))}
           </div>
         )}
         <div className="flex items-end gap-5 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch">
           <h4 className="font-sans text-[12px] md:text-base font-semibold uppercase tracking-[0.18em] text-(--ink) m-0 p-0 border-none whitespace-nowrap self-end pb-1.5">
-            {t('home.inputLabel')}
+            輸入資料
           </h4>
           <div className="flex gap-2 flex-wrap items-end flex-1">
           <div className="flex flex-col gap-1">
-            <label htmlFor="birth-date" className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.dateLabel')}</label>
+            <label htmlFor="birth-date" className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">日期</label>
             <DateSelect id="birth-date" value={birthDate} onChange={setBirthDate} minDate={dayjs('1900-01-01')} maxDate={dayjs('2040-12-31')} />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">{t('home.timeLabel')}</label>
+            <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-[var(--ink-soft)]">時間</label>
             <TimeSelect value={birthTime} onChange={setBirthTime} />
           </div>
           <LocationPicker
@@ -218,7 +213,7 @@ export default function PersonalTab({ initialLang }: { initialLang: Lang }) {
             onClick={calculate}
             disabled={loading}
           >
-            {loading ? (isRestoring ? t('home.loading') : t('home.calculating')) : t('home.generate')}
+            {loading ? (isRestoring ? '載入中…' : '計算中…') : '生成人類圖'}
           </button>
           {error && (
             <div className="font-mono text-[12px] md:text-base text-[var(--crimson)] mt-2 py-1.5 px-2 border border-[var(--crimson)] tracking-[0.02em]">

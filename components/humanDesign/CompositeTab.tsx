@@ -8,7 +8,6 @@ import DateSelect from '@/components/humanDesign/DateSelect'
 import dayjs, { type Dayjs } from 'dayjs'
 import LocationPicker from '@/components/humanDesign/LocationPicker'
 import type { HdResult } from '@/lib/buildAiPrompt'
-import { useLang, type Lang } from '@/i18n'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { useBirthProfiles, type BirthProfile } from '@/lib/useBirthProfiles'
 
@@ -27,9 +26,6 @@ const DEFAULT_INPUTS = {
   timezone: 'Asia/Taipei',
 }
 
-const getDefaultLocationLabel = (lang: Lang): string =>
-  lang === 'en' ? 'Taipei, Taiwan' : '台北, 台灣'
-
 const profileToInputs = (p: BirthProfile): FormInputs => ({
   birthDate: dayjs(p.date),
   birthTime: dayjs(`${p.date} ${p.time}`),
@@ -37,21 +33,20 @@ const profileToInputs = (p: BirthProfile): FormInputs => ({
   locationLabel: p.location,
 })
 
-export default function CompositeTab({ initialLang }: { initialLang: Lang }) {
-  const { t } = useLang()
+export default function CompositeTab() {
   const router = useRouter()
   const { profiles, isSignedIn } = useBirthProfiles()
   const hasAutoFilledRef = useRef(false)
 
   const [inputsA, setInputsA] = useState<FormInputs>(() => ({
     ...DEFAULT_INPUTS,
-    locationLabel: getDefaultLocationLabel(initialLang),
+    locationLabel: '台北, 台灣',
   }))
   const [inputsB, setInputsB] = useState<FormInputs>(() => ({
     ...DEFAULT_INPUTS,
     birthDate: dayjs('1995-06-15'),
     birthTime: dayjs('1995-06-15 08:00'),
-    locationLabel: getDefaultLocationLabel(initialLang),
+    locationLabel: '台北, 台灣',
   }))
 
   // Auto-fill from saved profiles on mount
@@ -87,16 +82,16 @@ export default function CompositeTab({ initialLang }: { initialLang: Lang }) {
       setCompositeResultB(rB)
     } catch (err) {
       console.error('[calculateComposite]', err)
-      setCompositeError(t('home.compositeError'))
+      setCompositeError('合圖計算失敗，請稍後再試')
     } finally {
       setCompositeLoading(false)
     }
-  }, [inputsA, inputsB, t])
+  }, [inputsA, inputsB])
 
   return (
     <>
       <CompositePersonForm
-        label={`${t('composite.personA')} — ${t('home.compositePersonA')}`}
+        label="人物 A — 人物 A"
         accentColor="#c8553d"
         inputs={inputsA}
         onInputsChange={inputs => { setInputsA(inputs); setCompositeResultA(null); setCompositeResultB(null) }}
@@ -105,7 +100,7 @@ export default function CompositeTab({ initialLang }: { initialLang: Lang }) {
       />
 
       <CompositePersonForm
-        label={`${t('composite.personB')} — ${t('home.compositePersonB')}`}
+        label="人物 B — 人物 B"
         accentColor="var(--ink)"
         inputs={inputsB}
         onInputsChange={inputs => { setInputsB(inputs); setCompositeResultA(null); setCompositeResultB(null) }}
@@ -119,7 +114,7 @@ export default function CompositeTab({ initialLang }: { initialLang: Lang }) {
           onClick={calculateComposite}
           disabled={compositeLoading}
         >
-          {compositeLoading ? t('home.compositeCalculating') : t('home.compositeCalculate')}
+          {compositeLoading ? '合圖計算中…' : '開始合圖'}
         </button>
         {compositeError && (
           <div className="font-mono text-[12px] text-[var(--crimson)] py-1.5 px-2 border border-[var(--crimson)]">
@@ -166,7 +161,6 @@ interface CompositePersonFormProps {
 }
 
 function CompositePersonForm({ label, accentColor, inputs, onInputsChange, profiles, isSignedIn }: CompositePersonFormProps) {
-  const { t } = useLang()
   const { birthDate, birthTime, locationLabel } = inputs
 
   const setBirthDate = (d: Dayjs) => onInputsChange({ ...inputs, birthDate: d })
@@ -190,7 +184,7 @@ function CompositePersonForm({ label, accentColor, inputs, onInputsChange, profi
       {isSignedIn && profiles.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-mono text-[11px] tracking-[0.1em] uppercase text-(--ink-soft)">
-            {t('home.loadFromProfile')}:
+            從個人檔案載入:
           </span>
           {profiles.map(p => (
             <button
@@ -198,7 +192,7 @@ function CompositePersonForm({ label, accentColor, inputs, onInputsChange, profi
               onClick={() => fillFromProfile(p)}
               className="font-mono text-[11px] tracking-[0.08em] border border-(--ink-soft) px-2 py-0.5 text-(--ink-soft) hover:text-(--ink) hover:border-(--ink) transition-colors duration-120 cursor-pointer bg-transparent"
             >
-              {p.label}
+              {(!p.label || p.label === '未命名') ? `${p.location} · ${p.date}` : p.label}
             </button>
           ))}
         </div>
@@ -212,11 +206,11 @@ function CompositePersonForm({ label, accentColor, inputs, onInputsChange, profi
         </h4>
         <div className="flex gap-2 flex-wrap items-end flex-1">
           <div className="flex flex-col gap-1">
-            <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-(--ink-soft)">{t('home.dateLabel')}</label>
+            <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-(--ink-soft)">日期</label>
             <DateSelect value={birthDate} onChange={setBirthDate} minDate={dayjs('1900-01-01')} maxDate={dayjs('2040-12-31')} />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-(--ink-soft)">{t('home.timeLabel')}</label>
+            <label className="font-mono text-[12px] md:text-base tracking-[0.1em] uppercase text-(--ink-soft)">時間</label>
             <TimeSelect value={birthTime} onChange={setBirthTime} />
           </div>
           <LocationPicker value={locationLabel} onSelect={handleLocation} />

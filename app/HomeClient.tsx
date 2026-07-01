@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
-import { useLang, type Lang } from '@/i18n'
 
 const PersonalTab = dynamic(() => import('@/components/humanDesign/PersonalTab'), { ssr: false })
 const CompositeTab = dynamic(() => import('@/components/humanDesign/CompositeTab'), { ssr: false })
@@ -10,14 +9,13 @@ const TransitTab = dynamic(() => import('@/components/humanDesign/TransitTab'), 
 
 type Tab = 'personal' | 'composite' | 'transit'
 
-const TAB_LABELS: Record<Tab, { zh: string; en: string }> = {
-  personal:  { zh: '個人圖', en: 'Personal' },
-  composite: { zh: '合圖',   en: 'Composite' },
-  transit:   { zh: '流日圖', en: 'Transit' },
+const TAB_LABELS: Record<Tab, string> = {
+  personal:  '個人圖',
+  composite: '合圖',
+  transit:   '流日圖',
 }
 
-export default function HomeClient({ lang: initialLang }: { lang: Lang }) {
-  const { lang } = useLang()
+export default function HomeClient() {
   const [tab, setTab] = useState<Tab>('personal')
 
   return (
@@ -36,14 +34,14 @@ export default function HomeClient({ lang: initialLang }: { lang: Lang }) {
                 : 'border-b-transparent text-[var(--ink-soft)] hover:text-[var(--ink)]',
             ].join(' ')}
           >
-            {lang === 'en' ? TAB_LABELS[tabKey].en : TAB_LABELS[tabKey].zh}
+            {TAB_LABELS[tabKey]}
           </button>
         ))}
       </div>
 
-      {tab === 'personal' && <PersonalTab initialLang={initialLang} />}
-      {tab === 'composite' && <CompositeTab initialLang={initialLang} />}
-      {tab === 'transit' && <TransitTab initialLang={initialLang} />}
+      {tab === 'personal' && <PersonalTab />}
+      {tab === 'composite' && <CompositeTab />}
+      {tab === 'transit' && <TransitTab />}
 
     </div>
   )
