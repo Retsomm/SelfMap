@@ -234,7 +234,8 @@ const LangContext = createContext<{
   lang: 'zh',
   setLang: () => {},
   t: (key) => key,
-  pick: (obj) => (typeof obj === 'object' && obj !== null && 'zh' in obj ? (obj as LangObj<unknown>).zh : obj as never),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pick: (obj) => (typeof obj === 'object' && obj !== null && 'zh' in obj ? (obj as any).zh : obj) as never,
 })
 
 export const LanguageProvider = ({
