@@ -167,7 +167,8 @@ export default function ChartView({
     try {
       await downloadChart(el)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '下載失敗')
+      console.error('[handleDownload]', err)
+      toast.error('下載失敗，請稍後再試')
     } finally {
       setDownloading(false)
     }
@@ -189,7 +190,8 @@ export default function ChartView({
       toast.success('圖表已儲存')
       onSaved?.()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '儲存失敗')
+      console.error('[handleSaveChart]', err)
+      toast.error('儲存失敗，請稍後再試')
     } finally {
       setSaving(false)
     }
