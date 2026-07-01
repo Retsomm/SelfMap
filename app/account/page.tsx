@@ -2,7 +2,7 @@
 
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useCallback, startTransition, useRef } from 'react'
+import { useEffect, useState, useCallback, startTransition, useRef, Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
@@ -56,6 +56,14 @@ interface SavedChart {
 type SidebarSection = 'profile' | 'humandesign' | 'connected'
 
 export default function AccountPage() {
+  return (
+    <Suspense>
+      <AccountContent />
+    </Suspense>
+  )
+}
+
+function AccountContent() {
   const { isLoaded, isSignedIn, user } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
