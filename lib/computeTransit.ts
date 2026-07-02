@@ -23,12 +23,14 @@ export interface TransitResult {
 
 let sweCache: Awaited<ReturnType<typeof initSwissEph>> | null = null
 
-/** 計算當下流日行星閘門（只取意識層/黑色，無設計層）。 */
-export const computeTransit = async (): Promise<TransitResult> => {
+/** 計算指定時刻（預設當下）的流日行星閘門（只取意識層/黑色，無設計層）。
+ *  targetDate 用於重建舊格式流日圖：舊記錄存的 birthDate/birthTime/timezone
+ *  其實就是當初計算流日的確切時刻，換算回 UTC Date 後可精準重算當天的流日行星。 */
+export const computeTransit = async (targetDate: Date = new Date()): Promise<TransitResult> => {
   if (!sweCache) sweCache = await initSwissEph()
   const swe = sweCache
 
-  const now = new Date()
+  const now = targetDate
   const jd = swe.dateToJulianDay(now)
   const lon = (body: Parameters<typeof swe.calculatePosition>[1]) =>
     swe.calculatePosition(jd, body).longitude

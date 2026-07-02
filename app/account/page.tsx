@@ -10,8 +10,9 @@ import ChartView from '@/components/humanDesign/ChartView'
 import BirthProfileManager from '@/components/humanDesign/BirthProfileManager'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
-import type { TransitResult, TransitPlanetRow } from '@/lib/computeTransit'
-import { CHANNEL_DEFS, type CenterName } from '@/lib/humanDesign'
+import { computeTransit, type TransitResult, type TransitPlanetRow } from '@/lib/computeTransit'
+import { CHANNEL_DEFS, calculateCentersAndChannels, type CenterName } from '@/lib/humanDesign'
+import { toUtcDate, getOffsetFromTimezone } from '@/utils/ephemeris'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmModal } from '@/components/ConfirmModal'
 
@@ -50,6 +51,14 @@ interface ChartMeta {
   transitMeta?: TransitMeta
 }
 
+interface LegacyPlanetRow {
+  name: string
+  blackGate: number
+  blackLine: number
+  redGate: number
+  redLine: number
+}
+
 interface SavedChart {
   id: string
   name: string | null
@@ -67,6 +76,9 @@ interface SavedChart {
   centers: CenterName[]
   channels: string[]
   gates: number[]
+  personalityGates?: number[] | null
+  designGates?: number[] | null
+  planets?: LegacyPlanetRow[] | null
 }
 
 type SidebarSection = 'profile' | 'humandesign' | 'connected'
@@ -294,29 +306,87 @@ function AccountContent() {
 
     if (isTransit) {
       const transitMeta = chart.meta?.transitMeta
-      if (!transitMeta) {
-        // 舊資料缺少個人出生資料與流日行星閘門，無法正確重建流日圖
+      if (transitMeta) {
+        computeHdResult(transitMeta.personalBirthDate, transitMeta.personalBirthTime, transitMeta.personalTimezone)
+          .then(personalResult => {
+            if (chartRequestIdRef.current !== requestId) return
+            const definedChannels = chart.channels
+              .map(id => CHANNEL_DEFS.find(ch => ch.id === id))
+              .filter((ch): ch is typeof CHANNEL_DEFS[number] => !!ch)
+            setChartResult(personalResult)
+            setTransitSnapshot({
+              planets: transitMeta.transitPlanets,
+              allGates: new Set(chart.gates),
+              definedCenterIds: new Set(chart.centers),
+              definedChannels,
+              computedAt: transitMeta.transitComputedAt,
+            })
+          })
+          .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error('計算失敗') } })
+          .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
+      } else if (chart.planets && chart.personalityGates && chart.designGates && chart.timezone) {
+        // 舊格式流日圖：缺少 meta.transitMeta，但本命閘門與流日計算當下的時刻都還在，
+        // 可用來精準重建（閘門/通道/中心/流日行星皆可重算，僅箭頭方向與變數顏色因 tone 遺失而無法還原）。
+        const legacyPersonalAllGates = new Set<number>([...chart.personalityGates, ...chart.designGates])
+        const { definedCenterIds, definedChannels } = calculateCentersAndChannels(legacyPersonalAllGates)
+        const dummyGate = { gate: 0, line: 0, color: 1, tone: 1, base: 1, full: '' }
+        const legacyPersonal: HdResult = {
+          jd: 0,
+          designJd: 0,
+          utcTime: '',
+          designUtcTime: '',
+          planets: chart.planets.map(p => ({
+            planetName: p.name,
+            black: { gate: p.blackGate, line: p.blackLine, color: 1, tone: 1, base: 1, full: `${p.blackGate}.${p.blackLine}` },
+            red: { gate: p.redGate, line: p.redLine, color: 1, tone: 1, base: 1, full: `${p.redGate}.${p.redLine}` },
+            display: '',
+            persLon: 0,
+            desLon: 0,
+          })),
+          profile: {
+            profile: chart.profile,
+            personalitySunLine: 0,
+            designSunLine: 0,
+            personalitySun: dummyGate,
+            designSun: dummyGate,
+          },
+          type: chart.type as HdResult['type'],
+          authority: { name: chart.authority, tip: '' },
+          definedCenterIds,
+          definedChannels,
+          allGates: legacyPersonalAllGates,
+          incarnationCross: {
+            crossType: 'RAC', crossBaseName: '', crossName: '', variant: 1,
+            conscious: '', unconscious: '', gatesLabel: '', persSunGate: 0, persSunLine: 0,
+          },
+          variables: {
+            digestion: { label: '', description: '' },
+            environment: { label: '', description: '' },
+            perspective: { label: '', description: '' },
+            motivation: { label: '', description: '' },
+          },
+          definition: { raw: chart.definition, label: chart.definition },
+        }
+
+        const legacyMoment = toUtcDate(
+          chart.birthDate,
+          chart.birthTime,
+          getOffsetFromTimezone(chart.timezone, new Date(`${chart.birthDate}T${chart.birthTime}:00`)),
+        )
+
+        computeTransit(legacyMoment)
+          .then(transit => {
+            if (chartRequestIdRef.current !== requestId) return
+            setChartResult(legacyPersonal)
+            setTransitSnapshot(transit)
+            toast('這份流日圖是舊格式儲存，已重建顯示（箭頭方向與變數顏色因舊資料未保留而無法還原）', { icon: 'ℹ️' })
+          })
+          .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error('計算失敗') } })
+          .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
+      } else {
         startTransition(() => setChartComputing(false))
         toast.error('這份流日圖是舊格式儲存，缺少完整資料，無法重新顯示')
-        return
       }
-      computeHdResult(transitMeta.personalBirthDate, transitMeta.personalBirthTime, transitMeta.personalTimezone)
-        .then(personalResult => {
-          if (chartRequestIdRef.current !== requestId) return
-          const definedChannels = chart.channels
-            .map(id => CHANNEL_DEFS.find(ch => ch.id === id))
-            .filter((ch): ch is typeof CHANNEL_DEFS[number] => !!ch)
-          setChartResult(personalResult)
-          setTransitSnapshot({
-            planets: transitMeta.transitPlanets,
-            allGates: new Set(chart.gates),
-            definedCenterIds: new Set(chart.centers),
-            definedChannels,
-            computedAt: transitMeta.transitComputedAt,
-          })
-        })
-        .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error('計算失敗') } })
-        .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
     } else if (isComposite) {
       let dateA: string, timeA: string, tzA: string
       let dateB: string, timeB: string, tzB: string
