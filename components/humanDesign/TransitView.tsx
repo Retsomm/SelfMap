@@ -16,7 +16,6 @@ import type { CenterName, Activations, ChannelDef } from '@/lib/humanDesign/type
 import { downloadChart } from '@/lib/downloadChart'
 import { saveTransitChart } from '@/lib/saveChart'
 import toast from 'react-hot-toast'
-import { useLang } from '@/i18n'
 
 type ViewMode = 'separate' | 'combined'
 
@@ -336,7 +335,6 @@ interface TransitViewProps {
 export default function TransitView({ personal, transit, onRefresh, refreshing, onSaved }: TransitViewProps) {
   const { isSignedIn } = useUser()
   const { openSignIn } = useClerk()
-  const { t } = useLang()
   const printAreaRef = useRef<HTMLDivElement>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('combined')
   const [downloading, setDownloading] = useState(false)
@@ -359,19 +357,19 @@ export default function TransitView({ personal, transit, onRefresh, refreshing, 
     try {
       await downloadChart(el)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('transit.downloadFailed'))
+      toast.error(err instanceof Error ? err.message : '下載失敗，請稍後再試')
     } finally {
       setDownloading(false)
     }
-  }, [t])
+  }, [])
 
   const handleCopyPrompt = useCallback(() => {
     window.umami?.track('transit-copy-prompt')
     navigator.clipboard.writeText(buildTransitAiPrompt(personal, transit)).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    }).catch(() => toast.error(t('transit.copyFailed')))
-  }, [personal, transit, t])
+    }).catch(() => toast.error('複製失敗，請稍後再試'))
+  }, [personal, transit])
 
   const handleSave = useCallback(async () => {
     setSaving(true)
@@ -384,14 +382,14 @@ export default function TransitView({ personal, transit, onRefresh, refreshing, 
         transitDefinedCenterIds: transit.definedCenterIds,
         transitDefinedChannels: transit.definedChannels,
       })
-      toast.success(t('transit.chartSaved'))
+      toast.success('流日圖已儲存')
       onSaved?.()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('transit.saveFailed'))
+      toast.error(err instanceof Error ? err.message : '儲存失敗，請稍後再試')
     } finally {
       setSaving(false)
     }
-  }, [personal, transit, onSaved, t])
+  }, [personal, transit, onSaved])
 
   return (
     <div ref={printAreaRef} className="flex flex-col gap-6">
@@ -536,20 +534,20 @@ export default function TransitView({ personal, transit, onRefresh, refreshing, 
           disabled={isSignedIn ? downloading : false}
           className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--paper) bg-(--ink) border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--crimson) hover:border-(--crimson) disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSignedIn ? (downloading ? t('transit.downloading') : t('transit.download')) : t('transit.downloadSignIn')}
+          {isSignedIn ? (downloading ? '下載中…' : '↓ 下載流日分析') : '↓ 登入後下載'}
         </button>
         <button
           onClick={isSignedIn ? handleCopyPrompt : () => openSignIn()}
           className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper)"
         >
-          {isSignedIn ? (copied ? t('transit.copied') : t('transit.copyPrompt')) : t('transit.copyPromptSignIn')}
+          {isSignedIn ? (copied ? '✓ 已複製！' : '⎘ 複製流日提示詞') : '⎘ 登入後複製提示詞'}
         </button>
         <button
           onClick={isSignedIn ? handleSave : () => openSignIn()}
           disabled={isSignedIn ? saving : false}
           className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper) disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSignedIn ? (saving ? t('account.saving') : t('transit.saveChart')) : t('transit.saveChartSignIn')}
+          {isSignedIn ? (saving ? '儲存中…' : '⊕ 儲存流日圖') : '⊕ 登入後儲存'}
         </button>
       </div>
 

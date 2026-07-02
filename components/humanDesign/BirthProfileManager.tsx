@@ -8,7 +8,6 @@ import TimeSelect from '@/components/humanDesign/TimeSelect'
 import LocationPicker from '@/components/humanDesign/LocationPicker'
 import { ConfirmModal } from '@/components/ConfirmModal'
 import { useBirthProfiles, type BirthProfile } from '@/lib/useBirthProfiles'
-import { useLang } from '@/i18n'
 
 // ── ProfileFormModal ────────────────────────────────────────────────────────
 
@@ -29,7 +28,6 @@ interface ProfileFormModalProps {
 }
 
 function ProfileFormModal({ title, initial, saving, onSave, onCancel }: ProfileFormModalProps) {
-  const { t } = useLang()
   const [form, setForm] = useState<FormState>(initial)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -62,13 +60,13 @@ function ProfileFormModal({ title, initial, saving, onSave, onCancel }: ProfileF
 
         <div className="flex flex-col gap-1">
           <label className="font-mono text-[11px] tracking-widest uppercase text-(--ink-soft)">
-            {t('account.birthProfileLabelPlaceholder')}
+            為此檔案命名
           </label>
           <input
             type="text"
             value={form.label}
             onChange={e => setForm(prev => ({ ...prev, label: e.target.value }))}
-            placeholder={t('account.birthProfileLabelPlaceholder')}
+            placeholder="為此檔案命名"
             className="font-mono text-[16px] tracking-[0.04em] border border-(--ink) bg-(--paper) text-(--ink) px-3 py-1.5 w-full outline-none placeholder:text-(--ink-soft)"
             autoFocus
           />
@@ -77,7 +75,7 @@ function ProfileFormModal({ title, initial, saving, onSave, onCancel }: ProfileF
         <div className="flex gap-3 flex-wrap items-end">
           <div className="flex flex-col gap-1">
             <label className="font-mono text-[11px] tracking-widest uppercase text-(--ink-soft)">
-              {t('home.dateLabel')}
+              日期
             </label>
             <DateSelect
               value={form.date}
@@ -88,7 +86,7 @@ function ProfileFormModal({ title, initial, saving, onSave, onCancel }: ProfileF
           </div>
           <div className="flex flex-col gap-1">
             <label className="font-mono text-[11px] tracking-widest uppercase text-(--ink-soft)">
-              {t('home.timeLabel')}
+              時間
             </label>
             <TimeSelect
               value={form.time}
@@ -99,7 +97,7 @@ function ProfileFormModal({ title, initial, saving, onSave, onCancel }: ProfileF
 
         <div className="flex flex-col gap-1">
           <label className="font-mono text-[11px] tracking-widest uppercase text-(--ink-soft)">
-            {t('home.locationLabel')}
+            地點
           </label>
           <LocationPicker
             value={form.location}
@@ -113,14 +111,14 @@ function ProfileFormModal({ title, initial, saving, onSave, onCancel }: ProfileF
             disabled={saving}
             className="font-mono text-[12px] tracking-widest uppercase text-(--ink-soft) border border-(--ink-soft) px-4 py-1.5 cursor-pointer transition-colors duration-120 hover:text-(--ink) hover:border-(--ink) disabled:opacity-40"
           >
-            {t('account.cancel')}
+            取消
           </button>
           <button
             onClick={() => onSave(form)}
             disabled={saving || !form.label.trim()}
             className="font-mono text-[12px] tracking-widest uppercase text-(--paper) bg-(--ink) border border-(--ink) px-4 py-1.5 cursor-pointer transition-colors duration-120 hover:bg-transparent hover:text-(--ink) disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {saving ? t('account.saving') : t('account.save')}
+            {saving ? '儲存中…' : '儲存'}
           </button>
         </div>
       </div>
@@ -147,7 +145,6 @@ const profileToForm = (p: BirthProfile): FormState => ({
 })
 
 export default function BirthProfileManager() {
-  const { t } = useLang()
   const { profiles, saveProfile, deleteProfile } = useBirthProfiles()
 
   const [showAddModal, setShowAddModal] = useState(false)
@@ -168,9 +165,9 @@ export default function BirthProfileManager() {
         location: form.location,
       })
       setShowAddModal(false)
-      toast.success(t('account.birthProfileSaved'))
+      toast.success('出生檔案已儲存')
     } catch {
-      toast.error(t('account.birthProfileSaveFailed'))
+      toast.error('出生檔案儲存失敗')
     } finally {
       setSaving(false)
     }
@@ -189,9 +186,9 @@ export default function BirthProfileManager() {
         location: form.location,
       })
       setEditingProfile(null)
-      toast.success(t('account.birthProfileSaved'))
+      toast.success('出生檔案已儲存')
     } catch {
-      toast.error(t('account.birthProfileSaveFailed'))
+      toast.error('出生檔案儲存失敗')
     } finally {
       setSaving(false)
     }
@@ -203,9 +200,9 @@ export default function BirthProfileManager() {
     try {
       await deleteProfile(confirmDeleteId)
       setConfirmDeleteId(null)
-      toast.success(t('account.birthProfileDeleted'))
+      toast.success('出生檔案已刪除')
     } catch {
-      toast.error(t('account.birthProfileDeleteFailed'))
+      toast.error('出生檔案刪除失敗')
     } finally {
       setDeleting(false)
     }
@@ -215,19 +212,19 @@ export default function BirthProfileManager() {
     <div className="mt-8">
       <div className="flex items-center justify-between mb-3 pb-2 border-b border-dotted border-[rgba(43,31,20,0.3)]">
         <h2 className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink)">
-          {t('account.birthProfiles')}
+          出生檔案
         </h2>
         <button
           onClick={() => setShowAddModal(true)}
           className="font-mono text-[11px] md:text-[13px] tracking-[0.1em] uppercase text-(--ink-soft) border border-(--ink-soft) px-2.5 py-1 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--ink) hover:border-(--ink)"
         >
-          {t('account.addBirthProfile')}
+          新增出生檔案
         </button>
       </div>
 
       {profiles.length === 0 ? (
         <p className="font-mono text-[12px] md:text-base tracking-[0.06em] text-(--ink-soft)">
-          {t('account.noBirthProfiles')}
+          尚無出生檔案
         </p>
       ) : (
         <div className="flex flex-col border border-(--ink)">
@@ -246,14 +243,14 @@ export default function BirthProfileManager() {
                 <button
                   onClick={() => setEditingProfile(p)}
                   className="font-mono text-[12px] md:text-base text-(--ink-soft) hover:text-(--ink) cursor-pointer transition-colors duration-120"
-                  title={t('account.editChartTitle')}
+                  title="編輯圖表名稱"
                 >
                   ✎
                 </button>
                 <button
                   onClick={() => setConfirmDeleteId(p.id)}
                   className="font-mono text-[12px] md:text-base text-(--ink-soft) hover:text-(--crimson) cursor-pointer transition-colors duration-120"
-                  title={t('account.deleteChart')}
+                  title="刪除圖表"
                 >
                   ✕
                 </button>
@@ -266,7 +263,7 @@ export default function BirthProfileManager() {
       {/* Add modal */}
       {showAddModal && (
         <ProfileFormModal
-          title={t('account.addBirthProfile')}
+          title="新增出生檔案"
           initial={DEFAULT_FORM}
           saving={saving}
           onSave={handleAdd}
@@ -277,7 +274,7 @@ export default function BirthProfileManager() {
       {/* Edit modal */}
       {editingProfile && (
         <ProfileFormModal
-          title={t('account.editChartTitle')}
+          title="編輯圖表名稱"
           initial={profileToForm(editingProfile)}
           saving={saving}
           onSave={handleEdit}
@@ -288,10 +285,10 @@ export default function BirthProfileManager() {
       {/* Delete confirm modal */}
       <ConfirmModal
         isOpen={!!confirmDeleteId}
-        title={t('account.deleteChartConfirmTitle')}
-        message={t('account.deleteProfileConfirmMessage')}
-        confirmLabel={t('account.deleteChartConfirm')}
-        cancelLabel={t('account.cancel')}
+        title="確認刪除"
+        message="確定要刪除此出生檔案嗎？"
+        confirmLabel="刪除"
+        cancelLabel="取消"
         onConfirm={handleDelete}
         onCancel={() => setConfirmDeleteId(null)}
         isLoading={deleting}

@@ -2,7 +2,7 @@
 
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useCallback, startTransition, useRef } from 'react'
+import { useEffect, useState, useCallback, startTransition, useRef, Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
@@ -10,7 +10,6 @@ import ChartView from '@/components/humanDesign/ChartView'
 import BirthProfileManager from '@/components/humanDesign/BirthProfileManager'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
-import { useLang } from '@/i18n'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmModal } from '@/components/ConfirmModal'
 
@@ -57,16 +56,22 @@ interface SavedChart {
 type SidebarSection = 'profile' | 'humandesign' | 'connected'
 
 export default function AccountPage() {
+  return (
+    <Suspense>
+      <AccountContent />
+    </Suspense>
+  )
+}
+
+function AccountContent() {
   const { isLoaded, isSignedIn, user } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { t } = useLang()
+  const rawSection = searchParams.get('section') as SidebarSection | null
+  const activeSection: SidebarSection =
+    rawSection && ['profile', 'humandesign', 'connected'].includes(rawSection) ? rawSection : 'profile'
 
-  const initialSection = (searchParams.get('section') as SidebarSection | null) ?? 'profile'
-  const [activeSection, setActiveSection] = useState<SidebarSection>(
-    ['profile', 'humandesign', 'connected'].includes(initialSection) ? initialSection : 'profile'
-  )
   const [activeChartId, setActiveChartId] = useState<string | null>(null)
   const [charts, setCharts] = useState<SavedChart[]>([])
   const [chartsLoading, setChartsLoading] = useState(false)
@@ -121,9 +126,9 @@ export default function AccountPage() {
       const lastName = spaceIdx === -1 ? '' : trimmed.slice(spaceIdx + 1)
       await user.update({ firstName, lastName })
       setEditingName(false)
-      toast.success(t('account.nameUpdated'))
+      toast.success('名稱已更新')
     } catch {
-      toast.error(t('account.saveFailed'))
+      toast.error('儲存失敗')
     } finally {
       setNameSaving(false)
     }
@@ -133,7 +138,7 @@ export default function AccountPage() {
     const file = e.target.files?.[0]
     if (!file || !user) return
     if (file.size > 10 * 1024 * 1024) {
-      toast.error(t('account.imageTooLarge'))
+      toast.error('圖片大小不能超過 10MB')
       if (avatarInputRef.current) avatarInputRef.current.value = ''
       return
     }
@@ -141,10 +146,10 @@ export default function AccountPage() {
     window.umami?.track('account-avatar-upload')
     try {
       await user.setProfileImage({ file })
-      toast.success(t('account.avatarUpdated'))
+      toast.success('頭像已更新')
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
-      toast.error(msg || t('account.avatarUploadFailed'))
+      toast.error(msg || '頭像上傳失敗')
     } finally {
       setAvatarUploading(false)
       if (avatarInputRef.current) avatarInputRef.current.value = ''
@@ -207,12 +212,8 @@ export default function AccountPage() {
     }
   }
 
-  // Reset chartsFetched whenever URL searchParams change (e.g., redirect back after save)
-  // This ensures the list re-fetches instead of showing a stale empty state
   useEffect(() => {
-    if (searchParams.get('section') === 'humandesign') {
-      setChartsFetched(false)
-    }
+    if (activeSection === 'humandesign') setChartsFetched(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
@@ -258,16 +259,16 @@ export default function AccountPage() {
         computeHdResult(dateB, timeB, tzB),
       ])
         .then(([a, b]) => { if (chartRequestIdRef.current === requestId) setCompositeResults({ a, b }) })
-        .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error(t('account.calcFailed')) } })
+        .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error('計算失敗') } })
         .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
     } else {
       const tz = chart.timezone ?? 'UTC'
       computeHdResult(chart.birthDate, chart.birthTime, tz)
         .then(r => { if (chartRequestIdRef.current === requestId) setChartResult(r) })
-        .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error(t('account.calcFailed')) } })
+        .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error('計算失敗') } })
         .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
     }
-  }, [activeChartId, charts, t])
+  }, [activeChartId, charts])
 
   if (!isLoaded || !isSignedIn) {
     return (
@@ -292,14 +293,14 @@ export default function AccountPage() {
   }
 
   const handleSectionClick = (section: SidebarSection) => {
-    setActiveSection(section)
+    router.replace(`/account?section=${section}`, { scroll: false })
     window.umami?.track('account-section-click', { section })
   }
 
   const NAV_ITEMS: { key: SidebarSection; label: string }[] = [
-    { key: 'profile', label: t('account.profile') },
-    { key: 'humandesign', label: t('account.humanDesign') },
-    { key: 'connected', label: t('account.connectedAccounts') },
+    { key: 'profile', label: '個人資料' },
+    { key: 'humandesign', label: '人類圖' },
+    { key: 'connected', label: '連結帳號' },
   ]
 
   return (
@@ -322,7 +323,7 @@ export default function AccountPage() {
               onClick={handleSignOut}
               className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink-soft) border border-(--ink-soft) px-2.5 py-1 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--crimson) hover:border-(--crimson)"
             >
-              {t('account.signOut')}
+              登出
             </button>
           </div>
         </div>
@@ -334,7 +335,7 @@ export default function AccountPage() {
             onClick={() => handleSectionClick('profile')}
             className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'profile' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
           >
-            {t('account.profile')}
+            個人資料
           </button>
 
           <div>
@@ -342,7 +343,7 @@ export default function AccountPage() {
               onClick={() => handleSectionClick('humandesign')}
               className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'humandesign' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
             >
-              {t('account.humanDesign')}
+              人類圖
             </button>
 
             {activeSection === 'humandesign' && charts.length >= 1 && (
@@ -380,7 +381,7 @@ export default function AccountPage() {
                         <button
                           onClick={() => handleStartRenameChart(ch)}
                           className="opacity-0 group-hover:opacity-100 pl-1 text-(--ink-soft) hover:text-(--ink) text-[12px] md:text-base cursor-pointer transition-all duration-120"
-                          title={t('account.editChartTitle')}
+                          title="編輯圖表名稱"
                         >
                           ✎
                         </button>
@@ -388,7 +389,7 @@ export default function AccountPage() {
                           onClick={() => setConfirmDeleteId(ch.id)}
                           disabled={deletingId === ch.id}
                           className="opacity-0 group-hover:opacity-100 px-2 text-(--ink-soft) hover:text-(--crimson) text-[12px] md:text-base cursor-pointer transition-all duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
-                          title={t('account.deleteChart')}
+                          title="刪除圖表"
                         >
                           {deletingId === ch.id ? '…' : '✕'}
                         </button>
@@ -404,7 +405,7 @@ export default function AccountPage() {
             onClick={() => handleSectionClick('connected')}
             className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'connected' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
           >
-            {t('account.connectedAccounts')}
+            連結帳號
           </button>
 
           <div className="mt-auto px-5">
@@ -412,7 +413,7 @@ export default function AccountPage() {
               onClick={handleSignOut}
               className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) border border-(--ink-soft) px-3.5 py-1.5 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--crimson) hover:border-(--crimson) w-full"
             >
-              {t('account.signOut')}
+              登出
             </button>
           </div>
         </nav>
@@ -425,7 +426,7 @@ export default function AccountPage() {
             <div className="px-5 py-8 md:px-10 md:py-10 max-w-3xl">
               <header className="mb-8 pb-3 border-b border-(--ink)">
                 <h1 className="font-serif italic font-medium text-[clamp(24px,3vw,36px)] leading-none m-0 text-(--ink)">
-                  {t('account.profile')}
+                  個人資料
                 </h1>
               </header>
 
@@ -443,7 +444,7 @@ export default function AccountPage() {
                     onClick={() => avatarInputRef.current?.click()}
                     disabled={avatarUploading}
                     className="relative w-20 h-20 block cursor-pointer border border-(--ink) overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
-                    title={t('account.changeAvatar')}
+                    title="更換頭像"
                   >
                     {user.imageUrl ? (
                       <Image
@@ -454,12 +455,12 @@ export default function AccountPage() {
                       />
                     ) : (
                       <div className="w-full h-full bg-(--paper-deep) flex items-center justify-center">
-                        <span className="font-mono text-[12px] md:text-base text-(--ink-soft)">{t('account.noImage')}</span>
+                        <span className="font-mono text-[12px] md:text-base text-(--ink-soft)">無頭像</span>
                       </div>
                     )}
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                       <span className="font-mono text-[12px] md:text-base tracking-widest uppercase text-white">
-                        {avatarUploading ? t('account.uploading') : t('account.change')}
+                        {avatarUploading ? '上傳中…' : '更換'}
                       </span>
                     </div>
                   </button>
@@ -476,7 +477,7 @@ export default function AccountPage() {
                         onClick={handleStartEditName}
                         className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft) border border-(--ink-soft) px-2 py-0.5 cursor-pointer transition-colors duration-120 hover:text-(--ink) hover:border-(--ink) shrink-0"
                       >
-                        {t('account.edit')}
+                        編輯
                       </button>
                     </div>
                   ) : (
@@ -484,7 +485,7 @@ export default function AccountPage() {
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          placeholder={t('account.displayNamePlaceholder')}
+                          placeholder="輸入顯示名稱"
                           value={displayName}
                           onChange={e => setDisplayName(e.target.value)}
                           className="font-mono text-base tracking-[0.04em] border border-(--ink) bg-(--paper) text-(--ink) px-3 py-1.5 w-52 outline-none placeholder:text-(--ink-soft)"
@@ -496,14 +497,14 @@ export default function AccountPage() {
                           disabled={nameSaving}
                           className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--paper) bg-(--ink) border border-(--ink) px-3 py-1 cursor-pointer transition-colors duration-120 hover:bg-transparent hover:text-(--ink) disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {nameSaving ? t('account.saving') : t('account.save')}
+                          {nameSaving ? '儲存中…' : '儲存'}
                         </button>
                         <button
                           onClick={() => setEditingName(false)}
                           disabled={nameSaving}
                           className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft) border border-(--ink-soft) px-3 py-1 cursor-pointer transition-colors duration-120 hover:text-(--ink) hover:border-(--ink) disabled:opacity-50"
                         >
-                          {t('account.cancel')}
+                          取消
                         </button>
                       </div>
                     </div>
@@ -524,7 +525,7 @@ export default function AccountPage() {
             <div className="px-5 py-8 md:px-10 md:py-10">
               <header className="mb-6 pb-3 border-b border-(--ink)">
                 <h1 className="font-serif italic font-medium text-[clamp(24px,3vw,36px)] leading-none m-0 text-(--ink)">
-                  {t('account.humanDesign')}
+                  人類圖
                 </h1>
               </header>
 
@@ -537,13 +538,13 @@ export default function AccountPage() {
               {!chartsLoading && charts.length === 0 && (
                 <div className="border border-dashed border-(--ink) py-10 px-6 text-center max-w-md">
                   <div className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink-soft) mb-3">
-                    {t('account.noCharts')}
+                    目前沒有已儲存的人類圖
                   </div>
                   <button
                     onClick={() => router.push('/')}
                     className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink) border border-(--ink) px-4 py-2 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper)"
                   >
-                    {t('account.goCalculate')}
+                    前往計算
                   </button>
                 </div>
               )}
@@ -580,7 +581,7 @@ export default function AccountPage() {
                           <button
                             onClick={() => handleStartRenameChart(ch)}
                             className="px-1.5 py-1.5 text-[12px] md:text-base text-(--ink-soft) hover:text-(--ink) border-l border-(--ink) cursor-pointer transition-colors duration-120"
-                            title={t('account.editChartTitle')}
+                            title="編輯圖表名稱"
                           >
                             ✎
                           </button>
@@ -588,7 +589,7 @@ export default function AccountPage() {
                             onClick={() => setConfirmDeleteId(ch.id)}
                             disabled={deletingId === ch.id}
                             className="px-2 py-1.5 text-[12px] md:text-base text-(--ink-soft) hover:text-(--crimson) border-l border-(--ink) cursor-pointer transition-colors duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
-                            title={t('account.deleteChart')}
+                            title="刪除圖表"
                           >
                             {deletingId === ch.id ? '…' : '✕'}
                           </button>
@@ -602,7 +603,7 @@ export default function AccountPage() {
               {!chartsLoading && activeChart && (
                 <>
                   {chartComputing && (
-                    <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) mb-6">{t('account.computing')}</div>
+                    <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) mb-6">正在計算…</div>
                   )}
                   {(activeChart.chartKind === 'composite' || activeChart.type === 'composite') ? (
                     compositeResults && (() => {
@@ -657,11 +658,11 @@ export default function AccountPage() {
             <div className="px-5 py-8 md:px-10 md:py-10 max-w-3xl">
               <header className="mb-8 pb-3 border-b border-(--ink)">
                 <h1 className="font-serif italic font-medium text-[clamp(24px,3vw,36px)] leading-none m-0 text-(--ink)">
-                  {t('account.connectedAccounts')}
+                  連結帳號
                 </h1>
               </header>
               {user.externalAccounts.length === 0 ? (
-                <div className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft)">{t('account.noConnected')}</div>
+                <div className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft)">尚未連結任何第三方帳號</div>
               ) : (
                 <div className="flex flex-col border border-(--ink)">
                   {user.externalAccounts.map((account) => (
@@ -687,10 +688,10 @@ export default function AccountPage() {
 
       <ConfirmModal
         isOpen={!!confirmDeleteId}
-        title={t('account.deleteChartConfirmTitle')}
-        message={t('account.deleteChartConfirmMessage')}
-        confirmLabel={t('account.deleteChartConfirm')}
-        cancelLabel={t('account.cancel')}
+        title="確認刪除"
+        message="確定要刪除此圖表嗎？"
+        confirmLabel="刪除"
+        cancelLabel="取消"
         onConfirm={() => handleDeleteChart(confirmDeleteId!)}
         onCancel={() => setConfirmDeleteId(null)}
         isLoading={!!deletingId}

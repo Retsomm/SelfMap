@@ -10,33 +10,18 @@ import DetailDrawer from '@/components/humanDesign/DetailDrawer'
 import { HD_GATES, HD_CENTERS_INFO, HD_CHANNELS } from '@/components/humanDesign/hd-chart-data'
 import {
   CENTER_INFO,
-  CENTER_NAMES_EN,
   CHANNEL_DEFS,
   TYPE_LABELS,
-  TYPE_LABELS_EN,
   PROFILE_LABELS,
-  PROFILE_LABELS_EN,
   STRATEGY_MAP,
-  STRATEGY_MAP_EN,
   SIGNATURE_MAP,
-  SIGNATURE_MAP_EN,
   CROSS_TYPE_LABELS,
-  CROSS_TYPE_LABELS_EN,
-  CROSS_BASE_NAMES,
-  CROSS_BASE_NAMES_EN,
-  DEFINITION_LABEL_EN,
-  AUTHORITY_INFO_EN,
   AUTHORITY_KEY_MAP,
-  DIGESTION_MAP_EN,
-  ENVIRONMENT_MAP_EN,
-  PERSPECTIVE_MAP_EN,
-  MOTIVATION_MAP_EN,
 } from '@/lib/humanDesign'
 import { downloadChart } from '@/lib/downloadChart'
 import { buildAiPrompt, type HdResult } from '@/lib/buildAiPrompt'
 import { saveChart } from '@/lib/saveChart'
 import toast from 'react-hot-toast'
-import { useLang } from '@/i18n'
 
 interface ChartViewProps {
   result: HdResult
@@ -59,7 +44,6 @@ export default function ChartView({
 }: ChartViewProps) {
   const { isSignedIn } = useUser()
   const { openSignIn } = useClerk()
-  const { t, lang, pick } = useLang()
 
   const printAreaRef = useRef<HTMLDivElement>(null)
   const [selection, setSelection] = useState<SelectionPayload | null>(null)
@@ -68,36 +52,31 @@ export default function ChartView({
   const [saving, setSaving] = useState(false)
 
   const annotationLabels: AnnotationLabels = useMemo(() => ({
-    head:        t('chart.annotations.head'),
-    ajna:        t('chart.annotations.ajna'),
-    throat:      t('chart.annotations.throat'),
-    g:           t('chart.annotations.g'),
-    ego:         t('chart.annotations.ego'),
-    spleen:      t('chart.annotations.spleen'),
-    sacral:      t('chart.annotations.sacral'),
-    solarPlexus: t('chart.annotations.solarPlexus'),
-    root:        t('chart.annotations.root'),
-  }), [t])
+    head:        '頭',
+    ajna:        '阿賈那',
+    throat:      '喉輪',
+    g:           'G',
+    ego:         '自我',
+    spleen:      '脾',
+    sacral:      '骶髂',
+    solarPlexus: '太陽神經叢',
+    root:        '根',
+  }), [])
 
   const activations = useMemo(() => toActivations(result.planets), [result])
-  const generatedAt = useMemo(() => new Date().toLocaleString(lang === 'zh' ? 'zh-TW' : 'en-US', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }), [lang])
+  const generatedAt = useMemo(() => new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }), [])
 
-  // language-aware label helpers
-  const typeLabel = lang === 'en' ? (TYPE_LABELS_EN[result.type] ?? result.type) : TYPE_LABELS[result.type]
-  const profileLabel = lang === 'en' ? (PROFILE_LABELS_EN[result.profile.profile] ?? '—') : (PROFILE_LABELS[result.profile.profile] ?? '—')
-  const strategyLabel = lang === 'en' ? (STRATEGY_MAP_EN[result.type] ?? '—') : (STRATEGY_MAP[result.type] ?? '—')
-  const signaturePositive = lang === 'en' ? (SIGNATURE_MAP_EN[result.type]?.positive ?? '—') : (SIGNATURE_MAP[result.type]?.positive ?? '—')
-  const signatureNegative = lang === 'en' ? (SIGNATURE_MAP_EN[result.type]?.negative ?? '—') : (SIGNATURE_MAP[result.type]?.negative ?? '—')
-  const crossTypeLabel = lang === 'en' ? (CROSS_TYPE_LABELS_EN[result.incarnationCross.crossType] ?? result.incarnationCross.crossType) : (CROSS_TYPE_LABELS[result.incarnationCross.crossType] ?? result.incarnationCross.crossType)
-  const crossBaseName = useMemo(() => {
-    if (lang !== 'en') return result.incarnationCross.crossBaseName
-    const idx = CROSS_BASE_NAMES.indexOf(result.incarnationCross.crossBaseName)
-    return idx >= 0 ? (CROSS_BASE_NAMES_EN[idx] ?? result.incarnationCross.crossBaseName) : result.incarnationCross.crossBaseName
-  }, [lang, result.incarnationCross.crossBaseName])
-  const definitionLabel = lang === 'en' ? (DEFINITION_LABEL_EN[result.definition.raw] ?? result.definition.raw) : result.definition.label
+  const typeLabel = TYPE_LABELS[result.type]
+  const profileLabel = PROFILE_LABELS[result.profile.profile] ?? '—'
+  const strategyLabel = STRATEGY_MAP[result.type] ?? '—'
+  const signaturePositive = SIGNATURE_MAP[result.type]?.positive ?? '—'
+  const signatureNegative = SIGNATURE_MAP[result.type]?.negative ?? '—'
+  const crossTypeLabel = CROSS_TYPE_LABELS[result.incarnationCross.crossType] ?? result.incarnationCross.crossType
+  const crossBaseName = result.incarnationCross.crossBaseName
+  const definitionLabel = result.definition.label
 
   const authorityKey = AUTHORITY_KEY_MAP[result.authority.name]
-  const authorityInfo = lang === 'en' && authorityKey ? (AUTHORITY_INFO_EN[authorityKey] ?? result.authority) : result.authority
+  const authorityInfo = result.authority
 
   // variable color indices from planet data (same derivation as engine.ts calculateVariables)
   const varColors = useMemo(() => ({
@@ -115,17 +94,9 @@ export default function ChartView({
     bottomRight: result.planets[3]?.black.tone ?? 1,  // Personality 北交點 (Perspective)
   }), [result.planets])
 
-  const varLabels = useMemo(() => {
-    if (lang !== 'en') return result.variables
-    return {
-      digestion:   DIGESTION_MAP_EN[varColors.digestion]   ?? result.variables.digestion,
-      environment: ENVIRONMENT_MAP_EN[varColors.environment] ?? result.variables.environment,
-      perspective: PERSPECTIVE_MAP_EN[varColors.perspective] ?? result.variables.perspective,
-      motivation:  MOTIVATION_MAP_EN[varColors.motivation]  ?? result.variables.motivation,
-    }
-  }, [lang, result.variables, varColors])
+  const varLabels = result.variables
 
-  const centerName = (id: CenterName) => lang === 'en' ? (CENTER_NAMES_EN[id] ?? CENTER_INFO[id].name) : CENTER_INFO[id].name
+  const centerName = (id: CenterName) => CENTER_INFO[id].name
 
   const CENTER_CHART_KEY: Record<string, string> = { ego: 'heart', solarPlexus: 'solar' }
   const toChartKey = (id: string) => CENTER_CHART_KEY[id] ?? id
@@ -196,11 +167,12 @@ export default function ChartView({
     try {
       await downloadChart(el)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('chart.downloadFailed'))
+      console.error('[handleDownload]', err)
+      toast.error('下載失敗，請稍後再試')
     } finally {
       setDownloading(false)
     }
-  }, [t])
+  }, [])
 
   const handleCopyPrompt = useCallback(() => {
     window.umami?.track('chart-copy-prompt')
@@ -215,14 +187,15 @@ export default function ChartView({
     window.umami?.track('chart-save')
     try {
       await saveChart({ result, date, time, locationLabel, timezone })
-      toast.success(t('chart.chartSaved'))
+      toast.success('圖表已儲存')
       onSaved?.()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('chart.saveFailed'))
+      console.error('[handleSaveChart]', err)
+      toast.error('儲存失敗，請稍後再試')
     } finally {
       setSaving(false)
     }
-  }, [result, date, time, locationLabel, timezone, onSaved, t])
+  }, [result, date, time, locationLabel, timezone, onSaved])
 
   return (
     <div ref={printAreaRef} className="relative">
@@ -231,7 +204,7 @@ export default function ChartView({
       <div className="hd-chart-row">
 
         <aside className="hd-planets-side hd-planets-side--design">
-          <div className="hd-planets-side-header">{t('chart.designLabel')}</div>
+          <div className="hd-planets-side-header">設計</div>
           <div className="hd-planet-rows">
             {result.planets.map(p => (
               <div key={p.planetName} className="hd-planet-row hd-planet-row--left">
@@ -283,7 +256,7 @@ export default function ChartView({
         </aside>
 
         <aside className="hd-planets-side hd-planets-side--personality">
-          <div className="hd-planets-side-header">{t('chart.personalityLabel')}</div>
+          <div className="hd-planets-side-header">人格</div>
           <div className="hd-planet-rows">
             {result.planets.map(p => (
               <div key={p.planetName} className="hd-planet-row hd-planet-row--right">
@@ -299,9 +272,9 @@ export default function ChartView({
       {/* Gate index strip */}
       <div className="hd-index-strip">
         <div>
-          <h5>{t('chart.gateIndex')}</h5>
+          <h5>閘門索引</h5>
           <div className="mt-1 text-[12px] md:text-base leading-[1.4] text-[var(--ink-soft)]">
-            {lang === 'en' ? (<>INDEX OF<br />SIXTY-FOUR<br />GATES</>) : (<>六十四<br />閘門索引</>)}
+            <>六十四<br />閘門索引</>
           </div>
         </div>
         <div className="hd-index-grid">
@@ -316,7 +289,7 @@ export default function ChartView({
                 key={n}
                 className={cls}
                 onClick={() => handleJumpToGate(n)}
-                title={HD_GATES[n] ? pick(HD_GATES[n].name) : undefined}
+                title={HD_GATES[n] ? HD_GATES[n].name.zh : undefined}
               >
                 {fmtGate(n)}
               </div>
@@ -328,7 +301,7 @@ export default function ChartView({
       {/* Mobile planet list */}
       <div className="hd-planets-mobile">
         <div className="hd-planets-mobile-col hd-planets-mobile-design">
-          <div className="hd-planets-mobile-header">{t('chart.designLabel')}</div>
+          <div className="hd-planets-mobile-header">設計</div>
           {result.planets.map(p => (
             <div key={p.planetName} className="hd-planets-mobile-row">
               <PlanetIcon name={p.planetName} className="hd-planets-mobile-icon" />
@@ -337,7 +310,7 @@ export default function ChartView({
           ))}
         </div>
         <div className="hd-planets-mobile-col hd-planets-mobile-personality">
-          <div className="hd-planets-mobile-header">{t('chart.personalityLabel')}</div>
+          <div className="hd-planets-mobile-header">人格</div>
           {result.planets.map(p => (
             <div key={p.planetName} className="hd-planets-mobile-row">
               <span>{p.black.full}</span>
@@ -357,23 +330,23 @@ export default function ChartView({
       <div className="mt-14 border border-(--ink) bg-(--paper-deep) px-5 py-4 font-mono text-[12px] md:text-base tracking-[0.06em]">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5">
           <div className="flex gap-3">
-            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">{t('chart.birthDate')}</span>
+            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">出生日期</span>
             <span className="text-(--ink)">{date}</span>
           </div>
           <div className="flex gap-3">
-            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">{t('chart.birthTime')}</span>
+            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">出生時間</span>
             <span className="text-(--ink)">{time}</span>
           </div>
           <div className="flex gap-3">
-            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">{t('chart.birthLocation')}</span>
+            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">出生地點</span>
             <span className="text-(--ink)">{locationLabel}</span>
           </div>
           <div className="flex gap-3">
-            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">{t('chart.timezone')}</span>
+            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">時區</span>
             <span className="text-(--ink)">{timezone}</span>
           </div>
           <div className="flex gap-3 sm:col-span-2 mt-1 pt-2 border-t border-dotted border-[rgba(43,31,20,0.25)]">
-            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">{t('chart.generatedAt')}</span>
+            <span className="text-(--ink-soft) uppercase tracking-[0.15em]">生成時間</span>
             <span className="text-(--ink)">{generatedAt}</span>
           </div>
         </div>
@@ -382,52 +355,49 @@ export default function ChartView({
       {/* Full calculation results */}
       <section className="mt-6 border-t border-(--ink) pt-10">
         <div className="flex items-baseline gap-5 mb-8">
-          <h2 className="font-serif italic font-medium text-[clamp(28px,3vw,42px)] leading-none m-0 text-[var(--ink)]">{t('chart.results')}</h2>
-          <span className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)]">{t('chart.bodygraphAnalysis')}</span>
+          <h2 className="font-serif italic font-medium text-[clamp(28px,3vw,42px)] leading-none m-0 text-[var(--ink)]">分析結果</h2>
+          <span className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)]">身體圖分析</span>
         </div>
 
         {/* Overview cards */}
         <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 mb-6">
           <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={() => { window.umami?.track('chart-detail', { card: 'type' }); handleSelectType() }}>
-            <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.typeCard')}</div>
+            <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">類型</div>
             <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{typeLabel}</div>
-            {lang === 'zh' && <div className="font-mono text-[11px] text-[var(--ink-soft)] opacity-60">{result.type}</div>}
-            <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)] mt-1.5 tracking-[0.04em]">{t('chart.strategy')} · {strategyLabel}</div>
+            <div className="font-mono text-[11px] text-[var(--ink-soft)] opacity-60">{result.type}</div>
+            <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)] mt-1.5 tracking-[0.04em]">策略 · {strategyLabel}</div>
             <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)] mt-1.5 tracking-[0.04em]">
-              {t('chart.positive')} {signaturePositive} ／ {t('chart.negative')} {signatureNegative}
+              正面 {signaturePositive} ／ 負面 {signatureNegative}
             </div>
           </div>
 
           <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={() => { window.umami?.track('chart-detail', { card: 'profile' }); handleSelectProfile() }}>
-            <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.profileCard')}</div>
+            <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">配置</div>
             <div className="font-serif italic font-medium text-[40px] leading-[1.1] text-[var(--ink)] mb-1 tracking-[0.06em]">{result.profile.profile}</div>
             <div className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] leading-[1.5]">{profileLabel}</div>
           </div>
 
           <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={() => { window.umami?.track('chart-detail', { card: 'authority' }); handleSelectAuthority() }}>
-            <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.authorityCard')}</div>
+            <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">權威</div>
             <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{authorityInfo.name}</div>
             <div className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] leading-[1.5]">{authorityInfo.tip}</div>
           </div>
 
           <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={() => { window.umami?.track('chart-detail', { card: 'definition' }); handleSelectDefinition() }}>
-            <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.definitionCard')}</div>
+            <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">定義</div>
             <div className="font-serif italic font-medium text-[26px] leading-[1.1] text-[var(--ink)] mb-1">{definitionLabel}</div>
-            {lang === 'en' && <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)] mt-1 tracking-[0.04em]">{result.definition.raw}</div>}
             <div className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] leading-[1.5] mt-1.5">
-              {t('chart.definedCenters', { count: result.definedCenterIds.size, gates: result.allGates.size })}
+              {result.definedCenterIds.size} 個已定義中心，{result.allGates.size} 個已啟動閘門
             </div>
           </div>
 
           <div className="border border-[var(--ink)] py-4 px-[18px] bg-[var(--paper)] sm:col-span-2 cursor-pointer transition-colors duration-[120ms] hover:bg-[var(--paper-deep)]" onClick={() => { window.umami?.track('chart-detail', { card: 'cross' }); handleSelectCross() }}>
-            <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">{t('chart.crossCard')}</div>
+            <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-2">輪迴交叉</div>
             <div className="font-serif italic font-medium text-[22px] leading-[1.1] text-[var(--ink)] mb-1">
-              {lang === 'en'
-                ? `${crossTypeLabel} of ${crossBaseName} ${result.incarnationCross.variant}`
-                : `${crossTypeLabel}之${crossBaseName}${result.incarnationCross.variant}`}
+              {`${crossTypeLabel}之${crossBaseName}${result.incarnationCross.variant}`}
             </div>
             <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)] mt-1.5 tracking-[0.04em]">
-              {lang === 'en' ? result.incarnationCross.crossType : crossTypeLabel} · {result.incarnationCross.gatesLabel}
+              {crossTypeLabel} · {result.incarnationCross.gatesLabel}
             </div>
           </div>
         </div>
@@ -437,13 +407,13 @@ export default function ChartView({
         {/* Variables */}
         <div className="border border-[var(--ink)] mb-6">
           <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] py-2.5 px-4 border-b border-[var(--ink)] bg-[var(--paper-deep)]">
-            {t('chart.variablesCard')}
+            變數
           </div>
           {[
-            { category: t('chart.digestion'), val: varLabels.digestion },
-            { category: t('chart.environment'), val: varLabels.environment },
-            { category: t('chart.perspective'), val: varLabels.perspective },
-            { category: t('chart.motivation'), val: varLabels.motivation },
+            { category: '消化', val: varLabels.digestion },
+            { category: '環境', val: varLabels.environment },
+            { category: '視角', val: varLabels.perspective },
+            { category: '動機', val: varLabels.motivation },
           ].map(r => (
             <div
               className="grid grid-cols-1 sm:grid-cols-[180px_160px_1fr] gap-1 sm:gap-4 py-2.5 px-4 border-b border-dotted border-[rgba(43,31,20,0.2)] items-start last:border-b-0"
@@ -459,7 +429,7 @@ export default function ChartView({
         <div className="border-t border-[var(--ink)] my-8" />
 
         {/* Centers */}
-        <div className="mb-2 font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)]">{t('chart.centersTitle')}</div>
+        <div className="mb-2 font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)]">九大中心</div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
           {(Object.keys(CENTER_INFO) as CenterName[]).map(id => {
             const defined = result.definedCenterIds.has(id)
@@ -472,7 +442,7 @@ export default function ChartView({
                 <div className={`w-2.5 h-2.5 border-[1.5px] border-[var(--ink)] shrink-0${defined ? ' bg-[var(--ink)]' : ''}`} />
                 <div>
                   <div className="font-sans text-[12px] md:text-base font-semibold text-[var(--ink)]">{centerName(id)}</div>
-                  <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)] tracking-[0.05em]">{defined ? t('chart.defined') : t('chart.open')}</div>
+                  <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)] tracking-[0.05em]">{defined ? '已定義' : '開放'}</div>
                 </div>
               </div>
             )
@@ -484,10 +454,10 @@ export default function ChartView({
         {/* Channels */}
         <div className="border border-[var(--ink)] p-4 mb-6">
           <div className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-3 pb-2 border-b border-[var(--ink)]">
-            {t('chart.channelsTitle')}（{result.definedChannels.length} / {CHANNEL_DEFS.length}）
+            通道（{result.definedChannels.length} / {CHANNEL_DEFS.length}）
           </div>
           {result.definedChannels.length === 0 ? (
-            <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)]">{t('chart.noChannels')}</div>
+            <div className="font-mono text-[12px] md:text-base text-[var(--ink-soft)]">目前尚未形成任何通道</div>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {result.definedChannels.map(ch => (
@@ -498,7 +468,7 @@ export default function ChartView({
                 >
                   {ch.id}
                   <span className="ml-1.5 text-[12px] md:text-base opacity-60">
-                    {lang === 'en' ? CENTER_NAMES_EN[ch.centerA] : fmtCenterName(CENTER_INFO[ch.centerA].name)}—{lang === 'en' ? CENTER_NAMES_EN[ch.centerB] : fmtCenterName(CENTER_INFO[ch.centerB].name)}
+                    {fmtCenterName(CENTER_INFO[ch.centerA].name)}—{fmtCenterName(CENTER_INFO[ch.centerB].name)}
                   </span>
                 </span>
               ))}
@@ -513,13 +483,13 @@ export default function ChartView({
             disabled={isSignedIn ? downloading : false}
             className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--paper) bg-(--ink) border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--crimson) hover:border-(--crimson) disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSignedIn ? (downloading ? t('chart.downloading') : t('chart.download')) : t('chart.downloadSignIn')}
+            {isSignedIn ? (downloading ? '下載中…' : '下載圖表') : '先登入再下載'}
           </button>
           <button
             onClick={isSignedIn ? handleCopyPrompt : () => openSignIn()}
             className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper)"
           >
-            {isSignedIn ? (copied ? t('chart.copied') : t('chart.copyPrompt')) : t('chart.copyPromptSignIn')}
+            {isSignedIn ? (copied ? '已複製' : '複製分析提示') : '先登入再複製'}
           </button>
           {!hideSaveButton && (
             <button
@@ -527,7 +497,7 @@ export default function ChartView({
               disabled={isSignedIn ? saving : false}
               className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper) disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSignedIn ? (saving ? t('account.saving') : t('chart.saveChart')) : t('chart.saveChartSignIn')}
+              {isSignedIn ? (saving ? '儲存中…' : '儲存圖表') : '先登入再儲存'}
             </button>
           )}
         </div>

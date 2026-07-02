@@ -8,7 +8,6 @@ import dayjs, { type Dayjs } from 'dayjs'
 import LocationPicker from '@/components/humanDesign/LocationPicker'
 import type { HdResult } from '@/lib/buildAiPrompt'
 import type { TransitResult } from '@/lib/computeTransit'
-import { type Lang } from '@/i18n'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { useBirthProfiles, type BirthProfile } from '@/lib/useBirthProfiles'
 
@@ -28,8 +27,6 @@ const DEFAULT_INPUTS = {
   timezone: 'Asia/Taipei',
 }
 
-const getDefaultLocationLabel = (lang: Lang) => lang === 'en' ? 'Taipei, Taiwan' : '台北, 台灣'
-
 interface FormInputs {
   birthDate: Dayjs
   birthTime: Dayjs
@@ -37,11 +34,11 @@ interface FormInputs {
   locationLabel: string
 }
 
-export default function TransitTab({ initialLang }: { initialLang: Lang }) {
+export default function TransitTab() {
   const { profiles, isSignedIn } = useBirthProfiles()
   const [inputs, setInputs] = useState<FormInputs>(() => ({
     ...DEFAULT_INPUTS,
-    locationLabel: getDefaultLocationLabel(initialLang),
+    locationLabel: '台北, 台灣',
   }))
   const { birthDate, birthTime, timezone, locationLabel } = inputs
   const date = birthDate.format('YYYY-MM-DD')

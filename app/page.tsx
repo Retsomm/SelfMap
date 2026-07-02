@@ -1,9 +1,5 @@
-import { cookies } from 'next/headers'
 import type { Metadata } from 'next'
-import type { Lang } from '@/i18n'
 import HomeClient from './HomeClient'
-import zh from '@/i18n/chinese.json'
-import en from '@/i18n/english.json'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://selfmap.app'
 
@@ -35,10 +31,7 @@ const jsonLd = {
 }
 
 export default async function HomePage() {
-  const cookieStore = await cookies()
-  const rawLang = cookieStore.get('selfmap_lang')?.value
-  const lang: Lang = rawLang === 'en' ? 'en' : 'zh'
-  const title = lang === 'zh' ? zh.home.title : en.home.title
+  const title = 'SelfMap 人類圖計算器'
 
   return (
     <>
@@ -52,7 +45,7 @@ export default async function HomePage() {
             {title}
           </h1>
         </header>
-        <HomeClient lang={lang} />
+        <HomeClient />
       </div>
     </>
   )
