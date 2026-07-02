@@ -83,6 +83,9 @@ export async function POST(req: NextRequest) {
     )
 
     const result = {
+      type:      hd.type,
+      profile:   hd.profile.profile,
+      authority: hd.authority.name,
       personalGates:    [...personalGates],
       personalityGates: hd.planets.map(p => p.black.gate),
       designGates:      hd.planets.map(p => p.red.gate),

@@ -121,7 +121,7 @@ function CreatePersonalView() {
     <ScrollLockContext.Provider value={scrollLockCtx}>
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'android' ? 'height' : undefined}
     >
     <ScrollView
       ref={scrollRef}
@@ -129,6 +129,7 @@ function CreatePersonalView() {
       keyboardShouldPersistTaps="handled"
       scrollEnabled={scrollEnabled}
       nestedScrollEnabled
+      automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
     >
       {savedProfiles.length > 0 && !appliedProfile && (
         <Pressable style={styles.quickApplyBtn} onPress={async () => { await refreshProfiles(); setPickerVisible(true) }}>

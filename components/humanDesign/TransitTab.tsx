@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, startTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import TimeSelect from '@/components/humanDesign/TimeSelect'
 import DateSelect from '@/components/humanDesign/DateSelect'
@@ -35,6 +36,7 @@ interface FormInputs {
 }
 
 export default function TransitTab() {
+  const router = useRouter()
   const { profiles, isSignedIn } = useBirthProfiles()
   const [inputs, setInputs] = useState<FormInputs>(() => ({
     ...DEFAULT_INPUTS,
@@ -223,7 +225,7 @@ export default function TransitTab() {
           transit={transit}
           onRefresh={fetchTransit}
           refreshing={loadingTransit}
-          onSaved={() => { window.location.href = '/account?section=humandesign' }}
+          onSaved={() => router.push('/account?section=humandesign&tab=transit')}
           personalBirth={{ date, time, city: locationLabel, timezone }}
         />
       )}

@@ -330,11 +330,11 @@ export default function CompositeView({
 
   const handleCopyPrompt = useCallback(() => {
     window.umami?.track('composite-copy-prompt')
-    navigator.clipboard.writeText(buildCompositeAiPrompt(resultA, resultB)).then(() => {
+    navigator.clipboard.writeText(buildCompositeAiPrompt(resultA, resultB, analysis)).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }).catch(err => { console.error(err); toast.error('複製失敗') })
-  }, [resultA, resultB])
+  }, [resultA, resultB, analysis])
 
   const handleSaveCharts = useCallback(async () => {
     setSaving(true)

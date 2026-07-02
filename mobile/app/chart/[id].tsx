@@ -2,6 +2,8 @@ import { useAuth } from '@clerk/expo'
 import { useLocalSearchParams } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
+  Alert,
+  Clipboard,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,10 +11,18 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { type Chart, type StoredPlanet, type CreateCompositeResult, getChart, previewCompositeChart } from '@/lib/api'
+import { type Chart, type StoredPlanet, type CreateCompositeResult, getChart, previewCompositeChart, previewTransitChart } from '@/lib/api'
 import { HD_CENTERS_INFO, ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@/lib/hd-chart-data'
 import { normalizeCenterId, normalizeChannelId, findChannelById } from '@/lib/hd-normalizers'
 import { getTypeMeta, getTypeLabel } from '@/lib/hd-type-meta'
+import {
+  downloadChartAsPdf,
+  generateAiPrompt,
+  downloadCompositePdf,
+  generateCompositeAiPrompt,
+  downloadTransitPdf,
+  generateTransitAiPrompt,
+} from '@/lib/chartPdf'
 import BodyGraph from '@/components/BodyGraph'
 import DetailBottomSheet, { type SheetTarget } from '@/components/DetailBottomSheet'
 import { SectionCard, Row, Tag } from '@/components/chart/ChartPrimitives'
@@ -21,6 +31,65 @@ import CompositeInfo from '@/components/chart/CompositeInfo'
 import { LoadingView, ErrorView } from '@/components/StateViews'
 import { NavBackHeader } from '@/components/NavBackHeader'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
+
+type ActionState = 'idle' | 'loading'
+
+function ActionButton({
+  label,
+  onPress,
+  state,
+  variant,
+}: {
+  label: string
+  onPress: () => void
+  state?: ActionState
+  variant?: 'primary' | 'outline'
+}) {
+  const isPrimary = variant === 'primary'
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.actionBtn,
+        isPrimary ? styles.actionBtnPrimary : styles.actionBtnOutline,
+        (state === 'loading' || pressed) && styles.actionBtnDisabled,
+      ]}
+      onPress={onPress}
+      disabled={state === 'loading'}
+    >
+      <Text style={[styles.actionBtnText, isPrimary ? styles.actionBtnTextPrimary : styles.actionBtnTextOutline]}>
+        {state === 'loading' ? '處理中…' : label}
+      </Text>
+    </Pressable>
+  )
+}
+
+// 合圖補算所需的出生資料 payload（與自動補算 useEffect 共用邏輯）
+function buildCompositePayload(chart: Chart): Parameters<typeof previewCompositeChart>[0] | null {
+  if (chart.meta?.personA && chart.meta?.personB) {
+    const pA = chart.meta.personA
+    const pB = chart.meta.personB
+    if (pA.birthDate && pA.birthTime && pA.timezone && pB.birthDate && pB.birthTime && pB.timezone) {
+      return {
+        personA: { name: pA.name ?? undefined, birthDate: pA.birthDate, birthTime: pA.birthTime, birthCity: pA.birthCity, timezone: pA.timezone },
+        personB: { name: pB.name ?? undefined, birthDate: pB.birthDate, birthTime: pB.birthTime, birthCity: pB.birthCity, timezone: pB.timezone },
+      }
+    }
+    return null
+  }
+  if (chart.birthDate?.includes('|') && chart.timezone) {
+    const [dateA, dateB] = chart.birthDate.split('|')
+    const [timeA, timeB] = chart.birthTime.split('|')
+    const [cityA, cityB] = chart.birthCity.split('|')
+    const [tzA, tzB] = chart.timezone.split('|')
+    if (dateA && dateB && timeA && timeB && tzA && tzB) {
+      return {
+        personA: { birthDate: dateA, birthTime: timeA, birthCity: cityA ?? '', timezone: tzA },
+        personB: { birthDate: dateB, birthTime: timeB, birthCity: cityB ?? '', timezone: tzB },
+      }
+    }
+  }
+  return null
+}
 
 export default function ChartDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -31,6 +100,8 @@ export default function ChartDetailScreen() {
   const [sheetTarget, setSheetTarget] = useState<SheetTarget | null>(null)
   const [compositeFetched, setCompositeFetched]         = useState<CreateCompositeResult | null>(null)
   const [compositeFetchLoading, setCompositeFetchLoading] = useState(false)
+  const [pdfState, setPdfState] = useState<ActionState>('idle')
+  const [copyState, setCopyState] = useState<ActionState>('idle')
 
   // 切換圖表時清除舊的合圖補算結果，避免渲染過期資料
   useEffect(() => { setCompositeFetched(null) }, [id])
@@ -64,30 +135,7 @@ export default function ChartDetailScreen() {
     const needsFetch = (chart.chartKind === 'composite' || isOldComposite) && !chart.meta?.compositeResult
     if (!needsFetch) return
 
-    let payload: Parameters<typeof previewCompositeChart>[0] | null = null
-
-    if (chart.meta?.personA && chart.meta?.personB) {
-      const pA = chart.meta.personA
-      const pB = chart.meta.personB
-      if (pA.birthDate && pA.birthTime && pA.timezone && pB.birthDate && pB.birthTime && pB.timezone) {
-        payload = {
-          personA: { name: pA.name ?? undefined, birthDate: pA.birthDate, birthTime: pA.birthTime, birthCity: pA.birthCity, timezone: pA.timezone },
-          personB: { name: pB.name ?? undefined, birthDate: pB.birthDate, birthTime: pB.birthTime, birthCity: pB.birthCity, timezone: pB.timezone },
-        }
-      }
-    } else if (chart.birthDate?.includes('|') && chart.timezone) {
-      const [dateA, dateB] = chart.birthDate.split('|')
-      const [timeA, timeB] = chart.birthTime.split('|')
-      const [cityA, cityB] = chart.birthCity.split('|')
-      const [tzA, tzB] = chart.timezone.split('|')
-      if (dateA && dateB && timeA && timeB && tzA && tzB) {
-        payload = {
-          personA: { birthDate: dateA, birthTime: timeA, birthCity: cityA ?? '', timezone: tzA },
-          personB: { birthDate: dateB, birthTime: timeB, birthCity: cityB ?? '', timezone: tzB },
-        }
-      }
-    }
-
+    const payload = buildCompositePayload(chart)
     if (!payload) return
     setCompositeFetchLoading(true)
     getToken().then(token => {
@@ -185,6 +233,109 @@ export default function ChartDetailScreen() {
 
   const personalChartCenterIds = new Set(chart.centers.map(normalizeCenterId))
   const open = (target: SheetTarget) => setSheetTarget(target)
+
+  async function getCompositeResult(): Promise<CreateCompositeResult | null> {
+    if (compositeFetched) return compositeFetched
+    const payload = buildCompositePayload(chart!)
+    if (!payload) return null
+    const result = await previewCompositeChart(payload)
+    setCompositeFetched(result)
+    return result
+  }
+
+  async function getTransitResult() {
+    const c = chart!
+    if (!c.timezone) return null
+    return previewTransitChart({
+      birthDate: c.birthDate,
+      birthTime: c.birthTime,
+      birthCity: c.birthCity,
+      timezone: c.timezone,
+    })
+  }
+
+  async function handleDownload() {
+    setPdfState('loading')
+    try {
+      if (isComposite) {
+        const result = await getCompositeResult()
+        if (!result) throw new Error('缺少完整出生資料，無法產生合圖報告')
+        await downloadCompositePdf(result)
+      } else if (transitSnapshot) {
+        const result = await getTransitResult()
+        if (!result) throw new Error('缺少時區資料，無法產生流日報告')
+        await downloadTransitPdf(result)
+      } else {
+        await downloadChartAsPdf({
+          name: chart!.name ?? '',
+          birthDate: chart!.birthDate,
+          birthTime: chart!.birthTime,
+          birthCity: chart!.birthCity,
+          timezone: chart!.timezone ?? '',
+          type: chart!.type,
+          authority: chart!.authority,
+          profile: chart!.profile,
+          definition: chart!.definition,
+          centers: chart!.centers,
+          channels: chart!.channels,
+          gates: chart!.gates,
+          planets: chart!.planets,
+          personalityGates: chart!.personalityGates,
+          designGates: chart!.designGates,
+          incarnationCross: chart!.meta?.incarnationCross,
+          variables: chart!.meta?.variables,
+          arrows: chart!.meta?.arrows,
+        })
+      }
+    } catch (err) {
+      Alert.alert('下載失敗', err instanceof Error ? err.message : '請稍後再試')
+    } finally {
+      setPdfState('idle')
+    }
+  }
+
+  async function handleCopyPrompt() {
+    setCopyState('loading')
+    try {
+      let text: string
+      if (isComposite) {
+        const result = await getCompositeResult()
+        if (!result) throw new Error('缺少完整出生資料，無法產生提示詞')
+        text = generateCompositeAiPrompt(result)
+      } else if (transitSnapshot) {
+        const result = await getTransitResult()
+        if (!result) throw new Error('缺少時區資料，無法產生提示詞')
+        text = generateTransitAiPrompt(result)
+      } else {
+        text = generateAiPrompt({
+          name: chart!.name ?? '',
+          birthDate: chart!.birthDate,
+          birthTime: chart!.birthTime,
+          birthCity: chart!.birthCity,
+          timezone: chart!.timezone ?? '',
+          type: chart!.type,
+          authority: chart!.authority,
+          profile: chart!.profile,
+          definition: chart!.definition,
+          centers: chart!.centers,
+          channels: chart!.channels,
+          gates: chart!.gates,
+          planets: chart!.planets,
+          personalityGates: chart!.personalityGates,
+          designGates: chart!.designGates,
+          incarnationCross: chart!.meta?.incarnationCross,
+          variables: chart!.meta?.variables,
+          arrows: chart!.meta?.arrows,
+        })
+      }
+      Clipboard.setString(text)
+      Alert.alert('已複製', '提示詞已複製到剪貼簿，可貼到 ChatGPT 或其他 AI 工具使用。')
+    } catch (err) {
+      Alert.alert('複製失敗', err instanceof Error ? err.message : '請稍後再試')
+    } finally {
+      setCopyState('idle')
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
@@ -426,6 +577,12 @@ export default function ChartDetailScreen() {
           </>
         )}
 
+        {/* ─── 下載／複製按鈕 ─── */}
+        <View style={styles.actionSection}>
+          <ActionButton label="下載 PDF" onPress={handleDownload} state={pdfState} variant="outline" />
+          <ActionButton label="複製提示詞" onPress={handleCopyPrompt} state={copyState} variant="outline" />
+        </View>
+
       </ScrollView>
 
       <DetailBottomSheet
@@ -478,6 +635,15 @@ const styles = StyleSheet.create({
   arrowCategory: { fontSize: 12, color: Colors.sub, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
   arrowLabel:    { fontSize: 17, color: Colors.text, fontWeight: '700' },
   arrowDesc:     { fontSize: 13, color: Colors.sub, lineHeight: 18 },
+
+  actionSection: { gap: Spacing.sm, marginTop: Spacing.sm },
+  actionBtn:         { paddingVertical: 14, borderRadius: Radius.lg, alignItems: 'center' },
+  actionBtnPrimary:  { backgroundColor: Colors.accent },
+  actionBtnOutline:  { borderWidth: 1.5, borderColor: Colors.accent, backgroundColor: Colors.accentD },
+  actionBtnDisabled: { opacity: 0.5 },
+  actionBtnText:        { fontSize: 15, fontWeight: '600' },
+  actionBtnTextPrimary: { color: Colors.bg },
+  actionBtnTextOutline: { color: Colors.accent },
 
   crossCard:        { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border, gap: 6 },
   crossCardPressed: { borderColor: Colors.accent, backgroundColor: Colors.accentD },
