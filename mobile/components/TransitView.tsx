@@ -48,6 +48,13 @@ const IMPACT_CFG = {
   'completing-channel': { color: Colors.compro,  icon: '🔗', label: '通道補全' },
 } as const
 
+const GateRow = ({ g, color, bg }: { g: number; color: string; bg: string }) => (
+  <View style={[s.gateTag, { backgroundColor: bg }]}>
+    <Text style={[s.gateTagNum, { color }]}>{g}</Text>
+    <Text style={[s.gateTagName, { color }]} numberOfLines={1}>{HD_GATES[g]?.name.zh ?? ''}</Text>
+  </View>
+)
+
 
 export default function TransitView() {
   const { getToken } = useAuth()
@@ -255,12 +262,6 @@ export default function TransitView() {
             const personalOnly = result.personalGates.filter(g => !transitSet.has(g)).sort((a, b) => a - b)
             const shared       = result.personalGates.filter(g => transitSet.has(g)).sort((a, b) => a - b)
             const transitOnly  = result.transit.allGates.filter(g => !personalSet.has(g)).sort((a, b) => a - b)
-            const GateRow = ({ g, color, bg }: { g: number; color: string; bg: string }) => (
-              <View style={[s.gateTag, { backgroundColor: bg }]}>
-                <Text style={[s.gateTagNum, { color }]}>{g}</Text>
-                <Text style={[s.gateTagName, { color }]} numberOfLines={1}>{HD_GATES[g]?.name.zh ?? ''}</Text>
-              </View>
-            )
             return (
               <View style={s.card}>
                 <Text style={s.sectionLabel}>閘門摘要</Text>

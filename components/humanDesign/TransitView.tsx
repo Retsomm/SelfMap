@@ -376,7 +376,10 @@ export default function TransitView({ personal, transit, onRefresh, refreshing, 
   }, [personal, transit])
 
   const handleSave = useCallback(async () => {
-    if (!personalBirth) return
+    if (!personalBirth) {
+      toast.error('缺少個人出生資料，無法儲存流日圖')
+      return
+    }
     setSaving(true)
     window.umami?.track('transit-save')
     try {

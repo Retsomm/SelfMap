@@ -28,7 +28,7 @@
 
 Pi 本身不跑計算，只是一個 Chromium kiosk 瀏覽器，打開 SelfMap 提供的專用顯示頁。
 
-```
+```text
 Pi (Chromium kiosk)
   ↕ 每 30 分鐘 fetch
 SelfMap 後端 GET /api/aura-flow?chartId=xxx
@@ -46,7 +46,7 @@ SelfMap 後端 GET /api/aura-flow?chartId=xxx
 
 ## 專案位置（SelfMap 內）
 
-```
+```text
 app/
   api/
     aura-flow/
@@ -64,7 +64,7 @@ app/
 - **底部圖例：** 黑 = 個人圖、紅 = 流日、斜紋 = 共同激活 + 最後更新時間
 - **30 分鐘輪詢：** 自動重新 fetch 合圖
 - **多圖表切換：** 右上角下拉選單（只顯示 personal 類型），單一圖表時只顯示名稱
-- **新增個人資料：** 右上角 `+` 按鈕開啟 Modal，欄位：名稱、出生日期 *、出生時間 *、時區（UTC-12 ～ UTC+12 共 25 個選項，預設 UTC+8）
+- **新增個人資料：** 右上角 `+` 按鈕開啟 Modal，欄位：名稱、出生日期*、出生時間*、時區（UTC-12 ～ UTC+12 共 25 個選項，預設 UTC+8）
 
 ---
 
@@ -73,7 +73,7 @@ app/
 Pi 本身只需要：
 1. 安裝 Chromium
 2. 開機自動執行：
-   ```
+   ```bash
    chromium-browser --kiosk https://yourdomain.com/aura-flow
    ```
 3. 使用者切換：直接在頁面右上角下拉選單操作（或用滑鼠/觸控）

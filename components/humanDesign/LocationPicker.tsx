@@ -67,13 +67,19 @@ function ItemRow({ name, sub, offset, onSelect }: {
   return (
     <div
       role="button"
-      tabIndex={-1}
+      tabIndex={0}
       onPointerDown={(e) => {
         if (e.pointerType === 'mouse') e.preventDefault()
       }}
       onClick={(e) => {
         e.stopPropagation()
         onSelect()
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect()
+        }
       }}
       style={{
         padding: '10px 12px',
@@ -139,7 +145,7 @@ export default function LocationPicker({ value, onSelect }: Props) {
   // Close when clicking/touching outside
   useEffect(() => {
     const handler = (e: MouseEvent | TouchEvent) => {
-      const target = e instanceof TouchEvent ? e.touches[0]?.target : e.target
+      const target = 'touches' in e ? e.touches[0]?.target : e.target
       const inContainer = containerRef.current?.contains(target as Node) ?? false
       const inDrop = dropRef.current?.contains(target as Node) ?? false
       if (!inContainer && !inDrop) setOpen(false)
@@ -190,10 +196,11 @@ export default function LocationPicker({ value, onSelect }: Props) {
   }, [open, reposition])
 
   const search = useCallback(async (q: string) => {
-    if (q.trim().length < 2) { setResults([]); return }
+    if (q.trim().length < 2) { abortRef.current?.abort(); setResults([]); return }
 
     const staticMatches = searchStaticLocations(q)
     if (staticMatches.length > 0) {
+      abortRef.current?.abort()
       setResults(staticMatches.slice(0, 3)); setOpen(true); setFetchError(null)
       return
     }
@@ -226,8 +233,9 @@ export default function LocationPicker({ value, onSelect }: Props) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const q = e.target.value
     setQuery(q)
+    onSelect('', q)
     if (timerRef.current) clearTimeout(timerRef.current)
-    if (q.trim().length < 2) { setResults([]); setOpen(false); return }
+    if (q.trim().length < 2) { abortRef.current?.abort(); setResults([]); setOpen(false); return }
     timerRef.current = setTimeout(() => search(q), 320)
   }
 

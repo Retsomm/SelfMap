@@ -71,35 +71,24 @@ export const useBirthProfiles = () => {
 
   // ── 每次掛載時從 DB 讀取（確保 tab 切換後仍能取得最新資料）──────────────
   useEffect(() => {
-    if (!isSignedIn) return
-    let cancelled = false
-    apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')
-      .then(data => {
-        if (cancelled) return
-        setProfiles(data.profiles.map(p => ({
-          id: p.id, label: p.label, date: p.date,
-          time: p.time, timezone: p.timezone, location: p.location,
-        })))
-      })
-      .catch(() => { /* 靜默失敗，不影響 UI */ })
-    return () => { cancelled = true }
-  }, [isSignedIn])
+    refresh().catch(() => { /* 靜默失敗，不影響 UI */ })
+  }, [refresh])
 
   // ── 一次性遷移：若 DB 空且 Clerk metadata 有舊資料 → 自動遷移 ──────────
   useEffect(() => {
     if (!isSignedIn || !user || migratedUserIds.has(user.id)) return
-    migratedUserIds.add(user.id)
+    const userId = user.id
 
     const migrate = async () => {
       const clerkRaw = user.unsafeMetadata?.birthProfiles
       const clerkProfiles: BirthProfile[] = Array.isArray(clerkRaw)
         ? clerkRaw.filter(isValidClerkProfile)
         : []
-      if (clerkProfiles.length === 0) return
+      if (clerkProfiles.length === 0) { migratedUserIds.add(userId); return }
 
       // 只在 DB 空時才遷移
       const dbData = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')
-      if (dbData.profiles.length > 0) return
+      if (dbData.profiles.length > 0) { migratedUserIds.add(userId); return }
 
       console.log('[useBirthProfiles] migrating', clerkProfiles.length, 'profiles from Clerk to DB')
       await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles', {
@@ -109,6 +98,7 @@ export const useBirthProfiles = () => {
         }),
       })
       console.log('[useBirthProfiles] migration done')
+      migratedUserIds.add(userId)
       await refresh()
     }
 

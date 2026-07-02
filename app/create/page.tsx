@@ -47,8 +47,8 @@ export default function CreatePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!birthDate || !birthTime || !form.birthCity) {
-      toast.error('請填寫所有必填欄位')
+    if (!birthDate || !birthTime || !form.birthCity || !form.timezone) {
+      toast.error('請填寫所有必填欄位，並從下拉選單選擇出生城市')
       return
     }
     setLoading(true)

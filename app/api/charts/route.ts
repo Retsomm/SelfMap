@@ -93,7 +93,19 @@ export async function POST(req: NextRequest) {
     }
 
     // 流日圖：額外保留個人出生資料與流日行星閘門，供之後重新顯示完整流日圖
-    const transitMeta = body.transitMeta
+    const isTransitPayloadValid = (m: unknown): m is Record<string, unknown> =>
+      typeof m === 'object' && m !== null &&
+      typeof (m as Record<string, unknown>).personalBirthDate === 'string' &&
+      typeof (m as Record<string, unknown>).personalBirthTime === 'string' &&
+      typeof (m as Record<string, unknown>).personalBirthCity === 'string' &&
+      typeof (m as Record<string, unknown>).personalTimezone === 'string' &&
+      typeof (m as Record<string, unknown>).transitComputedAt === 'string' &&
+      Array.isArray((m as Record<string, unknown>).transitPlanets)
+
+    if (chartKind === 'transit' && !isTransitPayloadValid(body.transitMeta)) {
+      return NextResponse.json({ error: '流日圖資料不完整，請重新產生後再儲存' }, { status: 400 })
+    }
+    const transitMeta = chartKind === 'transit' ? body.transitMeta : undefined
 
     // 未登入：只回傳計算結果，不存 DB
     if (!userId) {

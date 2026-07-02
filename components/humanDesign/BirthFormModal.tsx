@@ -44,6 +44,9 @@ export function BirthFormModal({
 
   useEffect(() => {
     containerRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel()
     }
