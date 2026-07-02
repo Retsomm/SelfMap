@@ -234,6 +234,9 @@ export function createCompositeChart(token: string, payload: CreateCompositePayl
 
 export type CreateTransitResult = {
   chartId: string | null
+  type: string
+  profile: string
+  authority: string
   personalGates: number[]
   personalityGates: number[]
   designGates: number[]

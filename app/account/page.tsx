@@ -124,7 +124,10 @@ function AccountContent() {
     setChartsLoading(true)
     try {
       const res = await fetch('/api/charts')
-      if (!res.ok) return
+      if (!res.ok) {
+        toast.error('圖表載入失敗')
+        return
+      }
       const json = await res.json()
       const list: SavedChart[] = json.charts ?? []
       setCharts(list)
@@ -135,6 +138,7 @@ function AccountContent() {
       setChartsFetched(true)
     } catch (err) {
       console.error('[account] fetchCharts error:', err)
+      toast.error('圖表載入失敗')
     } finally {
       setChartsLoading(false)
     }
@@ -285,8 +289,8 @@ function AccountContent() {
 
     const requestId = ++chartRequestIdRef.current
 
-    const isComposite = chart.chartKind === 'composite' || chart.type === 'composite'
-    const isTransit = chart.chartKind === 'transit'
+    const isComposite = kindOf(chart) === 'composite'
+    const isTransit = kindOf(chart) === 'transit'
 
     if (isTransit) {
       const transitMeta = chart.meta?.transitMeta
@@ -431,7 +435,7 @@ function AccountContent() {
                     >
                       {t.label}
                     </button>
-                    {chartTab === t.id && charts.filter(ch => kindOf(ch) === t.id).map(ch => (
+                    {chartTab === t.id && filteredCharts.map(ch => (
                       <div
                         key={ch.id}
                         className={`flex items-center group ${activeChartId === ch.id ? 'bg-(--paper-deep)' : ''}`}
@@ -690,7 +694,7 @@ function AccountContent() {
                   {chartComputing && (
                     <div className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) mb-6">正在計算…</div>
                   )}
-                  {(activeChart.chartKind === 'composite' || activeChart.type === 'composite') ? (
+                  {kindOf(activeChart) === 'composite' ? (
                     compositeResults && (() => {
                       let cityA: string, cityB: string
                       let dateA: string, dateB: string

@@ -73,7 +73,7 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
 
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'android' ? 'height' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
         <ScrollLockContext.Provider value={scrollLockCtx}>
         <ScrollView
@@ -95,7 +95,7 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
         </ScrollLockContext.Provider>
 
         <View style={styles.footer}>
-          <Pressable onPress={onCancel} style={styles.cancelBtn} disabled={saving}>
+          <Pressable onPress={onCancel} style={[styles.cancelBtn, saving && styles.disabled]} disabled={saving}>
             <Text style={styles.cancelText}>取消</Text>
           </Pressable>
           <Pressable onPress={handleSave} style={[styles.saveBtn, saving && styles.disabled]} disabled={saving}>
