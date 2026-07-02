@@ -237,6 +237,11 @@ export type CreateTransitResult = {
   personalGates: number[]
   personalityGates: number[]
   designGates: number[]
+  personalPlanets?: Array<{
+    planetName: string
+    personality: { gate: number; line: number }
+    design: { gate: number; line: number }
+  }>
   personalDefinedCenterIds: string[]
   personalDefinedChannelIds: string[]
   transit: {

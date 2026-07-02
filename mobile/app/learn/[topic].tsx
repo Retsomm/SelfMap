@@ -1,5 +1,5 @@
-import { useLocalSearchParams, useRouter } from 'expo-router'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { useLocalSearchParams } from 'expo-router'
+import { StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   HD_TYPE_CONTENT,
@@ -13,7 +13,8 @@ import { ChannelList }    from '@/components/learn/ChannelList'
 import { GateList }       from '@/components/learn/GateList'
 import { TransitLearn }   from '@/components/learn/TransitLearn'
 import { CompositeLearn } from '@/components/learn/CompositeLearn'
-import { Colors, Spacing } from '@/constants/tokens'
+import { NavBackHeader }  from '@/components/NavBackHeader'
+import { Colors } from '@/constants/tokens'
 
 const TITLE: Record<string, string> = {
   type:       '五大類型',
@@ -30,17 +31,10 @@ const SUPPORTED_TOPICS = new Set(Object.keys(TITLE))
 
 export default function TopicScreen() {
   const { topic } = useLocalSearchParams<{ topic: string }>()
-  const router = useRouter()
 
   return (
     <SafeAreaView style={s.container}>
-      <View style={s.header}>
-        <Pressable onPress={() => router.back()} style={s.backBtn} hitSlop={12}>
-          <Text style={s.backText}>‹ 返回</Text>
-        </Pressable>
-        <Text style={s.headerTitle}>{TITLE[topic] ?? topic}</Text>
-        <View style={{ width: 60 }} />
-      </View>
+      <NavBackHeader title={TITLE[topic] ?? topic} />
 
       {topic === 'type'       && <SummaryList data={HD_TYPE_CONTENT}       categoryLabel="能量類型" />}
       {topic === 'authority'  && <SummaryList data={HD_AUTHORITY_CONTENT}  categoryLabel="內在權威" />}
@@ -61,17 +55,5 @@ export default function TopicScreen() {
 }
 
 const s = StyleSheet.create({
-  container:   { flex: 1, backgroundColor: Colors.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  backBtn:     {},
-  backText:    { color: Colors.accent, fontSize: 16, fontWeight: '600' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: Colors.text },
+  container: { flex: 1, backgroundColor: Colors.bg },
 })

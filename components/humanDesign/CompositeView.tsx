@@ -51,11 +51,11 @@ const CompositePlanetPanel = ({ result, side, label }: PlanetPanelProps) => {
         {result.planets.map(p => (
           <div key={p.planetName} className={`composite-planet-row ${rowClass}`}>
             <span className={`composite-gate composite-gate--side ${isLeft ? 'composite-gate--right' : 'composite-gate--left'}`}>
-              {p.red.full}
+              {isLeft ? p.red.full : p.black.full}
             </span>
             <PlanetIcon name={p.planetName} className="composite-planet-icon" />
             <span className={`composite-gate composite-gate--side ${isLeft ? 'composite-gate--left' : 'composite-gate--right'}`}>
-              {p.black.full}
+              {isLeft ? p.black.full : p.red.full}
             </span>
           </div>
         ))}
@@ -98,7 +98,7 @@ const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: Min
       {/* Header */}
       <div className="flex items-baseline gap-3 mb-2 pb-2 border-b border-[var(--ink)]">
         <span className="font-serif italic font-medium text-[26px] leading-none" style={{ color }}>{label}</span>
-        <div className="font-mono text-[10px] tracking-[0.08em] text-[var(--ink-soft)] min-w-0">
+        <div className="font-mono text-[12px] tracking-[0.08em] text-[var(--ink-soft)] min-w-0">
           <div className="truncate">{date} {time}</div>
           <div className="truncate opacity-70">{locationLabel}</div>
         </div>
@@ -169,8 +169,8 @@ const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: Min
           { label: '權威', value: result.authority.name },
         ].map(item => (
           <div key={item.label} className="min-w-0">
-            <div className="font-mono text-[8px] tracking-[0.1em] uppercase text-[var(--ink-soft)]">{item.label}</div>
-            <div className="font-sans text-[10px] font-semibold text-[var(--ink)] leading-snug">{item.value}</div>
+            <div className="font-mono text-[10px] tracking-[0.1em] uppercase text-[var(--ink-soft)]">{item.label}</div>
+            <div className="font-sans text-[12px] font-semibold text-[var(--ink)] leading-snug">{item.value}</div>
           </div>
         ))}
       </div>
@@ -193,28 +193,30 @@ const ConnectionGroup = ({ title, desc, connections, colorClass, labelA, labelB 
   return (
     <div className="border border-[var(--ink)]">
       <div className={`px-4 py-2.5 border-b border-[var(--ink)] ${colorClass}`}>
-        <div className="font-mono text-[11px] md:text-[13px] font-bold tracking-[0.12em] uppercase text-[var(--ink)]">{title}</div>
-        <div className="font-sans text-[11px] md:text-[12px] text-[var(--ink-soft)] mt-0.5 leading-snug">{desc}</div>
+        <div className="font-mono text-[12px] md:text-base font-bold tracking-[0.12em] uppercase text-[var(--ink)]">{title}</div>
+        <div className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] mt-0.5 leading-snug">{desc}</div>
       </div>
       {connections.length === 0 ? (
-        <div className="px-4 py-3 font-mono text-[11px] md:text-[12px] text-[var(--ink-soft)]">目前尚無連結動態</div>
+        <div className="px-4 py-3 font-mono text-[12px] md:text-base text-[var(--ink-soft)]">目前尚無連結動態</div>
       ) : (
         <div className="divide-y divide-dotted divide-[rgba(43,31,20,0.2)]">
           {connections.map(conn => (
-            <div key={conn.channelId} className="px-4 py-2 grid grid-cols-[80px_1fr_1fr] md:grid-cols-[100px_1fr_1fr] gap-2 items-start text-[11px] md:text-[12px]">
-              <div className="font-mono font-bold text-[var(--ink)]">
-                {conn.channelId}
-                <div className="font-normal text-[10px] text-[var(--ink-soft)] leading-tight">
+            <div key={conn.channelId} className="px-4 py-2 flex flex-col gap-1 text-[12px] md:text-base">
+              <div className="font-mono font-bold text-[var(--ink)] flex items-baseline gap-2 whitespace-nowrap">
+                <span>{conn.channelId}</span>
+                <span className="font-normal text-[var(--ink-soft)]">
                   {centerLabel(conn.centerA)}—{centerLabel(conn.centerB)}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="font-mono text-[var(--ink-soft)]">
+                  <span className="font-semibold text-[#c8553d]">{labelA}</span>{' '}
+                  {conn.aGates.length > 0 ? conn.aGates.join(', ') : '—'}
                 </div>
-              </div>
-              <div className="font-mono text-[var(--ink-soft)]">
-                <span className="font-semibold text-[#c8553d]">{labelA}</span>{' '}
-                {conn.aGates.length > 0 ? conn.aGates.join(', ') : '—'}
-              </div>
-              <div className="font-mono text-[var(--ink-soft)]">
-                <span className="font-semibold text-[var(--ink)]">{labelB}</span>{' '}
-                {conn.bGates.length > 0 ? conn.bGates.join(', ') : '—'}
+                <div className="font-mono text-[var(--ink-soft)]">
+                  <span className="font-semibold text-[var(--ink)]">{labelB}</span>{' '}
+                  {conn.bGates.length > 0 ? conn.bGates.join(', ') : '—'}
+                </div>
               </div>
             </div>
           ))}
@@ -359,7 +361,7 @@ export default function CompositeView({
     <div ref={printAreaRef} className="flex flex-col gap-8">
 
       {/* Person info header row */}
-      <div className="grid grid-cols-2 gap-4 border border-[var(--ink)] bg-[var(--paper-deep)] px-5 py-3 font-mono text-[11px] tracking-[0.06em]">
+      <div className="grid grid-cols-2 gap-4 border border-[var(--ink)] bg-[var(--paper-deep)] px-5 py-3 font-mono text-[12px] md:text-base tracking-[0.06em]">
         {[
           { label: labelA, date: dateA, time: timeA, loc: locationA, color: '#c8553d' },
           { label: labelB, date: dateB, time: timeB, loc: locationB, color: 'var(--ink)' },
@@ -384,7 +386,7 @@ export default function CompositeView({
             key={mode}
             onClick={() => setChartMode(mode)}
             className={[
-              'font-mono text-[11px] md:text-[12px] tracking-[0.12em] uppercase px-4 py-2 cursor-pointer transition-colors duration-[120ms] border-0',
+              'font-mono text-[12px] md:text-base tracking-[0.12em] uppercase px-4 py-2 cursor-pointer transition-colors duration-[120ms] border-0',
               chartMode === mode
                 ? 'bg-[var(--ink)] text-[var(--paper)]'
                 : 'bg-transparent text-[var(--ink-soft)] hover:text-[var(--ink)] hover:bg-[var(--paper-deep)]',
@@ -458,17 +460,17 @@ export default function CompositeView({
       {/* Analysis section */}
       <section className="border-t border-[var(--ink)] pt-8">
         <div className="flex items-baseline gap-4 mb-6">
-          <h2 className="font-serif italic font-medium text-[clamp(24px,2.5vw,36px)] leading-none m-0 text-[var(--ink)]">
+          <h2 className="font-serif italic font-medium text-[clamp(28px,3vw,42px)] leading-none m-0 text-[var(--ink)]">
             合圖分析
           </h2>
-          <span className="font-mono text-[11px] md:text-[13px] tracking-[0.2em] uppercase text-[var(--ink-soft)]">
+          <span className="font-mono text-[12px] md:text-base tracking-[0.2em] uppercase text-[var(--ink-soft)]">
             兩張圖的整合關係
           </span>
         </div>
 
         {/* Integration theme */}
         <div className="mb-6">
-          <div className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
+          <div className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
             整合主題
           </div>
           <div className="border border-[var(--ink)] bg-[var(--paper-deep)]">
@@ -476,7 +478,7 @@ export default function CompositeView({
               <span className="font-serif italic font-medium text-[22px] md:text-[26px] text-[var(--ink)]">
                 {INTEGRATION_CONTENT[integrationKey]?.label}
               </span>
-              <span className="font-mono text-[11px] tracking-[0.1em] text-[var(--ink-soft)]">
+              <span className="font-mono text-[12px] md:text-base tracking-[0.1em] text-[var(--ink-soft)]">
                 {analysis.compositeDefinedCount} 個已定義中心
                 {' · '}
                 {analysis.compositeOpenCount} 個開放中心
@@ -484,14 +486,14 @@ export default function CompositeView({
             </div>
             <div className="px-5 py-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">愛與關係</div>
-                <p className="font-sans text-[12px] md:text-[13px] text-[var(--ink)] leading-[1.65] m-0">
+                <div className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">愛與關係</div>
+                <p className="font-sans text-[12px] md:text-base text-[var(--ink)] leading-[1.65] m-0">
                   {INTEGRATION_CONTENT[integrationKey]?.love}
                 </p>
               </div>
               <div>
-                <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">工作與成長</div>
-                <p className="font-sans text-[12px] md:text-[13px] text-[var(--ink)] leading-[1.65] m-0">
+                <div className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">工作與成長</div>
+                <p className="font-sans text-[12px] md:text-base text-[var(--ink)] leading-[1.65] m-0">
                   {INTEGRATION_CONTENT[integrationKey]?.work}
                 </p>
               </div>
@@ -501,7 +503,7 @@ export default function CompositeView({
 
         {/* Connection dynamics */}
         <div className="mb-6">
-          <div className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
+          <div className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
             連結動態
           </div>
           <div className="flex flex-col gap-2">
@@ -536,28 +538,9 @@ export default function CompositeView({
           </div>
         </div>
 
-        {/* Composite defined channels */}
-        {analysis.compositeDefinedChannels.length > 0 && (
-          <div className="mb-6">
-            <div className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-2">
-              合圖形成的通道（{analysis.compositeDefinedChannels.length}）
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {analysis.compositeDefinedChannels.map(ch => (
-                <span key={ch.id} className="font-mono text-[11px] tracking-[0.04em] border border-[var(--ink)] py-[3px] px-2 text-[var(--ink)] bg-[var(--paper-deep)]">
-                  {ch.id}
-                  <span className="ml-1.5 opacity-60 text-[10px]">
-                    {centerLabel(ch.centerA)}—{centerLabel(ch.centerB)}
-                  </span>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Profile resonance */}
         <div className="mb-6">
-          <div className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
+          <div className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
             配置共鳴
           </div>
           <div className="border border-[var(--ink)] px-5 py-4">
@@ -566,7 +549,7 @@ export default function CompositeView({
               <span className="font-serif italic text-[16px] text-[var(--ink)]">{labelB} {resultB.profile.profile}</span>
             </div>
             {analysis.profileResonance.length === 0 ? (
-              <p className="font-sans text-[12px] md:text-[13px] text-[var(--ink-soft)] m-0 leading-[1.65]">
+              <p className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] m-0 leading-[1.65]">
                 目前沒有明顯的配置共鳴
               </p>
             ) : (
@@ -578,10 +561,10 @@ export default function CompositeView({
                   if (!key) return null
                   return (
                     <div key={line} className="flex gap-3 items-start">
-                      <span className="font-mono text-[11px] font-bold tracking-[0.06em] text-[var(--ink)] shrink-0 pt-0.5">
+                      <span className="font-mono text-[12px] md:text-base font-bold tracking-[0.06em] text-[var(--ink)] shrink-0 pt-0.5">
                         {LINE_RESONANCE[key]?.label}
                       </span>
-                      <span className="font-sans text-[12px] md:text-[13px] text-[var(--ink-soft)] leading-[1.65]">
+                      <span className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] leading-[1.65]">
                         {LINE_RESONANCE[key]?.desc}
                       </span>
                     </div>
@@ -594,7 +577,7 @@ export default function CompositeView({
 
         {/* Authority interaction */}
         <div className="mb-6">
-          <div className="font-mono text-[11px] md:text-[13px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
+          <div className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-3">
             權威互動
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -603,9 +586,9 @@ export default function CompositeView({
               { label: 'B 的權威', result: resultB, accentColor: 'var(--ink)' },
             ].map(({ label, result: r, accentColor }) => (
               <div key={label} className="border border-[var(--ink)] border-l-4 px-4 py-3" style={{ borderLeftColor: accentColor }}>
-                <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">{label}</div>
+                <div className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-[var(--ink-soft)] mb-1">{label}</div>
                 <div className="font-serif italic font-medium text-[18px] text-[var(--ink)] mb-1">{r.authority.name}</div>
-                <p className="font-sans text-[12px] md:text-[13px] text-[var(--ink-soft)] m-0 leading-[1.65]">{r.authority.tip}</p>
+                <p className="font-sans text-[12px] md:text-base text-[var(--ink-soft)] m-0 leading-[1.65]">{r.authority.tip}</p>
               </div>
             ))}
           </div>

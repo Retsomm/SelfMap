@@ -29,6 +29,7 @@ import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
 import { AppliedProfileCard } from '@/components/AppliedProfileCard'
 import BodyGraph from '@/components/BodyGraph'
 import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
+import { matchCity } from '@/lib/cities'
 import { type BirthProfile } from '@/lib/birthProfiles'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
@@ -101,25 +102,31 @@ export default function CompositeView() {
   }
 
   const calculate = async () => {
+    const matchedA = matchCity(formA.city)
+    const matchedB = matchCity(formB.city)
     let valid = true
-    if (!formA.city || !formA.timezone) { setErrorA('請輸入城市名稱並從清單中選擇'); valid = false }
-    if (!formB.city || !formB.timezone) { setErrorB('請輸入城市名稱並從清單中選擇'); valid = false }
-    if (!valid) return
+    if (!matchedA) { setErrorA('找不到這個地點，請確認拼字或改用資料庫中的地名'); setFormA(f => ({ ...f, timezone: '' })); valid = false }
+    if (!matchedB) { setErrorB('找不到這個地點，請確認拼字或改用資料庫中的地名'); setFormB(f => ({ ...f, timezone: '' })); valid = false }
+    if (!valid || !matchedA || !matchedB) return
+    setErrorA(null)
+    setErrorB(null)
+    setFormA(f => ({ ...f, city: matchedA.name, timezone: matchedA.timezone }))
+    setFormB(f => ({ ...f, city: matchedB.name, timezone: matchedB.timezone }))
 
     const payload: CreateCompositePayload = {
       personA: {
         name:      formA.name || undefined,
         birthDate: formToBirthDate(formA),
         birthTime: formToBirthTime(formA),
-        birthCity: formA.city,
-        timezone:  formA.timezone,
+        birthCity: matchedA.name,
+        timezone:  matchedA.timezone,
       },
       personB: {
         name:      formB.name || undefined,
         birthDate: formToBirthDate(formB),
         birthTime: formToBirthTime(formB),
-        birthCity: formB.city,
-        timezone:  formB.timezone,
+        birthCity: matchedB.name,
+        timezone:  matchedB.timezone,
       },
     }
 
@@ -311,19 +318,29 @@ export default function CompositeView() {
           {(result.personA.planets?.length ?? 0) > 0 && (
             <View style={s.card}>
               <Text style={[s.sectionLabel, { marginBottom: Spacing.md }]}>行星閘門對照</Text>
+              {/* Person group header */}
+              <View style={s.planetGroupRow}>
+                <View style={s.planetPlanetCol} />
+                <Text style={[s.planetGroupLabel, { color: Colors.accent }]}>{result.personA.name ?? 'A'}</Text>
+                <Text style={[s.planetGroupLabel, { color: Colors.text }]}>{result.personB.name ?? 'B'}</Text>
+              </View>
               {/* Header */}
               <View style={[s.planetRow, { borderBottomWidth: 1, borderBottomColor: Colors.border, paddingBottom: 6 }]}>
                 <Text style={[s.planetPlanetCol, s.planetHeaderText]}>行星</Text>
-                <Text style={[s.planetGateCol, s.planetHeaderText, { color: Colors.accent }]}>A（意識）</Text>
-                <Text style={[s.planetGateCol, s.planetHeaderText, { color: Colors.text }]}>B（意識）</Text>
+                <Text style={[s.planetGateColSm, s.planetHeaderText, { color: Colors.text }]}>意識</Text>
+                <Text style={[s.planetGateColSm, s.planetHeaderText, { color: Colors.designRed }]}>潛意識</Text>
+                <Text style={[s.planetGateColSm, s.planetHeaderText, { color: Colors.text }]}>意識</Text>
+                <Text style={[s.planetGateColSm, s.planetHeaderText, { color: Colors.designRed }]}>潛意識</Text>
               </View>
               {(result.personA.planets ?? []).map((p, i) => {
                 const pb = result.personB.planets?.[i]
                 return (
                   <View key={p.name} style={[s.planetRow, i % 2 === 1 && s.planetRowAlt]}>
                     <Text style={s.planetPlanetCol}>{p.name}</Text>
-                    <Text style={[s.planetGateCol, { color: Colors.accent }]}>{p.blackGate}.{p.blackLine}</Text>
-                    <Text style={[s.planetGateCol, { color: Colors.text }]}>{pb?.blackGate}.{pb?.blackLine}</Text>
+                    <Text style={[s.planetGateColSm, { color: Colors.text }]}>{p.blackGate}.{p.blackLine}</Text>
+                    <Text style={[s.planetGateColSm, { color: Colors.designRed }]}>{p.redGate}.{p.redLine}</Text>
+                    <Text style={[s.planetGateColSm, { color: Colors.text }]}>{pb?.blackGate}.{pb?.blackLine}</Text>
+                    <Text style={[s.planetGateColSm, { color: Colors.designRed }]}>{pb?.redGate}.{pb?.redLine}</Text>
                   </View>
                 )
               })}
@@ -398,22 +415,6 @@ export default function CompositeView() {
               )
             })}
           </View>
-
-          {/* 合圖定義通道 */}
-          {(result.compositeDefinedChannelIds ?? []).length > 0 && (
-            <View style={s.card}>
-              <Text style={[s.sectionLabel, { marginBottom: Spacing.sm }]}>
-                合圖定義通道（{(result.compositeDefinedChannelIds ?? []).length}）
-              </Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                {(result.compositeDefinedChannelIds ?? []).map(ch => (
-                  <View key={ch} style={s.channelTag}>
-                    <Text style={s.channelTagText}>{ch}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
 
           {/* 人生角色共鳴 */}
           <View style={s.card}>
@@ -515,6 +516,9 @@ const s = StyleSheet.create({
   planetRowAlt:     { backgroundColor: Colors.altRowBg },
   planetPlanetCol:  { flex: 1.2, fontSize: 12, color: Colors.sub },
   planetGateCol:    { flex: 1, fontSize: 13, fontWeight: '700' },
+  planetGateColSm:  { flex: 1, fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  planetGroupRow:   { flexDirection: 'row', marginBottom: 2 },
+  planetGroupLabel: { flex: 2, fontSize: 11, fontWeight: '700', textAlign: 'center' },
   planetHeaderText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: 0.5 },
   // Theme
   themeLabel:    { fontSize: 15, fontWeight: '700', color: Colors.accent, marginBottom: Spacing.sm },
@@ -529,9 +533,6 @@ const s = StyleSheet.create({
   connDesc:        { fontSize: 12, color: Colors.sub, lineHeight: 18 },
   connRow:         { flexDirection: 'row', padding: 10, gap: Spacing.sm },
   connId:          { fontSize: 13, fontWeight: '700' },
-  // Channels
-  channelTag:     { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm, paddingHorizontal: 8, paddingVertical: 3 },
-  channelTagText: { fontSize: 12, color: Colors.text, fontWeight: '600' },
   // Profile resonance
   profileLabel:   { fontSize: 15, fontWeight: '700', color: Colors.text },
   resonanceRow:   { marginTop: Spacing.sm, gap: 2 },

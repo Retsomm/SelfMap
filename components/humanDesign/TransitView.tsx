@@ -4,6 +4,7 @@ import { useMemo, useState, useRef, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { useUser, useClerk } from '@clerk/nextjs'
 import BodyGraph from '@/components/humanDesign/BodyGraph'
+import PlanetIcon from '@/components/humanDesign/PlanetIcon'
 import { CENTER_INFO, CHANNEL_DEFS, calculateCentersAndChannels } from '@/lib/humanDesign'
 import type { HdResult } from '@/lib/buildAiPrompt'
 import { buildTransitAiPrompt } from '@/lib/buildAiPrompt'
@@ -79,6 +80,37 @@ const SectionHeader = ({ children }: { children: ReactNode }) => (
   <h3 className="font-mono text-[12px] md:text-base tracking-[0.18em] uppercase text-(--ink-soft) mb-3 pb-1.5 border-b border-dotted border-(--ink)/20">
     {children}
   </h3>
+)
+
+// ── 大螢幕合併圖兩側閘門面板（寬度足夠時才顯示，見 .composite-person-panel 的 RWD 規則）──
+
+const PersonalGatePanel = ({ personal }: { personal: HdResult }) => (
+  <div className="composite-person-panel transit-gate-panel--personal">
+    <div className="composite-person-label">個人圖</div>
+    <div className="composite-planet-rows">
+      {personal.planets.map(p => (
+        <div key={p.planetName} className="transit-planet-row">
+          <span className="transit-gate transit-gate--design">{p.red.full}</span>
+          <PlanetIcon name={p.planetName} className="composite-planet-icon" />
+          <span className="transit-gate transit-gate--personality">{p.black.full}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+)
+
+const TransitGatePanel = ({ transit }: { transit: TransitResult }) => (
+  <div className="composite-person-panel transit-gate-panel--transit">
+    <div className="composite-person-label">流日</div>
+    <div className="composite-planet-rows">
+      {transit.planets.map(p => (
+        <div key={p.planetName} className="transit-planet-row">
+          <PlanetIcon name={p.planetName} className="composite-planet-icon" />
+          <span className="transit-gate transit-gate--transit">{p.full}</span>
+        </div>
+      ))}
+    </div>
+  </div>
 )
 
 // ── 中心 ────────────────────────────────────────────────────────────────────
@@ -510,22 +542,28 @@ export default function TransitView({ personal, transit, onRefresh, refreshing, 
           </div>
         </div>
       ) : (
-        <div className="max-w-2xl mx-auto w-full">
-          <div className="hd-chart-frame">
-            <span className="hd-chart-corner tl" />
-            <span className="hd-chart-corner tr" />
-            <span className="hd-chart-corner bl" />
-            <span className="hd-chart-corner br" />
-            <BodyGraph
-              onSelect={() => {}}
-              showGates
-              showAnnotations
-              showFace
-              showSilhouette
-              activations={combinedActivations}
-              definedCenterIds={combinedCenterIds}
-            />
+        <div className="composite-chart-row">
+          <PersonalGatePanel personal={personal} />
+
+          <div className="hd-col-mid max-w-2xl mx-auto w-full">
+            <div className="hd-chart-frame">
+              <span className="hd-chart-corner tl" />
+              <span className="hd-chart-corner tr" />
+              <span className="hd-chart-corner bl" />
+              <span className="hd-chart-corner br" />
+              <BodyGraph
+                onSelect={() => {}}
+                showGates
+                showAnnotations
+                showFace
+                showSilhouette
+                activations={combinedActivations}
+                definedCenterIds={combinedCenterIds}
+              />
+            </div>
           </div>
+
+          <TransitGatePanel transit={transit} />
         </div>
       )}
 

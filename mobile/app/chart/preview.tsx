@@ -14,12 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { getPendingChart, clearPendingChart, type PendingChart } from '@/lib/pendingChart'
 import { createChart } from '@/lib/api'
 import { downloadChartAsPdf, generateAiPrompt } from '@/lib/chartPdf'
-import { HD_CENTERS_INFO } from '@/lib/hd-chart-data'
+import { HD_CENTERS_INFO, ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@/lib/hd-chart-data'
 import { normalizeCenterId, normalizeChannelId, findChannelById } from '@/lib/hd-normalizers'
-import { getTypeMeta } from '@/lib/hd-type-meta'
+import { getTypeMeta, getTypeLabel } from '@/lib/hd-type-meta'
 import BodyGraph from '@/components/BodyGraph'
 import DetailBottomSheet, { type SheetTarget } from '@/components/DetailBottomSheet'
 import { SectionCard, Row, Tag } from '@/components/chart/ChartPrimitives'
+import { NavBackHeader } from '@/components/NavBackHeader'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 // ─── Action buttons ───────────────────────────────────────────────────────────
@@ -149,7 +150,8 @@ export default function ChartPreviewScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+      <NavBackHeader title="圖表預覽" />
       <ScrollView contentContainerStyle={styles.inner}>
 
         {/* Body Graph */}
@@ -178,7 +180,7 @@ export default function ChartPreviewScreen() {
 
         {/* 類型 */}
         <SectionCard title="類型">
-          <Row label="能量類型" value={chart.type} accent tappable onPress={() => open({ kind: 'type', typeKey: chart.type })} />
+          <Row label="能量類型" value={getTypeLabel(chart.type)} accent tappable onPress={() => open({ kind: 'type', typeKey: chart.type })} />
           <Row label="策略" value={typeMeta.strategy} />
           <Row label="簽名（成功徵兆）" value={typeMeta.signature} accent />
           <Row label="非自我主題" value={typeMeta.notSelf} dim />
@@ -191,15 +193,19 @@ export default function ChartPreviewScreen() {
           <Row label="定義" value={chart.definition} tappable onPress={() => open({ kind: 'definition', definitionKey: chart.definition })} />
         </SectionCard>
 
-        {/* 已定義中心 */}
-        <SectionCard title="九大中心（已定義）">
+        {/* 九大中心 */}
+        <SectionCard title="九大中心">
           <View style={styles.tagRow}>
-            {chart.centers.map((c) => {
-              const chartKey = normalizeCenterId(c)
-              const info     = HD_CENTERS_INFO[chartKey]
-              const label    = info?.name.zh ?? c
+            {Object.keys(HD_CENTERS_INFO).map((chartKey) => {
+              const info    = HD_CENTERS_INFO[chartKey]
+              const defined = definedCenterIds.has(chartKey)
               return (
-                <Tag key={c} label={label} active onPress={() => open({ kind: 'center', id: chartKey })} />
+                <Tag
+                  key={chartKey}
+                  label={info.name.zh}
+                  active={defined}
+                  onPress={() => open({ kind: 'center', id: chartKey, defined })}
+                />
               )
             })}
           </View>
@@ -213,7 +219,7 @@ export default function ChartPreviewScreen() {
                 const ch    = findChannelById(rawCh)
                 const label = ch ? `${ch.from}–${ch.to}` : rawCh
                 return (
-                  <Tag key={rawCh} label={label} onPress={ch ? () => open({ kind: 'channel', channel: ch }) : undefined} />
+                  <Tag key={rawCh} label={label} active onPress={ch ? () => open({ kind: 'channel', channel: ch }) : undefined} />
                 )
               })}
             </View>
@@ -241,15 +247,32 @@ export default function ChartPreviewScreen() {
         {/* 激活閘門 */}
         <SectionCard title={`激活閘門（${chart.gates.length}）`}>
           <View style={styles.gateGrid}>
-            {[...chart.gates].sort((a, b) => a - b).map((g) => (
-              <Pressable
-                key={g}
-                style={({ pressed }) => [styles.gate, pressed && styles.gatePressed]}
-                onPress={() => open({ kind: 'gate', num: g })}
-              >
-                <Text style={styles.gateText}>{g}</Text>
-              </Pressable>
-            ))}
+            {[...chart.gates].sort((a, b) => a - b).map((g) => {
+              const state = activations[g]
+              const isDual = !!(state?.c && state?.u)
+              const soloFill = isDual ? null : state?.c ? ACT_CONSCIOUS : state?.u ? ACT_UNCONSCIOUS : null
+              const isActive = isDual || !!soloFill
+              return (
+                <Pressable
+                  key={g}
+                  style={[
+                    styles.gate,
+                    isDual && { backgroundColor: ACT_CONSCIOUS, borderColor: ACT_CONSCIOUS },
+                    soloFill && { backgroundColor: soloFill, borderColor: soloFill },
+                  ]}
+                  onPress={() => open({ kind: 'gate', num: g })}
+                >
+                  {({ pressed }) => (
+                    <>
+                      {isDual && <View style={styles.gateDualOverlay} />}
+                      <Text style={[styles.gateText, isActive && styles.gateTextActive, pressed && styles.gateTextPressed]}>
+                        {g}
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              )
+            })}
           </View>
         </SectionCard>
 
@@ -377,9 +400,11 @@ const styles = StyleSheet.create({
 
   tagRow:   { flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 6 },
   gateGrid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: Spacing.sm, rowGap: Spacing.sm },
-  gate:        { backgroundColor: Colors.gateBg, borderRadius: Radius.sm, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Colors.gateBorder },
-  gatePressed: { backgroundColor: Colors.accentD, borderColor: Colors.accent },
-  gateText:    { color: Colors.accent, fontSize: 13, fontWeight: '600' },
+  gate:            { backgroundColor: Colors.gateBg, borderRadius: Radius.sm, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Colors.gateBorder, overflow: 'hidden' },
+  gateDualOverlay: { position: 'absolute', top: 0, right: 0, bottom: 0, width: '50%', backgroundColor: Colors.designRed },
+  gateText:        { color: Colors.accent, fontSize: 13, fontWeight: '600' },
+  gateTextActive:  { color: '#ffffff' },
+  gateTextPressed: { fontSize: 17, fontWeight: '800' },
 
   planetHeader:     { flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: Colors.border, marginBottom: Spacing.xs },
   planetHeaderText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, color: Colors.sub },
@@ -390,15 +415,15 @@ const styles = StyleSheet.create({
   planetBlack:      { color: Colors.text },
   planetRed:        { color: Colors.planetRedText },
 
-  arrowsGrid:    { flexDirection: 'row', gap: Spacing.md, padding: Spacing.md },
-  arrowsCol:     { flex: 1, gap: Spacing.sm },
-  arrowsSide:    { fontSize: 11, color: Colors.muted, fontWeight: '600', marginBottom: 2 },
+  arrowsGrid:    { flexDirection: 'column', gap: Spacing.lg, padding: Spacing.md },
+  arrowsCol:     { gap: Spacing.md },
+  arrowsSide:    { fontSize: 14, color: Colors.muted, fontWeight: '600', marginBottom: 2 },
   arrowItem:     { flexDirection: 'row', gap: Spacing.sm, alignItems: 'flex-start' },
-  arrowDir:      { fontSize: 18, color: Colors.accent, fontWeight: '700', width: 20, lineHeight: 22 },
-  arrowInfo:     { flex: 1, gap: 2 },
-  arrowCategory: { fontSize: 10, color: Colors.sub, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
-  arrowLabel:    { fontSize: 13, color: Colors.text, fontWeight: '700' },
-  arrowDesc:     { fontSize: 11, color: Colors.sub, lineHeight: 15 },
+  arrowDir:      { fontSize: 22, color: Colors.accent, fontWeight: '700', width: 24, lineHeight: 26 },
+  arrowInfo:     { flex: 1, gap: 3 },
+  arrowCategory: { fontSize: 12, color: Colors.sub, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
+  arrowLabel:    { fontSize: 17, color: Colors.text, fontWeight: '700' },
+  arrowDesc:     { fontSize: 13, color: Colors.sub, lineHeight: 18 },
 
   actionSection: { gap: Spacing.sm, marginTop: Spacing.sm },
   actionBtn:         { paddingVertical: 14, borderRadius: Radius.lg, alignItems: 'center' },

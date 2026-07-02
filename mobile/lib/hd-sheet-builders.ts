@@ -16,7 +16,7 @@ import { centerZh } from '@/lib/hd-normalizers'
 export interface SheetContent {
   title: string
   subtitle: string
-  sections: Array<{ label?: string; body: string }>
+  sections: Array<{ label?: string; body: string; dim?: boolean }>
   highlights?: Array<{ label: string; text: string }>
   keywords: string[]
 }
@@ -48,10 +48,13 @@ const NOT_FOUND: SheetContent = {
 
 /**
  * @param id - Center key (e.g. 'head', 'sacral') from HD_CENTERS_INFO
+ * @param defined - Whether this center is defined in the chart being viewed.
+ *   When provided, the matching state (已定義/開放) is shown normally and the
+ *   other, non-applicable state is dimmed. When omitted, both are shown plain.
  * @returns SheetContent with description, defined/open states, and keywords;
  *   falls back to a "not found" message when the id is unrecognised.
  */
-export function buildCenterContent(id: string): SheetContent {
+export function buildCenterContent(id: string, defined?: boolean): SheetContent {
   const info = HD_CENTERS_INFO[id]
   if (!info) return NOT_FOUND
   return {
@@ -59,8 +62,8 @@ export function buildCenterContent(id: string): SheetContent {
     subtitle: info.type.zh,
     sections: [
       { body: info.description.zh },
-      { label: '已定義', body: info.definedContent.zh },
-      { label: '開放', body: info.openContent.zh },
+      { label: '已定義', body: info.definedContent.zh, dim: defined === false },
+      { label: '開放', body: info.openContent.zh, dim: defined === true },
     ],
     keywords: info.keywords.zh,
   }

@@ -1,5 +1,21 @@
 export type TypeMeta = { strategy: string; signature: string; notSelf: string }
 
+export const TYPE_LABELS: Record<string, string> = {
+  'Manifestor':              '顯示者',
+  'Generator':                '生產者',
+  'Manifesting Generator':    '顯示生產者',
+  'Projector':                '投射者',
+  'Reflector':                '反映者',
+}
+
+export function getTypeLabel(type: string): string {
+  return (
+    TYPE_LABELS[type] ??
+    Object.entries(TYPE_LABELS).find(([k]) => type.includes(k))?.[1] ??
+    type
+  )
+}
+
 export const TYPE_META: Record<string, TypeMeta> = {
   Manifestor:              { strategy: '告知',               signature: '和平', notSelf: '憤怒' },
   Generator:               { strategy: '等待回應',            signature: '滿足', notSelf: '沮喪' },

@@ -78,8 +78,8 @@ export default function BirthDataForm({
         <CitySearchField
           city={value.city}
           timezone={value.timezone}
-          onSelect={(city, timezone) => {
-            onChange({ ...value, city, timezone })
+          onChangeCity={(city) => {
+            onChange({ ...value, city, timezone: '' })
             onClearError?.()
           }}
           onFocus={onCityFocus}
