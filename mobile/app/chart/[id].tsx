@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { type Chart, type StoredPlanet, type CreateCompositeResult, getChart, previewCompositeChart, previewTransitChart } from '@/lib/api'
+import { type Chart, type StoredPlanet, type CreateCompositeResult, type CreateTransitResult, getChart, previewCompositeChart, previewTransitChart } from '@/lib/api'
 import { HD_CENTERS_INFO, ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@/lib/hd-chart-data'
 import { normalizeCenterId, normalizeChannelId, findChannelById } from '@/lib/hd-normalizers'
 import { getTypeMeta, getTypeLabel } from '@/lib/hd-type-meta'
@@ -33,6 +33,20 @@ import { NavBackHeader } from '@/components/NavBackHeader'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 type ActionState = 'idle' | 'loading'
+type TransitSnapshot = NonNullable<NonNullable<Chart['meta']>['transitSnapshot']>
+
+/** 把 previewTransitChart 回傳的巢狀結果轉成 chart.meta.transitSnapshot 的扁平格式 */
+function toTransitSnapshot(r: CreateTransitResult): TransitSnapshot {
+  return {
+    computedAt: r.transit.computedAt,
+    planets: r.transit.planets,
+    allGates: r.transit.allGates,
+    definedCenterIds: r.transit.definedCenterIds,
+    definedChannels: r.transit.definedChannels,
+    combinedDefinedCenterIds: r.combined.definedCenterIds,
+    combinedDefinedChannelIds: r.combined.definedChannelIds,
+  }
+}
 
 function ActionButton({
   label,
@@ -100,11 +114,13 @@ export default function ChartDetailScreen() {
   const [sheetTarget, setSheetTarget] = useState<SheetTarget | null>(null)
   const [compositeFetched, setCompositeFetched]         = useState<CreateCompositeResult | null>(null)
   const [compositeFetchLoading, setCompositeFetchLoading] = useState(false)
+  const [transitFetched, setTransitFetched]             = useState<TransitSnapshot | null>(null)
+  const [transitFetchLoading, setTransitFetchLoading]   = useState(false)
   const [pdfState, setPdfState] = useState<ActionState>('idle')
   const [copyState, setCopyState] = useState<ActionState>('idle')
 
-  // 切換圖表時清除舊的合圖補算結果，避免渲染過期資料
-  useEffect(() => { setCompositeFetched(null) }, [id])
+  // 切換圖表時清除舊的合圖／流日補算結果，避免渲染過期資料
+  useEffect(() => { setCompositeFetched(null); setTransitFetched(null) }, [id])
 
   const loadChart = async () => {
     setLoading(true)
@@ -149,14 +165,37 @@ export default function ChartDetailScreen() {
     }).catch(e => { console.warn('[CompositeInfo] getToken failed:', e); setCompositeFetchLoading(false) })
   }, [chart])
 
+  // 自動補算缺少 meta.transitSnapshot 的流日圖（舊格式或存檔失敗殘留）。
+  // 頂層 birthDate/birthTime/birthCity/timezone 存的是使用者本命出生資料（非流日計算時刻），
+  // 可直接餵給 previewTransitChart 重算，但流日行星會是「現在」而非當初存檔當下，僅為盡量還原。
+  useEffect(() => {
+    if (!chart) return
+    if (chart.chartKind !== 'transit' || chart.meta?.transitSnapshot || !chart.timezone) return
+
+    setTransitFetchLoading(true)
+    previewTransitChart({
+      birthDate: chart.birthDate,
+      birthTime: chart.birthTime,
+      birthCity: chart.birthCity,
+      timezone: chart.timezone,
+    })
+      .then(r => setTransitFetched(toTransitSnapshot(r)))
+      .catch(e => console.warn('[TransitAnalysis] previewTransitChart failed:', e))
+      .finally(() => setTransitFetchLoading(false))
+  }, [chart])
+
   if (loading) return <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}><NavBackHeader title="圖表詳情" /><LoadingView /></SafeAreaView>
   if (error || !chart) return <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}><NavBackHeader title="圖表詳情" /><ErrorView message={error ?? '找不到圖表'} onRetry={loadChart} /></SafeAreaView>
 
   const typeMeta        = getTypeMeta(chart.type)
-  const transitSnapshot = chart.chartKind === 'transit' ? chart.meta?.transitSnapshot : undefined
+  const isTransit       = chart.chartKind === 'transit'
+  const transitIsRebuilt = isTransit && !chart.meta?.transitSnapshot && !!transitFetched
+  const transitSnapshot = isTransit ? (chart.meta?.transitSnapshot ?? transitFetched ?? undefined) : undefined
   // 舊格式合圖：type='合圖' 或 birthDate 含 '|'（網頁端舊儲存方式）
   const isComposite     = chart.chartKind === 'composite' || chart.type === '合圖' || !!(chart.birthDate?.includes('|'))
-  const isPersonal      = !transitSnapshot && !isComposite
+  // 修正：舊格式流日圖缺少 meta.transitSnapshot 時，不能只靠 transitSnapshot 存在與否
+  // 判斷是不是個人圖，否則會誤顯示成個人圖版面（chartKind 才是可靠依據）
+  const isPersonal      = !isTransit && !isComposite
 
   const definedCenterIds = transitSnapshot
     ? new Set(transitSnapshot.combinedDefinedCenterIds.map(normalizeCenterId))
@@ -385,12 +424,22 @@ export default function ChartDetailScreen() {
         )}
 
         {/* 流日分析（transit 專屬） */}
+        {isTransit && transitFetchLoading && !transitSnapshot ? (
+          <View style={styles.transitCard}>
+            <Text style={styles.transitTime}>正在重新計算流日資料…</Text>
+          </View>
+        ) : null}
         {transitSnapshot ? (
           <>
             <View style={styles.transitCard}>
               <Text style={styles.transitTime}>
                 流日計算時間：{new Date(transitSnapshot.computedAt).toLocaleString('zh-TW', { hour12: false, timeZone: 'Asia/Taipei' })}
               </Text>
+              {transitIsRebuilt && (
+                <Text style={styles.transitRebuiltNote}>
+                  這份流日圖是舊格式儲存，已用你的本命資料重新計算「今天」的流日，並非原始儲存當下的結果
+                </Text>
+              )}
             </View>
             <TransitAnalysis
               snapshot={transitSnapshot}
@@ -607,6 +656,7 @@ const styles = StyleSheet.create({
 
   transitCard: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border, justifyContent: 'center' },
   transitTime: { fontSize: 12, color: Colors.transit },
+  transitRebuiltNote: { fontSize: 12, color: Colors.sub, marginTop: 4 },
 
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 6 },
 
