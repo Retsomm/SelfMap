@@ -5,7 +5,6 @@ import { Stack, useRouter, useSegments } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { Colors } from '@/constants/tokens'
 import { migrateLocalProfilesToDb } from '@/lib/birthProfileMigration'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -71,8 +70,8 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="chart/preview" options={{ headerShown: true, title: '圖表預覽', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.bg }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
-          <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.bg }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
+          <Stack.Screen name="chart/preview" options={{ headerShown: false }} />
+          <Stack.Screen name="chart/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="learn/[topic]" options={{ headerShown: false }} />
           <Stack.Screen name="oauth-native-callback" options={{ headerShown: false }} />
         </Stack>

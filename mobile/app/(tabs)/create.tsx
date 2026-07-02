@@ -16,6 +16,7 @@ import { previewChart, type CreateChartPayload } from '@/lib/api'
 import { setPendingChart } from '@/lib/pendingChart'
 import { DatePicker, TimePicker } from '@/components/DateTimePicker'
 import CitySearchField from '@/components/CitySearchField'
+import { matchCity } from '@/lib/cities'
 import TransitView from '@/components/TransitView'
 import CompositeView from '@/components/CompositeView'
 import { ScreenHeader } from '@/components/ScreenHeader'
@@ -57,22 +58,26 @@ function CreatePersonalView() {
   const birthTime = `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`
 
   async function handleSubmit() {
-    if (!city || !timezone) {
-      setFieldError('請輸入城市名稱並從清單中選擇')
+    const matched = matchCity(city)
+    if (!matched) {
+      setFieldError('找不到這個地點，請確認拼字或改用資料庫中的地名')
+      setTimezone('')
       return
     }
+    setCity(matched.name)
+    setTimezone(matched.timezone)
     setFieldError(null)
     setSubmitError(null)
     setSubmitting(true)
     try {
-      const payload: CreateChartPayload = { birthDate, birthTime, birthCity: city, timezone, name: name || undefined }
+      const payload: CreateChartPayload = { birthDate, birthTime, birthCity: matched.name, timezone: matched.timezone, name: name || undefined }
       const result = await previewChart(payload)
       setPendingChart({
         name: name || '',
         birthDate,
         birthTime,
-        birthCity: city,
-        timezone,
+        birthCity: matched.name,
+        timezone: matched.timezone,
         type:             result.type,
         authority:        result.authority,
         profile:          result.profile,
@@ -159,7 +164,7 @@ function CreatePersonalView() {
             <CitySearchField
               city={city}
               timezone={timezone}
-              onSelect={(c, tz) => { setCity(c); setTimezone(tz); setFieldError(null) }}
+              onChangeCity={(c) => { setCity(c); setTimezone(''); setFieldError(null) }}
               onFocus={handleCityFocus}
             />
             {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}

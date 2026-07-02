@@ -86,6 +86,11 @@ export async function POST(req: NextRequest) {
       personalGates:    [...personalGates],
       personalityGates: hd.planets.map(p => p.black.gate),
       designGates:      hd.planets.map(p => p.red.gate),
+      personalPlanets:  hd.planets.map(p => ({
+        planetName: p.planetName,
+        personality: { gate: p.black.gate, line: p.black.line },
+        design:      { gate: p.red.gate,   line: p.red.line },
+      })),
       personalDefinedCenterIds:  [...personalCenterIds],
       personalDefinedChannelIds: hd.definedChannels.map(ch => ch.id),
       transit: {

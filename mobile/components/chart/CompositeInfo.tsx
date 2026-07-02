@@ -1,6 +1,7 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 import { type Chart, type CreateCompositeResult } from '@/lib/api'
 import { findChannelById } from '@/lib/hd-normalizers'
+import { getTypeLabel } from '@/lib/hd-type-meta'
 import { Colors, Spacing } from '@/constants/tokens'
 
 const LIB_CENTER_ZH: Record<string, string> = {
@@ -127,7 +128,7 @@ export default function CompositeInfo({
             <Text style={[c.personName, { color }]}>{label}</Text>
             <Text style={c.personSub}>{p?.birthDate ?? '—'}</Text>
             <Text style={c.personSub}>{p?.birthCity ?? '—'}</Text>
-            <Text style={c.personMeta}>{p?.type ?? '—'} · {p?.profile ?? '—'}</Text>
+            <Text style={c.personMeta}>{p?.type ? getTypeLabel(p.type) : '—'} · {p?.profile ?? '—'}</Text>
           </View>
         ))}
       </View>

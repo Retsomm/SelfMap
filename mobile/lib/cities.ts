@@ -224,13 +224,22 @@ export const CITIES: City[] = [
   { name: 'Casablanca 卡薩布蘭加', display: 'Casablanca 卡薩布蘭加', country: 'MA', timezone: 'Africa/Casablanca' },
 ]
 
-export function searchCities(query: string): City[] {
-  if (query.trim().length < 2) return []
-  const q = query.toLowerCase()
-  return CITIES.filter(
-    (c) =>
-      c.name.toLowerCase().includes(q) ||
-      c.display.toLowerCase().includes(q) ||
-      c.country.toLowerCase() === q,
-  ).slice(0, 3)
+/**
+ * 依使用者輸入的關鍵字比對資料庫中的地點。
+ * 優先找完全相符（忽略大小寫），找不到再退回子字串比對；
+ * 子字串比對到超過一筆時視為輸入不夠明確，回傳 null 而非隨意取第一筆（避免時區算錯）。
+ */
+export function matchCity(query: string): City | null {
+  const q = query.trim().toLowerCase()
+  if (!q) return null
+
+  const exact = CITIES.find(
+    (c) => c.name.toLowerCase() === q || c.display.toLowerCase() === q,
+  )
+  if (exact) return exact
+
+  const partialMatches = CITIES.filter(
+    (c) => c.name.toLowerCase().includes(q) || c.display.toLowerCase().includes(q),
+  )
+  return partialMatches.length === 1 ? partialMatches[0] : null
 }

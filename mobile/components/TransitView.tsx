@@ -26,6 +26,7 @@ import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/compo
 import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
 import { AppliedProfileCard } from '@/components/AppliedProfileCard'
 import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
+import { matchCity } from '@/lib/cities'
 import BodyGraph from '@/components/BodyGraph'
 import { type BirthProfile } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
@@ -85,15 +86,18 @@ export default function TransitView() {
   }
 
   const handleSubmit = async () => {
-    if (!form.city || !form.timezone) {
-      setFieldError('請輸入城市名稱並從清單中選擇')
+    const matched = matchCity(form.city)
+    if (!matched) {
+      setFieldError('找不到這個地點，請確認拼字或改用資料庫中的地名')
+      setForm(f => ({ ...f, timezone: '' }))
       return
     }
+    setForm(f => ({ ...f, city: matched.name, timezone: matched.timezone }))
     const payload = {
       birthDate: formToBirthDate(form),
       birthTime: formToBirthTime(form),
-      birthCity: form.city,
-      timezone:  form.timezone,
+      birthCity: matched.name,
+      timezone:  matched.timezone,
       name:      form.name || undefined,
     }
     setFieldError(null)
@@ -241,39 +245,53 @@ export default function TransitView() {
             )
           })()}
 
-          {/* 今日行星閘門 */}
+          {/* 今日行星閘門：個人（潛意識／意識）+ 流日（意識）並排 */}
           <View style={s.card}>
             <Text style={s.sectionLabel}>今日行星閘門</Text>
-            {result.transit.planets.map(p => (
-              <View key={p.planetName} style={s.planetRow}>
-                <Text style={s.sym}>{PLANET_SYM[p.planetName] ?? '·'}</Text>
-                <Text style={s.planetName}>{p.planetName}</Text>
-                <View style={s.gateChip}>
-                  <Text style={s.gateChipText}>{p.gate}.{p.line}</Text>
+            <View style={s.planetHeaderRow}>
+              <Text style={[s.planetHeaderCell, s.sym]}> </Text>
+              <Text style={[s.planetHeaderCell, s.planetName]}>行星</Text>
+              <Text style={[s.planetHeaderCell, s.gateChipHeader]}>潛意識</Text>
+              <Text style={[s.planetHeaderCell, s.gateChipHeader]}>意識</Text>
+              <Text style={[s.planetHeaderCell, s.gateChipHeader]}>流日</Text>
+            </View>
+            {result.transit.planets.map(tp => {
+              const pp = result.personalPlanets?.find(p => p.planetName === tp.planetName)
+              return (
+                <View key={tp.planetName} style={s.planetRow}>
+                  <Text style={s.sym}>{PLANET_SYM[tp.planetName] ?? '·'}</Text>
+                  <Text style={s.planetName}>{tp.planetName}</Text>
+                  <View style={[s.gateChip, s.gateChipDesign]}>
+                    <Text style={[s.gateChipText, s.gateChipTextDesign]}>
+                      {pp ? `${pp.design.gate}.${pp.design.line}` : '—'}
+                    </Text>
+                  </View>
+                  <View style={s.gateChip}>
+                    <Text style={s.gateChipText}>
+                      {pp ? `${pp.personality.gate}.${pp.personality.line}` : '—'}
+                    </Text>
+                  </View>
+                  <View style={[s.gateChip, s.gateChipTransit]}>
+                    <Text style={[s.gateChipText, s.gateChipTextTransit]}>{tp.gate}.{tp.line}</Text>
+                  </View>
                 </View>
-              </View>
-            ))}
+              )
+            })}
           </View>
 
-          {/* 閘門摘要：自有 / 共有 / 流日 */}
+          {/* 閘門摘要：共有 / 流日 */}
           {(() => {
             const personalSet = new Set(result.personalGates)
             const transitSet  = new Set(result.transit.allGates)
-            const personalOnly = result.personalGates.filter(g => !transitSet.has(g)).sort((a, b) => a - b)
             const shared       = result.personalGates.filter(g => transitSet.has(g)).sort((a, b) => a - b)
             const transitOnly  = result.transit.allGates.filter(g => !personalSet.has(g)).sort((a, b) => a - b)
             return (
               <View style={s.card}>
                 <Text style={s.sectionLabel}>閘門摘要</Text>
 
-                <Text style={s.gateGroupLabel}>個人自有</Text>
-                <View style={s.chipRow}>
-                  {personalOnly.map(g => <GateRow key={g} g={g} color={Colors.text} bg={Colors.gateBg} />)}
-                </View>
-
                 {shared.length > 0 && (
                   <>
-                    <Text style={[s.gateGroupLabel, { marginTop: Spacing.sm }]}>個人 + 流日共有</Text>
+                    <Text style={s.gateGroupLabel}>個人 + 流日共有</Text>
                     <View style={s.chipRow}>
                       {shared.map(g => <GateRow key={g} g={g} color={Colors.successText} bg={Colors.successBg} />)}
                     </View>
@@ -371,11 +389,18 @@ const s = StyleSheet.create({
   chipRow:        { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip:           { backgroundColor: Colors.accentD, borderRadius: 6, paddingHorizontal: 10, paddingVertical: Spacing.xs },
   chipText:       { fontSize: 12, fontWeight: '500', color: Colors.accent },
-  planetRow:      { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  planetRow:      { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: 6 },
   sym:            { fontSize: 15, width: 24, textAlign: 'center', color: Colors.sub },
   planetName:     { flex: 1, fontSize: 14, color: Colors.text, marginLeft: Spacing.sm },
-  gateChip:       { backgroundColor: Colors.accentD, borderRadius: 6, paddingHorizontal: Spacing.sm, paddingVertical: 3 },
-  gateChipText:   { fontSize: 12, fontWeight: '600', color: Colors.accent },
+  planetHeaderRow:    { flexDirection: 'row', alignItems: 'center', paddingBottom: 6, gap: 6 },
+  planetHeaderCell:   { fontSize: 10, fontWeight: '600', color: Colors.muted, letterSpacing: 0.6, textTransform: 'uppercase' },
+  gateChipHeader:     { width: 44, textAlign: 'center' },
+  gateChip:       { backgroundColor: Colors.gateBg, borderRadius: 6, paddingHorizontal: Spacing.sm, paddingVertical: 3, width: 44, alignItems: 'center' },
+  gateChipText:   { fontSize: 12, fontWeight: '600', color: Colors.text },
+  gateChipDesign:      { backgroundColor: Colors.accentD },
+  gateChipTextDesign:  { color: Colors.designRed },
+  gateChipTransit:     { backgroundColor: Colors.transitChipBg },
+  gateChipTextTransit: { color: Colors.transitWarmText },
   quickApplyBtn:  { borderWidth: 1, borderColor: Colors.accent, borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center', backgroundColor: Colors.accentD, marginBottom: Spacing.md },
   quickApplyText: { color: Colors.accent, fontSize: 14, fontWeight: '600' },
   primaryBtn:     { backgroundColor: Colors.accent, borderRadius: Radius.lg, padding: 14, alignItems: 'center' },

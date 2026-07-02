@@ -20,7 +20,7 @@ import {
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 export type SheetTarget =
-  | { kind: 'center';            id: string }
+  | { kind: 'center';            id: string; defined?: boolean }
   | { kind: 'gate';              num: number }
   | { kind: 'channel';           channel: ChartChannel }
   | { kind: 'type';              typeKey: string }
@@ -38,7 +38,7 @@ export default function DetailBottomSheet({ target, onClose }: Props) {
   if (!target) return null
 
   const content =
-    target.kind === 'center'           ? buildCenterContent(target.id) :
+    target.kind === 'center'           ? buildCenterContent(target.id, target.defined) :
     target.kind === 'gate'             ? buildGateContent(target.num) :
     target.kind === 'channel'          ? buildChannelContent(target.channel) :
     target.kind === 'type'             ? buildTypeContent(target.typeKey) :
@@ -76,8 +76,10 @@ export default function DetailBottomSheet({ target, onClose }: Props) {
 
           {content.sections.map((s, i) => (
             <View key={i} style={styles.section}>
-              {s.label ? <Text style={styles.sectionLabel}>{s.label}</Text> : null}
-              <Text style={styles.sectionBody}>{s.body}</Text>
+              {s.label ? (
+                <Text style={[styles.sectionLabel, s.dim && styles.sectionLabelDim]}>{s.label}</Text>
+              ) : null}
+              <Text style={[styles.sectionBody, s.dim && styles.sectionBodyDim]}>{s.body}</Text>
             </View>
           ))}
 
@@ -166,6 +168,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   sectionBody: { color: Colors.text, fontSize: 15, lineHeight: 23 },
+  sectionLabelDim: { color: Colors.muted },
+  sectionBodyDim:  { color: Colors.muted },
 
   highlightGroup: { gap: 10 },
   highlightCard: {

@@ -1,6 +1,7 @@
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
+import { matchCity } from '@/lib/cities'
 import { type BirthProfile, makeProfileId } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 import { useState, useEffect, useRef } from 'react'
@@ -40,10 +41,12 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
   }, [visible, initial])
 
   async function handleSave() {
-    if (!form.city || !form.timezone) {
-      setFieldError('請選擇城市')
+    const matched = matchCity(form.city)
+    if (!matched) {
+      setFieldError('找不到這個地點，請確認拼字或改用資料庫中的地名')
       return
     }
+    setFieldError(null)
     setSaving(true)
     try {
       const { year, month, day } = form.date
@@ -53,8 +56,8 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
         label: form.name.trim() || '未命名',
         date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
         time: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
-        location: form.city,
-        timezone: form.timezone,
+        location: matched.name,
+        timezone: matched.timezone,
       })
     } finally {
       setSaving(false)
