@@ -92,6 +92,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 流日圖：額外保留個人出生資料與流日行星閘門，供之後重新顯示完整流日圖
+    const isTransitPayloadValid = (m: unknown): m is Record<string, unknown> =>
+      typeof m === 'object' && m !== null &&
+      typeof (m as Record<string, unknown>).personalBirthDate === 'string' &&
+      typeof (m as Record<string, unknown>).personalBirthTime === 'string' &&
+      typeof (m as Record<string, unknown>).personalBirthCity === 'string' &&
+      typeof (m as Record<string, unknown>).personalTimezone === 'string' &&
+      typeof (m as Record<string, unknown>).transitComputedAt === 'string' &&
+      Array.isArray((m as Record<string, unknown>).transitPlanets)
+
+    if (chartKind === 'transit' && !isTransitPayloadValid(body.transitMeta)) {
+      return NextResponse.json({ error: '流日圖資料不完整，請重新產生後再儲存' }, { status: 400 })
+    }
+    const transitMeta = chartKind === 'transit' ? body.transitMeta : undefined
+
     // 未登入：只回傳計算結果，不存 DB
     if (!userId) {
       return NextResponse.json({
@@ -141,7 +156,7 @@ export async function POST(req: NextRequest) {
     const chart = await prisma.chart.create({
       data: {
         userId: user.id,
-        name: name || null,
+        name: name || `${birthCity} · ${birthDate}` || null,
         birthDate,
         birthTime,
         birthCity,
@@ -155,8 +170,8 @@ export async function POST(req: NextRequest) {
         gates: gates ?? [],
         chartKind: chartKind ?? 'personal',
         ...(planets ? { planets, personalityGates, designGates } : {}),
-        ...((incarnationCross || variables || arrows) ? {
-          meta: { incarnationCross, variables, arrows },
+        ...((incarnationCross || variables || arrows || transitMeta) ? {
+          meta: { incarnationCross, variables, arrows, ...(transitMeta ? { transitMeta } : {}) },
         } : {}),
       },
     })
@@ -180,7 +195,12 @@ export async function GET() {
       include: { charts: { orderBy: { createdAt: 'desc' } } },
     })
 
-    const charts = user?.charts ?? []
+    const rawCharts = user?.charts ?? []
+    // Ensure every chart has a display name — old records may have name=null
+    const charts = rawCharts.map(c => ({
+      ...c,
+      name: c.name || `${c.birthCity} · ${c.birthDate}` || null,
+    }))
     if (process.env.NODE_ENV === 'development') {
       console.log('[GET /api/charts] 回傳圖表數量:', charts.length)
       charts.forEach((c, i) => {

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { UserButton } from '@clerk/nextjs'
 import toast from 'react-hot-toast'
+import LocationPicker from '@/components/humanDesign/LocationPicker'
 
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
 
@@ -18,7 +19,7 @@ function daysInMonth(year: number, month: number) {
 export default function CreatePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({ birthCity: '', name: '' })
+  const [form, setForm] = useState({ birthCity: '', name: '', timezone: '' })
   const [dateFields, setDateFields] = useState({ year: '', month: '', day: '' })
   const [timeFields, setTimeFields] = useState({ hour: '', minute: '' })
 
@@ -46,8 +47,8 @@ export default function CreatePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!birthDate || !birthTime || !form.birthCity) {
-      toast.error('請填寫所有必填欄位')
+    if (!birthDate || !birthTime || !form.birthCity || !form.timezone) {
+      toast.error('請填寫所有必填欄位，並從下拉選單選擇出生城市')
       return
     }
     setLoading(true)
@@ -172,13 +173,9 @@ export default function CreatePage() {
               <label className="text-[12px] md:text-base font-medium text-zinc-700">
                 出生城市 <span className="text-red-400">*</span>
               </label>
-              <input
-                type="text"
+              <LocationPicker
                 value={form.birthCity}
-                onChange={(e) => setForm({ ...form, birthCity: e.target.value })}
-                placeholder="例：台北、東京、New York…"
-                required
-                className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-base text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                onSelect={(tz, label) => setForm(prev => ({ ...prev, birthCity: label, timezone: tz }))}
               />
             </div>
 

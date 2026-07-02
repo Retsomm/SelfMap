@@ -160,7 +160,7 @@ export default function TransitTab() {
                 onClick={() => fillFromProfile(p)}
                 className="font-mono text-[11px] tracking-[0.08em] border border-(--ink-soft) px-2 py-0.5 text-(--ink-soft) hover:text-(--ink) hover:border-(--ink) transition-colors duration-120 cursor-pointer bg-transparent"
               >
-                {p.label}
+                {(!p.label || p.label === '未命名') ? `${p.location} · ${p.date}` : p.label}
               </button>
             ))}
           </div>
@@ -224,6 +224,7 @@ export default function TransitTab() {
           onRefresh={fetchTransit}
           refreshing={loadingTransit}
           onSaved={() => { window.location.href = '/account?section=humandesign' }}
+          personalBirth={{ date, time, city: locationLabel, timezone }}
         />
       )}
 

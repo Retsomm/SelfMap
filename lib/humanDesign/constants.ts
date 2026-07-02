@@ -148,7 +148,7 @@ export const CENTER_INFO: Record<CenterName, Omit<Center, 'id' | 'defined'>> = {
     suggestion: '重要決定請等待情緒波浪平靜後再做，給自己時間',
   },
   spleen: {
-    name: '脾臟中心',
+    name: '脾中心',
     description: '直覺、當下判斷與免疫系統',
     summary: '活在當下的本能智慧，一閃而過的直覺',
     behavior: '你有天生的生存本能和健康感知，直覺在瞬間出現',

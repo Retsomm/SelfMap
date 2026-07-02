@@ -10,10 +10,13 @@ import ChartView from '@/components/humanDesign/ChartView'
 import BirthProfileManager from '@/components/humanDesign/BirthProfileManager'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
+import type { TransitResult, TransitPlanetRow } from '@/lib/computeTransit'
+import { CHANNEL_DEFS, type CenterName } from '@/lib/humanDesign'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmModal } from '@/components/ConfirmModal'
 
 const CompositeView = dynamic(() => import('@/components/humanDesign/CompositeView'), { ssr: false })
+const TransitView = dynamic(() => import('@/components/humanDesign/TransitView'), { ssr: false })
 
 const PROVIDER_LABEL: Record<string, string> = {
   google: 'Google',
@@ -32,9 +35,19 @@ interface PersonMeta {
   profile: string
 }
 
+interface TransitMeta {
+  personalBirthDate: string
+  personalBirthTime: string
+  personalBirthCity: string
+  personalTimezone: string
+  transitComputedAt: string
+  transitPlanets: TransitPlanetRow[]
+}
+
 interface ChartMeta {
   personA?: PersonMeta
   personB?: PersonMeta
+  transitMeta?: TransitMeta
 }
 
 interface SavedChart {
@@ -51,6 +64,9 @@ interface SavedChart {
   createdAt: string
   chartKind: string | null
   meta: ChartMeta | null
+  centers: CenterName[]
+  channels: string[]
+  gates: number[]
 }
 
 type SidebarSection = 'profile' | 'humandesign' | 'connected'
@@ -80,6 +96,7 @@ function AccountContent() {
   const [chartResult, setChartResult] = useState<HdResult | null>(null)
   const [chartComputing, setChartComputing] = useState(false)
   const [compositeResults, setCompositeResults] = useState<{ a: HdResult; b: HdResult } | null>(null)
+  const [transitSnapshot, setTransitSnapshot] = useState<TransitResult | null>(null)
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace('/')
@@ -231,14 +248,41 @@ function AccountContent() {
     startTransition(() => {
       setChartResult(null)
       setCompositeResults(null)
+      setTransitSnapshot(null)
       setChartComputing(true)
     })
 
     const requestId = ++chartRequestIdRef.current
 
     const isComposite = chart.chartKind === 'composite' || chart.type === 'composite'
+    const isTransit = chart.chartKind === 'transit'
 
-    if (isComposite) {
+    if (isTransit) {
+      const transitMeta = chart.meta?.transitMeta
+      if (!transitMeta) {
+        // 舊資料缺少個人出生資料與流日行星閘門，無法正確重建流日圖
+        startTransition(() => setChartComputing(false))
+        toast.error('這份流日圖是舊格式儲存，缺少完整資料，無法重新顯示')
+        return
+      }
+      computeHdResult(transitMeta.personalBirthDate, transitMeta.personalBirthTime, transitMeta.personalTimezone)
+        .then(personalResult => {
+          if (chartRequestIdRef.current !== requestId) return
+          const definedChannels = chart.channels
+            .map(id => CHANNEL_DEFS.find(ch => ch.id === id))
+            .filter((ch): ch is typeof CHANNEL_DEFS[number] => !!ch)
+          setChartResult(personalResult)
+          setTransitSnapshot({
+            planets: transitMeta.transitPlanets,
+            allGates: new Set(chart.gates),
+            definedCenterIds: new Set(chart.centers),
+            definedChannels,
+            computedAt: transitMeta.transitComputedAt,
+          })
+        })
+        .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error('計算失敗') } })
+        .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
+    } else if (isComposite) {
       let dateA: string, timeA: string, tzA: string
       let dateB: string, timeB: string, tzB: string
 
@@ -636,6 +680,16 @@ function AccountContent() {
                         />
                       )
                     })()
+                  ) : activeChart.chartKind === 'transit' ? (
+                    chartResult && transitSnapshot && (
+                      <TransitView
+                        personal={chartResult}
+                        transit={transitSnapshot}
+                        onRefresh={() => {}}
+                        refreshing={false}
+                        readOnly
+                      />
+                    )
                   ) : (
                     chartResult && (
                       <ChartView

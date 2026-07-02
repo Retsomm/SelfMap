@@ -81,9 +81,9 @@ const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: Min
   const profileLabel = PROFILE_LABELS[result.profile.profile] ?? '—'
 
   const annotationLabels = useMemo(() => ({
-    head: '頭', ajna: '阿賈那', throat: '喉輪', g: 'G',
-    ego: '自我', spleen: '脾', sacral: '骶髂',
-    solarPlexus: '太陽神經叢', root: '根',
+    head: '頭腦中心', ajna: '邏輯中心', throat: '喉嚨中心', g: 'G 中心',
+    ego: '意志力中心', spleen: '脾中心', sacral: '薦骨中心',
+    solarPlexus: '情緒中心', root: '根部中心',
   }), [])
 
   const arrowTones = useMemo(() => ({
@@ -263,15 +263,15 @@ export default function CompositeView({
   const compositeActivations = useMemo(() => buildCompositeActivations(resultA, resultB), [resultA, resultB])
 
   const annotationLabels = useMemo(() => ({
-    head:        '頭',
-    ajna:        '阿賈那',
-    throat:      '喉輪',
-    g:           'G',
-    ego:         '自我',
-    spleen:      '脾',
-    sacral:      '骶髂',
-    solarPlexus: '太陽神經叢',
-    root:        '根',
+    head:        '頭腦中心',
+    ajna:        '邏輯中心',
+    throat:      '喉嚨中心',
+    g:           'G 中心',
+    ego:         '意志力中心',
+    spleen:      '脾中心',
+    sacral:      '薦骨中心',
+    solarPlexus: '情緒中心',
+    root:        '根部中心',
   }), [])
 
   const integrationKey = analysis.integrationTheme === '9+0' ? 'theme9_0'

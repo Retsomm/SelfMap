@@ -71,8 +71,8 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="chart/preview" options={{ headerShown: true, title: '圖表預覽', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
-          <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
+          <Stack.Screen name="chart/preview" options={{ headerShown: true, title: '圖表預覽', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.bg }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
+          <Stack.Screen name="chart/[id]" options={{ headerShown: true, title: '圖表詳情', headerBackButtonDisplayMode: 'minimal', headerStyle: { backgroundColor: Colors.bg }, headerTintColor: Colors.text, headerTitleStyle: { color: Colors.text } }} />
           <Stack.Screen name="learn/[topic]" options={{ headerShown: false }} />
           <Stack.Screen name="oauth-native-callback" options={{ headerShown: false }} />
         </Stack>

@@ -31,7 +31,7 @@ const jsonLd = {
 }
 
 export default async function HomePage() {
-  const title = 'SelfMap 人類圖計算器'
+  const title = '計算你的人類圖'
 
   return (
     <>
