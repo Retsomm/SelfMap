@@ -37,11 +37,14 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 // Module-level guard: only for one-time Clerk → DB migration, not for fetching
 const migratedUserIds = new Set<string>()
+// Module-level guard: prevents concurrent migration runs for the same user
+const migratingUserIds = new Set<string>()
 
 export const useBirthProfiles = () => {
   const { isSignedIn, user } = useUser()
   const [profiles, setProfiles] = useState<BirthProfile[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
 
   // ── 登出時清除狀態 ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -64,6 +67,10 @@ export const useBirthProfiles = () => {
         timezone: p.timezone,
         location: p.location,
       })))
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)))
+      throw err
     } finally {
       setLoading(false)
     }
@@ -71,13 +78,14 @@ export const useBirthProfiles = () => {
 
   // ── 每次掛載時從 DB 讀取（確保 tab 切換後仍能取得最新資料）──────────────
   useEffect(() => {
-    refresh().catch(() => { /* 靜默失敗，不影響 UI */ })
+    refresh().catch(() => { /* error 已存入 state，UI 可自行判斷 */ })
   }, [refresh])
 
   // ── 一次性遷移：若 DB 空且 Clerk metadata 有舊資料 → 自動遷移 ──────────
   useEffect(() => {
-    if (!isSignedIn || !user || migratedUserIds.has(user.id)) return
+    if (!isSignedIn || !user || migratedUserIds.has(user.id) || migratingUserIds.has(user.id)) return
     const userId = user.id
+    migratingUserIds.add(userId)
 
     const migrate = async () => {
       const clerkRaw = user.unsafeMetadata?.birthProfiles
@@ -102,7 +110,9 @@ export const useBirthProfiles = () => {
       await refresh()
     }
 
-    migrate().catch(err => console.error('[useBirthProfiles] migration error:', err))
+    migrate()
+      .catch(err => console.error('[useBirthProfiles] migration error:', err))
+      .finally(() => migratingUserIds.delete(userId))
   }, [isSignedIn, user, refresh])
 
   // ── CRUD ────────────────────────────────────────────────────────────────
@@ -131,5 +141,5 @@ export const useBirthProfiles = () => {
     setProfiles(prev => prev.filter(p => p.id !== id))
   }, [])
 
-  return { profiles, loading, saveProfile, deleteProfile, refresh, isSignedIn: !!isSignedIn }
+  return { profiles, loading, error, saveProfile, deleteProfile, refresh, isSignedIn: !!isSignedIn }
 }
