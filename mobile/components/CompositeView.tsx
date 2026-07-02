@@ -188,7 +188,7 @@ export default function CompositeView() {
     <ScrollLockContext.Provider value={scrollLockCtx}>
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'android' ? 'height' : undefined}
     >
     <ScrollView
       ref={scrollRef}
@@ -196,6 +196,7 @@ export default function CompositeView() {
       keyboardShouldPersistTaps="handled"
       scrollEnabled={scrollEnabled}
       nestedScrollEnabled
+      automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
     >
       {!result ? (
         <>

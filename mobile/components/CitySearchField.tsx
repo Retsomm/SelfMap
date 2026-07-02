@@ -30,7 +30,7 @@ export default function CitySearchField({ city, timezone, onChangeCity, onFocus 
           value={city}
           onChangeText={onChangeCity}
           onFocus={onFocus}
-          placeholder="輸入城市名稱，送出時自動比對時區…"
+          placeholder="輸入城市名稱"
           placeholderTextColor={Colors.muted}
           autoCapitalize="none"
           autoCorrect={false}

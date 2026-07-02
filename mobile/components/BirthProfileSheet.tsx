@@ -66,22 +66,14 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onCancel}>
-      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right', 'bottom']}>
         <View style={styles.header}>
-          <Pressable onPress={onCancel} style={styles.headerBtn}>
-            <Text style={styles.cancelText}>取消</Text>
-          </Pressable>
           <Text style={styles.title}>{initial ? '編輯出生資料' : '新增出生資料'}</Text>
-          <Pressable onPress={handleSave} style={styles.headerBtn} disabled={saving}>
-            {saving
-              ? <ActivityIndicator size="small" color={Colors.accent} style={{ alignSelf: 'flex-end' }} />
-              : <Text style={styles.saveText}>儲存</Text>}
-          </Pressable>
         </View>
 
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'android' ? 'height' : undefined}
         >
         <ScrollLockContext.Provider value={scrollLockCtx}>
         <ScrollView
@@ -89,6 +81,7 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
           contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled"
           scrollEnabled={scrollEnabled}
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
         >
           <BirthDataForm
             value={form}
@@ -100,6 +93,17 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
           />
         </ScrollView>
         </ScrollLockContext.Provider>
+
+        <View style={styles.footer}>
+          <Pressable onPress={onCancel} style={styles.cancelBtn} disabled={saving}>
+            <Text style={styles.cancelText}>取消</Text>
+          </Pressable>
+          <Pressable onPress={handleSave} style={[styles.saveBtn, saving && styles.disabled]} disabled={saving}>
+            {saving
+              ? <ActivityIndicator size="small" color={Colors.bg} />
+              : <Text style={styles.saveText}>儲存</Text>}
+          </Pressable>
+        </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
@@ -109,18 +113,39 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  headerBtn:  { minWidth: 48 },
   title:      { color: Colors.text, fontSize: 16, fontWeight: '700' },
-  cancelText: { color: Colors.sub, fontSize: 15 },
-  saveText:      { color: Colors.accent, fontSize: 15, fontWeight: '600', textAlign: 'right' },
-  saveDisabled:  { opacity: 0.4 },
   body:       { padding: Spacing.xl, gap: Spacing.lg, paddingBottom: 48 },
+  footer: {
+    flexDirection: 'row',
+    columnGap: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+  },
+  saveBtn: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.accent,
+    alignItems: 'center',
+  },
+  cancelText: { color: Colors.sub, fontSize: 15, fontWeight: '600' },
+  saveText:   { color: Colors.bg, fontSize: 15, fontWeight: '600' },
+  disabled:   { opacity: 0.5 },
 })

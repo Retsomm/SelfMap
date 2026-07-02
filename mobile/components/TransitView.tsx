@@ -157,7 +157,7 @@ export default function TransitView() {
     <ScrollLockContext.Provider value={scrollLockCtx}>
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'android' ? 'height' : undefined}
     >
     <ScrollView
       ref={scrollRef}
@@ -165,6 +165,7 @@ export default function TransitView() {
       keyboardShouldPersistTaps="handled"
       scrollEnabled={scrollEnabled}
       nestedScrollEnabled
+      automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
     >
       {!result ? (
         <>
