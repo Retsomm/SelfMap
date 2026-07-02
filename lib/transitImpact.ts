@@ -2,9 +2,9 @@ import { CHANNEL_DEFS } from '@/lib/humanDesign'
 import type { CenterName, ChannelDef } from '@/lib/humanDesign/types'
 
 const CENTER_ZH: Record<CenterName, string> = {
-  head: '頭頂中心', ajna: '邏輯中心', throat: '喉嚨中心', g: 'G 中心',
+  head: '頭腦中心', ajna: '邏輯中心', throat: '喉嚨中心', g: 'G 中心',
   ego: '意志力中心', sacral: '薦骨中心', solarPlexus: '情緒中心',
-  spleen: '脾臟中心', root: '根部中心',
+  spleen: '脾中心', root: '根部中心',
 }
 
 export interface ImpactLayer {
