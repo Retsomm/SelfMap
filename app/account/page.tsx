@@ -379,7 +379,6 @@ function AccountContent() {
             if (chartRequestIdRef.current !== requestId) return
             setChartResult(legacyPersonal)
             setTransitSnapshot(transit)
-            toast('這份流日圖是舊格式儲存，已重建顯示（箭頭方向與變數顏色因舊資料未保留而無法還原）', { icon: 'ℹ️' })
           })
           .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error('計算失敗') } })
           .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })

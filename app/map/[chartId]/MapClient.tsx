@@ -20,6 +20,7 @@ interface ChartRecord {
   centers: unknown
   channels: unknown
   gates: unknown
+  chartKind: string | null
 }
 
 export default function MapClient({ chart }: { chart: ChartRecord }) {
@@ -63,7 +64,9 @@ export default function MapClient({ chart }: { chart: ChartRecord }) {
               {chart.name || '我的地圖'}
             </h1>
             <p className="text-[12px] md:text-base text-zinc-400">
-              {chart.birthDate} · {chart.birthTime} · {chart.birthCity}
+              {chart.chartKind === 'transit'
+                ? `流日時間：${chart.birthDate} ${chart.birthTime}（台北時間）`
+                : `${chart.birthDate} · ${chart.birthTime} · ${chart.birthCity}`}
             </p>
           </div>
 
