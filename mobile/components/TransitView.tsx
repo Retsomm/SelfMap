@@ -107,8 +107,6 @@ export default function TransitView() {
     setSaveState('idle')
     try {
       const data = await previewTransitChart(payload)
-      console.log('[TransitView] personalPlanets:', JSON.stringify(data.personalPlanets))
-      console.log('[TransitView] transit.planets:', JSON.stringify(data.transit?.planets))
       setResult(data)
       setLastPayload(payload)
     } catch (e: unknown) {

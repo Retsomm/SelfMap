@@ -8,12 +8,11 @@ export const TYPE_LABELS: Record<string, string> = {
   'Reflector':                '反映者',
 }
 
+// 比對順序：完全相符 → 依 key 長度由長到短找最具體的子字串相符 → 原始字串
 export function getTypeLabel(type: string): string {
-  return (
-    TYPE_LABELS[type] ??
-    Object.entries(TYPE_LABELS).find(([k]) => type.includes(k))?.[1] ??
-    type
-  )
+  if (TYPE_LABELS[type]) return TYPE_LABELS[type]
+  const byLength = Object.entries(TYPE_LABELS).sort(([a], [b]) => b.length - a.length)
+  return byLength.find(([k]) => type.includes(k))?.[1] ?? type
 }
 
 export const TYPE_META: Record<string, TypeMeta> = {

@@ -705,7 +705,7 @@ body {
 
 /* ───────── Transit chart row: [Personal gates] [BodyGraph] [Transit gates] ───────── */
 /* 重用 .composite-person-panel / .composite-person-label / .composite-planet-rows
-   （含 ≤760px 自動隱藏規則），列的排版比照個人頁 .hd-planet-row（space-between 撐開寬度）*/
+   （含 ≤760px 自動隱藏規則），列的排版比照個人頁 .hd-planet-row（space-between 撐開寬度） */
 
 .transit-gate-panel--personal { color: var(--ink); }
 .transit-gate-panel--transit { color: #d04830; }

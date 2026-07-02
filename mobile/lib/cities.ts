@@ -226,7 +226,8 @@ export const CITIES: City[] = [
 
 /**
  * 依使用者輸入的關鍵字比對資料庫中的地點。
- * 優先找完全相符（忽略大小寫），找不到再退回子字串比對，取第一筆結果。
+ * 優先找完全相符（忽略大小寫），找不到再退回子字串比對；
+ * 子字串比對到超過一筆時視為輸入不夠明確，回傳 null 而非隨意取第一筆（避免時區算錯）。
  */
 export function matchCity(query: string): City | null {
   const q = query.trim().toLowerCase()
@@ -237,8 +238,8 @@ export function matchCity(query: string): City | null {
   )
   if (exact) return exact
 
-  const partial = CITIES.find(
+  const partialMatches = CITIES.filter(
     (c) => c.name.toLowerCase().includes(q) || c.display.toLowerCase().includes(q),
   )
-  return partial ?? null
+  return partialMatches.length === 1 ? partialMatches[0] : null
 }
