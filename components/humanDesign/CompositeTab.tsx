@@ -141,7 +141,7 @@ export default function CompositeTab() {
             timeB={inputsB.birthTime.format('HH:mm')}
             locationB={inputsB.locationLabel}
             timezoneB={inputsB.timezone}
-            onSaved={() => router.push('/account?section=humandesign')}
+            onSaved={() => router.push('/account?section=humandesign&tab=composite')}
           />
         </div>
       )}

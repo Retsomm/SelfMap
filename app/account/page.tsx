@@ -71,6 +71,20 @@ interface SavedChart {
 
 type SidebarSection = 'profile' | 'humandesign' | 'connected'
 
+const CHART_TABS = [
+  { id: 'personal', label: '個人' },
+  { id: 'composite', label: '合圖' },
+  { id: 'transit', label: '流日' },
+] as const
+type ChartTab = typeof CHART_TABS[number]['id']
+
+function kindOf(chart: Pick<SavedChart, 'chartKind' | 'type' | 'birthDate'>): ChartTab {
+  if (chart.chartKind === 'composite' || chart.chartKind === 'transit') return chart.chartKind
+  // 舊格式合圖：網頁端存 type='合圖' 但沒有設 chartKind
+  if (chart.type === '合圖' || chart.birthDate?.includes('|')) return 'composite'
+  return 'personal'
+}
+
 export default function AccountPage() {
   return (
     <Suspense>
@@ -92,6 +106,10 @@ function AccountContent() {
   const [charts, setCharts] = useState<SavedChart[]>([])
   const [chartsLoading, setChartsLoading] = useState(false)
   const [chartsFetched, setChartsFetched] = useState(false)
+  const [chartTab, setChartTab] = useState<ChartTab>(() => {
+    const t = searchParams.get('tab')
+    return t === 'composite' || t === 'transit' || t === 'personal' ? t : 'personal'
+  })
 
   const [chartResult, setChartResult] = useState<HdResult | null>(null)
   const [chartComputing, setChartComputing] = useState(false)
@@ -110,14 +128,17 @@ function AccountContent() {
       const json = await res.json()
       const list: SavedChart[] = json.charts ?? []
       setCharts(list)
-      if (list.length > 0) setActiveChartId(prev => prev ?? list[0].id)
+      setActiveChartId(prev => {
+        const filtered = list.filter(ch => kindOf(ch) === chartTab)
+        return (prev && filtered.some(c => c.id === prev)) ? prev : (filtered[0]?.id ?? null)
+      })
       setChartsFetched(true)
     } catch (err) {
       console.error('[account] fetchCharts error:', err)
     } finally {
       setChartsLoading(false)
     }
-  }, [isSignedIn, isLoaded])
+  }, [isSignedIn, isLoaded, chartTab])
 
   const [editingName, setEditingName] = useState(false)
   const [displayName, setDisplayName] = useState('')
@@ -231,6 +252,8 @@ function AccountContent() {
 
   useEffect(() => {
     if (activeSection === 'humandesign') setChartsFetched(false)
+    const t = searchParams.get('tab')
+    if (t === 'composite' || t === 'transit' || t === 'personal') setChartTab(t)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
@@ -239,6 +262,14 @@ function AccountContent() {
       startTransition(() => { fetchCharts() })
     }
   }, [activeSection, chartsFetched, chartsLoading, fetchCharts, isSignedIn])
+
+  const filteredCharts = charts.filter(ch => kindOf(ch) === chartTab)
+
+  const handleChartTabClick = (tab: ChartTab) => {
+    setChartTab(tab)
+    const filtered = charts.filter(ch => kindOf(ch) === tab)
+    setActiveChartId(filtered[0]?.id ?? null)
+  }
 
   useEffect(() => {
     if (!activeChartId) return
@@ -343,7 +374,7 @@ function AccountContent() {
 
   const NAV_ITEMS: { key: SidebarSection; label: string }[] = [
     { key: 'profile', label: '個人資料' },
-    { key: 'humandesign', label: '人類圖' },
+    { key: 'humandesign', label: '我的圖表' },
     { key: 'connected', label: '連結帳號' },
   ]
 
@@ -387,58 +418,68 @@ function AccountContent() {
               onClick={() => handleSectionClick('humandesign')}
               className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'humandesign' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
             >
-              人類圖
+              我的圖表
             </button>
 
-            {activeSection === 'humandesign' && charts.length >= 1 && (
+            {activeSection === 'humandesign' && (
               <div className="border-l border-dotted border-[rgba(43,31,20,0.3)] ml-5">
-                {charts.map(ch => (
-                  <div
-                    key={ch.id}
-                    className={`flex items-center group ${activeChartId === ch.id ? 'bg-(--paper-deep)' : ''}`}
-                  >
-                    {editingChartId === ch.id ? (
-                      <form
-                        className="flex-1 flex items-center gap-1 px-2 py-1"
-                        onSubmit={e => { e.preventDefault(); handleSaveChartName(ch.id) }}
+                {CHART_TABS.map(t => (
+                  <div key={t.id}>
+                    <button
+                      onClick={() => handleChartTabClick(t.id)}
+                      className={`w-full text-left font-mono text-[11px] md:text-sm tracking-widest uppercase px-4 py-2 cursor-pointer transition-colors duration-120 ${chartTab === t.id ? 'text-(--ink) font-semibold' : 'text-(--ink-soft) hover:text-(--ink)'}`}
+                    >
+                      {t.label}
+                    </button>
+                    {chartTab === t.id && charts.filter(ch => kindOf(ch) === t.id).map(ch => (
+                      <div
+                        key={ch.id}
+                        className={`flex items-center group ${activeChartId === ch.id ? 'bg-(--paper-deep)' : ''}`}
                       >
-                        <input
-                          ref={chartNameInputRef}
-                          type="text"
-                          value={editingChartName}
-                          onChange={e => setEditingChartName(e.target.value)}
-                          onBlur={() => handleSaveChartName(ch.id)}
-                          onKeyDown={e => e.key === 'Escape' && handleCancelRenameChart()}
-                          disabled={renamingId === ch.id}
-                          className="flex-1 min-w-0 font-mono text-base tracking-[0.06em] bg-(--paper) border-b border-(--ink) text-(--ink) outline-none px-1 py-0.5 disabled:opacity-50"
-                          autoFocus
-                        />
-                      </form>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => setActiveChartId(ch.id)}
-                          className={`flex-1 text-left font-mono text-[12px] md:text-base tracking-[0.06em] px-4 py-2 cursor-pointer truncate transition-colors duration-120 ${activeChartId === ch.id ? 'text-(--ink) font-semibold' : 'text-(--ink-soft) hover:text-(--ink)'}`}
-                        >
-                          {ch.name ?? `${ch.birthCity} · ${ch.birthDate}`}
-                        </button>
-                        <button
-                          onClick={() => handleStartRenameChart(ch)}
-                          className="opacity-0 group-hover:opacity-100 pl-1 text-(--ink-soft) hover:text-(--ink) text-[12px] md:text-base cursor-pointer transition-all duration-120"
-                          title="編輯圖表名稱"
-                        >
-                          ✎
-                        </button>
-                        <button
-                          onClick={() => setConfirmDeleteId(ch.id)}
-                          disabled={deletingId === ch.id}
-                          className="opacity-0 group-hover:opacity-100 px-2 text-(--ink-soft) hover:text-(--crimson) text-[12px] md:text-base cursor-pointer transition-all duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
-                          title="刪除圖表"
-                        >
-                          {deletingId === ch.id ? '…' : '✕'}
-                        </button>
-                      </>
-                    )}
+                        {editingChartId === ch.id ? (
+                          <form
+                            className="flex-1 flex items-center gap-1 px-2 py-1"
+                            onSubmit={e => { e.preventDefault(); handleSaveChartName(ch.id) }}
+                          >
+                            <input
+                              ref={chartNameInputRef}
+                              type="text"
+                              value={editingChartName}
+                              onChange={e => setEditingChartName(e.target.value)}
+                              onBlur={() => handleSaveChartName(ch.id)}
+                              onKeyDown={e => e.key === 'Escape' && handleCancelRenameChart()}
+                              disabled={renamingId === ch.id}
+                              className="flex-1 min-w-0 font-mono text-base tracking-[0.06em] bg-(--paper) border-b border-(--ink) text-(--ink) outline-none px-1 py-0.5 disabled:opacity-50"
+                              autoFocus
+                            />
+                          </form>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => setActiveChartId(ch.id)}
+                              className={`flex-1 text-left font-mono text-[12px] md:text-base tracking-[0.06em] pl-8 pr-4 py-2 cursor-pointer truncate transition-colors duration-120 ${activeChartId === ch.id ? 'text-(--ink) font-semibold' : 'text-(--ink-soft) hover:text-(--ink)'}`}
+                            >
+                              {ch.name ?? `${ch.birthCity} · ${ch.birthDate}`}
+                            </button>
+                            <button
+                              onClick={() => handleStartRenameChart(ch)}
+                              className="opacity-0 group-hover:opacity-100 pl-1 text-(--ink-soft) hover:text-(--ink) text-[12px] md:text-base cursor-pointer transition-all duration-120"
+                              title="編輯圖表名稱"
+                            >
+                              ✎
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(ch.id)}
+                              disabled={deletingId === ch.id}
+                              className="opacity-0 group-hover:opacity-100 px-2 text-(--ink-soft) hover:text-(--crimson) text-[12px] md:text-base cursor-pointer transition-all duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
+                              title="刪除圖表"
+                            >
+                              {deletingId === ch.id ? '…' : '✕'}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
@@ -569,7 +610,7 @@ function AccountContent() {
             <div className="px-5 py-8 md:px-10 md:py-10">
               <header className="mb-6 pb-3 border-b border-(--ink)">
                 <h1 className="font-serif italic font-medium text-[clamp(24px,3vw,36px)] leading-none m-0 text-(--ink)">
-                  人類圖
+                  我的圖表
                 </h1>
               </header>
 
@@ -579,10 +620,10 @@ function AccountContent() {
                 </div>
               )}
 
-              {!chartsLoading && charts.length === 0 && (
+              {!chartsLoading && filteredCharts.length === 0 && (
                 <div className="border border-dashed border-(--ink) py-10 px-6 text-center max-w-md">
                   <div className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink-soft) mb-3">
-                    目前沒有已儲存的人類圖
+                    目前沒有已儲存的{CHART_TABS.find(t => t.id === chartTab)?.label}圖表
                   </div>
                   <button
                     onClick={() => router.push('/')}
@@ -594,9 +635,9 @@ function AccountContent() {
               )}
 
               {/* Mobile-only horizontal chart selector */}
-              {!chartsLoading && charts.length >= 1 && (
+              {!chartsLoading && filteredCharts.length >= 1 && (
                 <div className="md:hidden flex gap-2 overflow-x-auto pb-2 mb-4 -mx-5 px-5">
-                  {charts.map(ch => (
+                  {filteredCharts.map(ch => (
                     <div key={ch.id} className="flex items-center shrink-0 border border-(--ink) overflow-hidden">
                       {editingChartId === ch.id ? (
                         <form

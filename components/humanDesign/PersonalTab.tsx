@@ -237,7 +237,7 @@ export default function PersonalTab() {
             time={time}
             locationLabel={locationLabel}
             timezone={timezone}
-            onSaved={() => router.push('/account?section=humandesign')}
+            onSaved={() => router.push('/account?section=humandesign&tab=personal')}
           />
         </div>
       )}

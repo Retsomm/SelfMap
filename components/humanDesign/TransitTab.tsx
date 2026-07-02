@@ -223,7 +223,7 @@ export default function TransitTab() {
           transit={transit}
           onRefresh={fetchTransit}
           refreshing={loadingTransit}
-          onSaved={() => { window.location.href = '/account?section=humandesign' }}
+          onSaved={() => { window.location.href = '/account?section=humandesign&tab=transit' }}
           personalBirth={{ date, time, city: locationLabel, timezone }}
         />
       )}
