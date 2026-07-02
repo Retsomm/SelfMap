@@ -1,5 +1,6 @@
 import type { HdResult } from '@/lib/buildAiPrompt'
 import type { CenterName, ChannelDef } from '@/lib/humanDesign/types'
+import type { TransitPlanetRow } from '@/lib/computeTransit'
 import { CROSS_TYPE_LABELS } from '@/lib/humanDesign/constants'
 
 export interface SaveChartParams {
@@ -66,13 +67,19 @@ export const saveChart = async ({ result, date, time, locationLabel, timezone }:
 
 export interface SaveTransitChartParams {
   personal: HdResult
+  personalBirthDate: string
+  personalBirthTime: string
+  personalBirthCity: string
+  personalTimezone: string
   transitComputedAt: string
   transitAllGates: Set<number>
   transitDefinedCenterIds: Set<CenterName>
   transitDefinedChannels: ChannelDef[]
+  transitPlanets: TransitPlanetRow[]
 }
 
-/** 將流日圖存成 Chart 記錄，type 取個人類型，chartKind='transit'。 */
+/** 將流日圖存成 Chart 記錄，type 取個人類型，chartKind='transit'。
+ *  meta.transitMeta 額外保留個人出生資料與流日行星閘門，供之後重新顯示完整流日圖（而非誤讀為個人圖）。 */
 export const saveTransitChart = async (p: SaveTransitChartParams): Promise<void> => {
   // Convert UTC ISO to Taipei time (UTC+8) without relying on toLocaleString
   const taipeiDate = (() => {
@@ -129,6 +136,19 @@ export const saveTransitChart = async (p: SaveTransitChartParams): Promise<void>
       })),
       personalityGates: (p.personal.planets ?? []).map(pl => pl.black.gate),
       designGates:      (p.personal.planets ?? []).map(pl => pl.red.gate),
+      transitMeta: {
+        personalBirthDate: p.personalBirthDate,
+        personalBirthTime: p.personalBirthTime,
+        personalBirthCity: p.personalBirthCity,
+        personalTimezone:  p.personalTimezone,
+        transitComputedAt: p.transitComputedAt,
+        transitPlanets: p.transitPlanets.map(pl => ({
+          planetName: pl.planetName,
+          gate:       pl.gate,
+          line:       pl.line,
+          full:       pl.full,
+        })),
+      },
     }),
   })
   const json = await res.json()

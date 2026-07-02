@@ -61,7 +61,7 @@ export default function DashboardClient({ charts }: { charts: Chart[] }) {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-zinc-900 group-hover:text-indigo-600 transition-colors">
-                      {chart.name || '未命名地圖'}
+                      {chart.name || `${chart.birthCity} · ${chart.birthDate}` || '未命名地圖'}
                     </h3>
                     <p className="text-[12px] md:text-base text-zinc-400 mt-0.5">
                       {chart.birthCity} · {chart.birthDate}

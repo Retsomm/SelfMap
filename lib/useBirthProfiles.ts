@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@clerk/nextjs'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 export type BirthProfile = {
   id: string
@@ -35,7 +35,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
-// Module-level guard: survives component remounts (React StrictMode / nav back)
+// Module-level guard: only for one-time Clerk → DB migration, not for fetching
 const migratedUserIds = new Set<string>()
 
 export const useBirthProfiles = () => {
@@ -69,43 +69,51 @@ export const useBirthProfiles = () => {
     }
   }, [isSignedIn])
 
-  // ── 首次載入：從 DB 讀取；若 DB 空且 Clerk metadata 有舊資料 → 自動遷移 ──
+  // ── 每次掛載時從 DB 讀取（確保 tab 切換後仍能取得最新資料）──────────────
   useEffect(() => {
-    if (!isSignedIn || !user || migratedUserIds.has(user.id)) return
-
-    const run = async () => {
-      const dbData = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')
-      if (dbData.profiles.length > 0) {
-        setProfiles(dbData.profiles.map(p => ({
+    if (!isSignedIn) return
+    let cancelled = false
+    apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')
+      .then(data => {
+        if (cancelled) return
+        setProfiles(data.profiles.map(p => ({
           id: p.id, label: p.label, date: p.date,
           time: p.time, timezone: p.timezone, location: p.location,
         })))
-        return
-      }
-      // DB 空，檢查 Clerk metadata 舊資料
+      })
+      .catch(() => { /* 靜默失敗，不影響 UI */ })
+    return () => { cancelled = true }
+  }, [isSignedIn])
+
+  // ── 一次性遷移：若 DB 空且 Clerk metadata 有舊資料 → 自動遷移 ──────────
+  useEffect(() => {
+    if (!isSignedIn || !user || migratedUserIds.has(user.id)) return
+    migratedUserIds.add(user.id)
+
+    const migrate = async () => {
       const clerkRaw = user.unsafeMetadata?.birthProfiles
       const clerkProfiles: BirthProfile[] = Array.isArray(clerkRaw)
         ? clerkRaw.filter(isValidClerkProfile)
         : []
       if (clerkProfiles.length === 0) return
 
-      // 批次匯入到 DB（Clerk 資料保留不刪除，作為備份）
+      // 只在 DB 空時才遷移
+      const dbData = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')
+      if (dbData.profiles.length > 0) return
+
       console.log('[useBirthProfiles] migrating', clerkProfiles.length, 'profiles from Clerk to DB')
-      const imported = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles', {
+      await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles', {
         method: 'POST',
         body: JSON.stringify({
           profiles: clerkProfiles.map((p, i) => ({ ...p, sortOrder: i })),
         }),
       })
-      console.log('[useBirthProfiles] migration done, imported', imported.profiles.length)
-      setProfiles(imported.profiles.map(p => ({
-        id: p.id, label: p.label, date: p.date,
-        time: p.time, timezone: p.timezone, location: p.location,
-      })))
+      console.log('[useBirthProfiles] migration done')
+      await refresh()
     }
 
-    run().then(() => migratedUserIds.add(user.id)).catch(err => console.error('[useBirthProfiles] migration error:', err))
-  }, [isSignedIn, user])
+    migrate().catch(err => console.error('[useBirthProfiles] migration error:', err))
+  }, [isSignedIn, user, refresh])
 
   // ── CRUD ────────────────────────────────────────────────────────────────
   const saveProfile = useCallback(async (profile: BirthProfile) => {

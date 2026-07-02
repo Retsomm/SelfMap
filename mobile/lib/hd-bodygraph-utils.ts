@@ -41,17 +41,14 @@ export function buildCompositeBodyGraphProps(result: CreateCompositeResult): Bod
 
 /**
  * Builds BodyGraph props from a transit (流日) result.
- * Personality gates → `c: true`, design gates → `u: true`,
- * transit-only gates → `t: true`. Personality/design always take precedence
- * over transit so personal activations are never overwritten.
+ * All personal gates (personality + design combined) → `c: true` (black).
+ * Transit gates → `u: true` (red). Gates in both show as striped.
  */
 export function buildTransitBodyGraphProps(data: CreateTransitResult): BodyGraphProps {
   const activations: BodyGraphProps['activations'] = {}
   for (const g of data.personalityGates) activations[g] = { ...activations[g], c: true }
-  for (const g of data.designGates)      activations[g] = { ...activations[g], u: true }
-  for (const g of data.transit.allGates) {
-    if (!activations[g]) activations[g] = { t: true }
-  }
+  for (const g of data.designGates)      activations[g] = { ...activations[g], c: true }
+  for (const g of data.transit.allGates) activations[g] = { ...activations[g], u: true }
   return {
     definedCenterIds:  new Set(data.combined.definedCenterIds.map(normalizeCenterId)),
     definedChannelIds: new Set(data.combined.definedChannelIds.map(normalizeChannelId)),

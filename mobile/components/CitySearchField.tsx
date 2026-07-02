@@ -25,7 +25,7 @@ export default function CitySearchField({ city, timezone, onSelect, onFocus }: P
 
   const handleChange = useCallback((text: string) => {
     setQuery(text)
-    setResults(searchCities(text))
+    setResults(text.trim().length < 2 ? [] : searchCities(text))
     onSelect('', '')
   }, [onSelect])
 

@@ -141,7 +141,7 @@ export default function ChartPreviewScreen() {
         chartKind:  'personal',
       })
       clearPendingChart()
-      router.replace('/(tabs)/profile')
+      router.replace('/(tabs)/profile?chartTab=personal')
     } catch (err) {
       Alert.alert('儲存失敗', err instanceof Error ? err.message : '請稍後再試')
       setSaveState('idle')

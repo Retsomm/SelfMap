@@ -330,9 +330,13 @@ interface TransitViewProps {
   onRefresh: () => void
   refreshing: boolean
   onSaved?: () => void
+  /** 個人出生資料，儲存流日圖時需要一併保留，之後才能正確重新顯示（而非誤讀為個人圖）。 */
+  personalBirth?: { date: string; time: string; city: string; timezone: string }
+  /** 檢視已儲存的歷史流日圖快照時使用：隱藏「更新流日」與「儲存流日圖」按鈕。 */
+  readOnly?: boolean
 }
 
-export default function TransitView({ personal, transit, onRefresh, refreshing, onSaved }: TransitViewProps) {
+export default function TransitView({ personal, transit, onRefresh, refreshing, onSaved, personalBirth, readOnly = false }: TransitViewProps) {
   const { isSignedIn } = useUser()
   const { openSignIn } = useClerk()
   const printAreaRef = useRef<HTMLDivElement>(null)
@@ -372,15 +376,21 @@ export default function TransitView({ personal, transit, onRefresh, refreshing, 
   }, [personal, transit])
 
   const handleSave = useCallback(async () => {
+    if (!personalBirth) return
     setSaving(true)
     window.umami?.track('transit-save')
     try {
       await saveTransitChart({
         personal,
+        personalBirthDate: personalBirth.date,
+        personalBirthTime: personalBirth.time,
+        personalBirthCity: personalBirth.city,
+        personalTimezone:  personalBirth.timezone,
         transitComputedAt: transit.computedAt,
         transitAllGates: transit.allGates,
         transitDefinedCenterIds: transit.definedCenterIds,
         transitDefinedChannels: transit.definedChannels,
+        transitPlanets: transit.planets,
       })
       toast.success('流日圖已儲存')
       onSaved?.()
@@ -389,7 +399,7 @@ export default function TransitView({ personal, transit, onRefresh, refreshing, 
     } finally {
       setSaving(false)
     }
-  }, [personal, transit, onSaved])
+  }, [personal, personalBirth, transit, onSaved])
 
   return (
     <div ref={printAreaRef} className="flex flex-col gap-6">
@@ -399,13 +409,15 @@ export default function TransitView({ personal, transit, onRefresh, refreshing, 
         <p className="font-mono text-[12px] md:text-base tracking-[0.1em] text-(--ink-soft)">
           流日時間：{formatTime(transit.computedAt)}（台北時間）
         </p>
-        <button
-          onClick={onRefresh}
-          disabled={refreshing}
-          className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) border border-(--ink) px-3 py-1 cursor-pointer transition-colors duration-[120ms] hover:bg-(--ink) hover:text-(--paper) disabled:opacity-45 disabled:cursor-not-allowed"
-        >
-          {refreshing ? '更新中…' : '↻ 更新流日'}
-        </button>
+        {!readOnly && (
+          <button
+            onClick={onRefresh}
+            disabled={refreshing}
+            className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) border border-(--ink) px-3 py-1 cursor-pointer transition-colors duration-[120ms] hover:bg-(--ink) hover:text-(--paper) disabled:opacity-45 disabled:cursor-not-allowed"
+          >
+            {refreshing ? '更新中…' : '↻ 更新流日'}
+          </button>
+        )}
       </div>
 
       {/* View mode toggle */}
@@ -542,13 +554,15 @@ export default function TransitView({ personal, transit, onRefresh, refreshing, 
         >
           {isSignedIn ? (copied ? '✓ 已複製！' : '⎘ 複製流日提示詞') : '⎘ 登入後複製提示詞'}
         </button>
-        <button
-          onClick={isSignedIn ? handleSave : () => openSignIn()}
-          disabled={isSignedIn ? saving : false}
-          className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper) disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSignedIn ? (saving ? '儲存中…' : '⊕ 儲存流日圖') : '⊕ 登入後儲存'}
-        </button>
+        {!readOnly && (
+          <button
+            onClick={isSignedIn ? handleSave : () => openSignIn()}
+            disabled={isSignedIn ? saving : false}
+            className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink) bg-transparent border border-(--ink) px-5 py-2.5 cursor-pointer transition-colors duration-120 hover:bg-(--ink) hover:text-(--paper) disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSignedIn ? (saving ? '儲存中…' : '⊕ 儲存流日圖') : '⊕ 登入後儲存'}
+          </button>
+        )}
       </div>
 
     </div>

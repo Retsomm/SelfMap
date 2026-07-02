@@ -20,6 +20,7 @@ import { type CreateTransitResult, previewTransitChart, createTransitChart } fro
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 import { downloadTransitPdf, generateTransitAiPrompt } from '@/lib/chartPdf'
 import { buildTransitBodyGraphProps } from '@/lib/hd-bodygraph-utils'
+import { HD_GATES } from '@/lib/hd-chart-data'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
@@ -207,7 +208,7 @@ export default function TransitView() {
             {formatTime(result.transit.computedAt)} 更新
           </Text>
 
-          {/* 合成 Body Graph：個人（黑/紅）+ 流日（橙） */}
+          {/* 合成 Body Graph：個人（黑）+ 流日（紅） */}
           {(() => {
             const { activations, definedCenterIds, definedChannelIds } = buildTransitBodyGraphProps(result)
             return (
@@ -216,10 +217,8 @@ export default function TransitView() {
                   <Text style={s.sectionLabel}>個人 + 流日 Body Graph</Text>
                   <View style={s.legend}>
                     <View style={[s.legendDot, { backgroundColor: Colors.text }]} />
-                    <Text style={s.legendText}>個人意識</Text>
+                    <Text style={s.legendText}>個人</Text>
                     <View style={[s.legendDot, { backgroundColor: Colors.designRed }]} />
-                    <Text style={s.legendText}>個人潛意識</Text>
-                    <View style={[s.legendDot, { backgroundColor: Colors.transit }]} />
                     <Text style={s.legendText}>今日流日</Text>
                   </View>
                 </View>
@@ -248,6 +247,45 @@ export default function TransitView() {
               </View>
             ))}
           </View>
+
+          {/* 閘門摘要：自有 / 共有 / 流日 */}
+          {(() => {
+            const personalSet = new Set(result.personalGates)
+            const transitSet  = new Set(result.transit.allGates)
+            const personalOnly = result.personalGates.filter(g => !transitSet.has(g)).sort((a, b) => a - b)
+            const shared       = result.personalGates.filter(g => transitSet.has(g)).sort((a, b) => a - b)
+            const transitOnly  = result.transit.allGates.filter(g => !personalSet.has(g)).sort((a, b) => a - b)
+            const GateRow = ({ g, color, bg }: { g: number; color: string; bg: string }) => (
+              <View style={[s.gateTag, { backgroundColor: bg }]}>
+                <Text style={[s.gateTagNum, { color }]}>{g}</Text>
+                <Text style={[s.gateTagName, { color }]} numberOfLines={1}>{HD_GATES[g]?.name.zh ?? ''}</Text>
+              </View>
+            )
+            return (
+              <View style={s.card}>
+                <Text style={s.sectionLabel}>閘門摘要</Text>
+
+                <Text style={s.gateGroupLabel}>個人自有</Text>
+                <View style={s.chipRow}>
+                  {personalOnly.map(g => <GateRow key={g} g={g} color={Colors.text} bg={Colors.gateBg} />)}
+                </View>
+
+                {shared.length > 0 && (
+                  <>
+                    <Text style={[s.gateGroupLabel, { marginTop: Spacing.sm }]}>個人 + 流日共有</Text>
+                    <View style={s.chipRow}>
+                      {shared.map(g => <GateRow key={g} g={g} color={Colors.successText} bg={Colors.successBg} />)}
+                    </View>
+                  </>
+                )}
+
+                <Text style={[s.gateGroupLabel, { marginTop: Spacing.sm }]}>流日影響</Text>
+                <View style={s.chipRow}>
+                  {transitOnly.map(g => <GateRow key={g} g={g} color={Colors.designRed} bg={Colors.accentD} />)}
+                </View>
+              </View>
+            )
+          })()}
 
           {/* 流日影響 */}
           {result.impact.layers.length === 0 ? (
@@ -348,6 +386,10 @@ const s = StyleSheet.create({
   errorText:      { color: Colors.red, fontSize: 13 },
   impactKind:     { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
   impactLabel:    { fontSize: 15, fontWeight: '700', color: Colors.text, marginTop: 2 },
+  gateGroupLabel: { fontSize: 10, fontWeight: '600', color: Colors.muted, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: Spacing.xs },
+  gateTag:        { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
+  gateTagNum:     { fontSize: 12, fontWeight: '700', fontFamily: 'monospace' },
+  gateTagName:    { fontSize: 11, fontWeight: '400', maxWidth: 80 },
   actionSection:        { gap: Spacing.sm },
   actionBtn:            { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.lg, padding: 13, alignItems: 'center' },
   actionBtnPrimary:     { backgroundColor: Colors.accent, borderColor: Colors.accent },

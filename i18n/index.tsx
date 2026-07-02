@@ -49,7 +49,7 @@ const CHINESE_FALLBACKS: Record<string, string> = {
   'chart.annotations.g': 'G',
   'chart.annotations.ego': '自我',
   'chart.annotations.spleen': '脾',
-  'chart.annotations.sacral': '骶髂',
+  'chart.annotations.sacral': '薦骨',
   'chart.annotations.solarPlexus': '太陽神經叢',
   'chart.annotations.root': '根',
   'chart.designLabel': '設計',
