@@ -4,8 +4,9 @@ import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/compo
 import { matchCity } from '@/lib/cities'
 import { type BirthProfile, makeProfileId } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight'
 
 type Props = {
   visible: boolean
@@ -32,7 +33,14 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
   const [saving, setSaving] = useState(false)
   const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
   const scrollRef = useRef<ScrollView>(null)
+  const keyboardHeight = useKeyboardHeight()
   const [prevVisible, setPrevVisible] = useState(visible)
+
+  useEffect(() => {
+    if (Platform.OS === 'android' && keyboardHeight > 0) {
+      scrollRef.current?.scrollToEnd({ animated: true })
+    }
+  }, [keyboardHeight])
 
   if (visible !== prevVisible) {
     setPrevVisible(visible)
@@ -74,8 +82,11 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
         </View>
 
         <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={[
+            { flex: 1 },
+            Platform.OS === 'android' && keyboardHeight > 0 ? { marginBottom: keyboardHeight } : null,
+          ]}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
         <ScrollLockContext.Provider value={scrollLockCtx}>
         <ScrollView

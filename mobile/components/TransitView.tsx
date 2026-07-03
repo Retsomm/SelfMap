@@ -3,12 +3,11 @@
  */
 import { useAuth } from '@clerk/expo'
 import { useRouter } from 'expo-router'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
   Clipboard,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -22,6 +21,7 @@ import { downloadTransitPdf, generateTransitAiPrompt } from '@/lib/chartPdf'
 import { buildTransitBodyGraphProps } from '@/lib/hd-bodygraph-utils'
 import { HD_GATES } from '@/lib/hd-chart-data'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
 import { AppliedProfileCard } from '@/components/AppliedProfileCard'
@@ -62,6 +62,7 @@ export default function TransitView() {
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
   const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
+  const keyboardHeight = useKeyboardHeight()
 
   const [form, setForm]               = useState<BirthFormData>(defaultBirthFormData)
   const [fieldError, setFieldError]   = useState<string | null>(null)
@@ -153,15 +154,20 @@ export default function TransitView() {
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleString('zh-TW', { hour12: false, timeZone: 'Asia/Taipei' })
 
+  useEffect(() => {
+    if (Platform.OS === 'android' && keyboardHeight > 0) {
+      scrollRef.current?.scrollToEnd({ animated: true })
+    }
+  }, [keyboardHeight])
+
   return (
     <ScrollLockContext.Provider value={scrollLockCtx}>
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'android' ? 'height' : undefined}
-    >
     <ScrollView
       ref={scrollRef}
-      contentContainerStyle={s.inner}
+      contentContainerStyle={[
+        s.inner,
+        Platform.OS === 'android' && keyboardHeight > 0 ? { paddingBottom: keyboardHeight + 48 } : null,
+      ]}
       keyboardShouldPersistTaps="handled"
       scrollEnabled={scrollEnabled}
       nestedScrollEnabled
@@ -371,7 +377,6 @@ export default function TransitView() {
         </>
       )}
     </ScrollView>
-    </KeyboardAvoidingView>
     </ScrollLockContext.Provider>
   )
 }

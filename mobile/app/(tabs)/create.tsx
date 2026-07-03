@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -26,6 +25,7 @@ import { AppliedProfileCard } from '@/components/AppliedProfileCard'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 import { type BirthProfile } from '@/lib/birthProfiles'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight'
 
 const TODAY = new Date()
 type SubTab = 'personal' | 'composite' | 'transit'
@@ -41,6 +41,7 @@ function CreatePersonalView() {
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
   const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
+  const keyboardHeight = useKeyboardHeight()
 
   const [name, setName] = useState('')
   const [date, setDate] = useState({ year: TODAY.getFullYear() - 30, month: 1, day: 1 })
@@ -119,15 +120,20 @@ function CreatePersonalView() {
     }
   }
 
+  useEffect(() => {
+    if (Platform.OS === 'android' && keyboardHeight > 0) {
+      scrollRef.current?.scrollToEnd({ animated: true })
+    }
+  }, [keyboardHeight])
+
   return (
     <ScrollLockContext.Provider value={scrollLockCtx}>
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'android' ? 'height' : undefined}
-    >
     <ScrollView
       ref={scrollRef}
-      contentContainerStyle={styles.inner}
+      contentContainerStyle={[
+        styles.inner,
+        Platform.OS === 'android' && keyboardHeight > 0 ? { paddingBottom: keyboardHeight + 48 } : null,
+      ]}
       keyboardShouldPersistTaps="handled"
       scrollEnabled={scrollEnabled}
       nestedScrollEnabled
@@ -196,7 +202,6 @@ function CreatePersonalView() {
         onClose={() => setPickerVisible(false)}
       />
     </ScrollView>
-    </KeyboardAvoidingView>
     </ScrollLockContext.Provider>
   )
 }
