@@ -50,7 +50,7 @@ export function CenterList() {
                   <View style={s.gatesRow}>
                     <Text style={ls.miniLabel}>包含閘門</Text>
                     <View style={s.gateChips}>
-                      {info.gates.map(g => (
+                      {[...info.gates].sort((a, b) => a - b).map(g => (
                         <View key={g} style={s.gateChip}>
                           <Text style={s.gateChipText}>{g}</Text>
                         </View>

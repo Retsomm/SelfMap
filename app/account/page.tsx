@@ -19,13 +19,6 @@ import { ConfirmModal } from '@/components/ConfirmModal'
 const CompositeView = dynamic(() => import('@/components/humanDesign/CompositeView'), { ssr: false })
 const TransitView = dynamic(() => import('@/components/humanDesign/TransitView'), { ssr: false })
 
-const PROVIDER_LABEL: Record<string, string> = {
-  google: 'Google',
-  apple: 'Apple',
-  line: 'LINE',
-  github: 'GitHub',
-}
-
 interface PersonMeta {
   name: string | null
   birthDate: string
@@ -81,7 +74,28 @@ interface SavedChart {
   planets?: LegacyPlanetRow[] | null
 }
 
-type SidebarSection = 'profile' | 'humandesign' | 'connected'
+type SidebarSection = 'profile' | 'humandesign' | 'notifications'
+
+type NotificationType = 'feature' | 'bugfix' | 'announcement'
+
+interface AppNotification {
+  id: string
+  title: string
+  body: string
+  type: NotificationType
+  publishedAt: string
+}
+
+const NOTIFICATION_TYPE_CFG: Record<NotificationType, { label: string; color: string }> = {
+  feature:      { label: '新功能',  color: 'var(--olive)' },
+  bugfix:       { label: '問題修正', color: 'var(--crimson)' },
+  announcement: { label: '公告',    color: 'var(--tan)' },
+}
+
+function formatNotificationDate(iso: string) {
+  const d = new Date(iso)
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
+}
 
 const CHART_TABS = [
   { id: 'personal', label: '個人' },
@@ -112,7 +126,7 @@ function AccountContent() {
   const searchParams = useSearchParams()
   const rawSection = searchParams.get('section') as SidebarSection | null
   const activeSection: SidebarSection =
-    rawSection && ['profile', 'humandesign', 'connected'].includes(rawSection) ? rawSection : 'profile'
+    rawSection && ['profile', 'humandesign', 'notifications'].includes(rawSection) ? rawSection : 'profile'
 
   const [activeChartId, setActiveChartId] = useState<string | null>(null)
   const [charts, setCharts] = useState<SavedChart[]>([])
@@ -155,6 +169,94 @@ function AccountContent() {
       setChartsLoading(false)
     }
   }, [isSignedIn, isLoaded, chartTab])
+
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [notificationsLoading, setNotificationsLoading] = useState(false)
+  const [notificationsFetched, setNotificationsFetched] = useState(false)
+  const [isNotificationsAdmin, setIsNotificationsAdmin] = useState(false)
+
+  const fetchNotifications = useCallback(async () => {
+    setNotificationsLoading(true)
+    try {
+      const res = await fetch('/api/notifications')
+      if (!res.ok) {
+        toast.error('通知載入失敗')
+        return
+      }
+      const json = await res.json()
+      setNotifications(json.notifications ?? [])
+      setIsNotificationsAdmin(!!json.isAdmin)
+    } catch (err) {
+      console.error('[account] fetchNotifications error:', err)
+      toast.error('通知載入失敗')
+    } finally {
+      // 無論成功或失敗都標記為已嘗試過，避免失敗時被 useEffect 無限重試
+      setNotificationsFetched(true)
+      setNotificationsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeSection === 'notifications' && !notificationsFetched && !notificationsLoading) {
+      startTransition(() => { fetchNotifications() })
+    }
+  }, [activeSection, notificationsFetched, notificationsLoading, fetchNotifications])
+
+  const [newNotifTitle, setNewNotifTitle] = useState('')
+  const [newNotifBody, setNewNotifBody] = useState('')
+  const [newNotifType, setNewNotifType] = useState<NotificationType>('announcement')
+  const [creatingNotif, setCreatingNotif] = useState(false)
+  const [deletingNotifId, setDeletingNotifId] = useState<string | null>(null)
+
+  const handleCreateNotification = async () => {
+    if (creatingNotif) return
+    if (!newNotifTitle.trim() || !newNotifBody.trim()) {
+      toast.error('標題與內容為必填')
+      return
+    }
+    setCreatingNotif(true)
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newNotifTitle.trim(), body: newNotifBody.trim(), type: newNotifType }),
+      })
+      if (!res.ok) {
+        const json = await res.json().catch(() => null)
+        toast.error(json?.error ?? '新增失敗')
+        return
+      }
+      const { notification } = await res.json()
+      setNotifications(prev => [notification, ...prev])
+      setNewNotifTitle('')
+      setNewNotifBody('')
+      setNewNotifType('announcement')
+      toast.success('已新增通知')
+    } catch (err) {
+      console.error('[account] handleCreateNotification error:', err)
+      toast.error('新增失敗')
+    } finally {
+      setCreatingNotif(false)
+    }
+  }
+
+  const handleDeleteNotification = async (id: string) => {
+    if (deletingNotifId) return
+    setDeletingNotifId(id)
+    try {
+      const res = await fetch(`/api/notifications/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        toast.error('刪除失敗')
+        return
+      }
+      setNotifications(prev => prev.filter(n => n.id !== id))
+    } catch (err) {
+      console.error('[account] handleDeleteNotification error:', err)
+      toast.error('刪除失敗')
+    } finally {
+      setDeletingNotifId(null)
+    }
+  }
 
   const [editingName, setEditingName] = useState(false)
   const [displayName, setDisplayName] = useState('')
@@ -379,7 +481,6 @@ function AccountContent() {
             if (chartRequestIdRef.current !== requestId) return
             setChartResult(legacyPersonal)
             setTransitSnapshot(transit)
-            toast('這份流日圖是舊格式儲存，已重建顯示（箭頭方向與變數顏色因舊資料未保留而無法還原）', { icon: 'ℹ️' })
           })
           .catch(err => { if (chartRequestIdRef.current === requestId) { console.error(err); toast.error('計算失敗') } })
           .finally(() => { if (chartRequestIdRef.current === requestId) setChartComputing(false) })
@@ -449,7 +550,7 @@ function AccountContent() {
   const NAV_ITEMS: { key: SidebarSection; label: string }[] = [
     { key: 'profile', label: '個人資料' },
     { key: 'humandesign', label: '我的圖表' },
-    { key: 'connected', label: '連結帳號' },
+    { key: 'notifications', label: '通知' },
   ]
 
   return (
@@ -561,10 +662,10 @@ function AccountContent() {
           </div>
 
           <button
-            onClick={() => handleSectionClick('connected')}
-            className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'connected' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
+            onClick={() => handleSectionClick('notifications')}
+            className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'notifications' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
           >
-            連結帳號
+            通知
           </button>
 
           <div className="mt-auto px-5">
@@ -822,31 +923,110 @@ function AccountContent() {
             </div>
           )}
 
-          {/* Connected Accounts */}
-          {activeSection === 'connected' && (
+          {/* Notifications */}
+          {activeSection === 'notifications' && (
             <div className="px-5 py-8 md:px-10 md:py-10 max-w-3xl">
               <header className="mb-8 pb-3 border-b border-(--ink)">
                 <h1 className="font-serif italic font-medium text-[clamp(24px,3vw,36px)] leading-none m-0 text-(--ink)">
-                  連結帳號
+                  通知
                 </h1>
               </header>
-              {user.externalAccounts.length === 0 ? (
-                <div className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft)">尚未連結任何第三方帳號</div>
-              ) : (
-                <div className="flex flex-col border border-(--ink)">
-                  {user.externalAccounts.map((account) => (
-                    <div
-                      key={account.id}
-                      className="flex items-center justify-between py-3.5 px-5 border-b border-dotted border-[rgba(43,31,20,0.2)] last:border-b-0"
+
+              {isNotificationsAdmin && (
+                <div className="border border-(--ink) px-5 py-4 mb-6 flex flex-col gap-3">
+                  <div className="font-mono text-[11px] tracking-widest uppercase text-(--ink-soft)">
+                    新增通知
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="標題"
+                    value={newNotifTitle}
+                    onChange={e => setNewNotifTitle(e.target.value)}
+                    disabled={creatingNotif}
+                    className="font-mono text-base tracking-[0.04em] border border-(--ink) bg-(--paper) text-(--ink) px-3 py-1.5 outline-none placeholder:text-(--ink-soft) disabled:opacity-50"
+                  />
+                  <textarea
+                    placeholder="內容"
+                    value={newNotifBody}
+                    onChange={e => setNewNotifBody(e.target.value)}
+                    disabled={creatingNotif}
+                    rows={3}
+                    className="font-mono text-[13px] leading-relaxed border border-(--ink) bg-(--paper) text-(--ink) px-3 py-1.5 outline-none placeholder:text-(--ink-soft) disabled:opacity-50 resize-y"
+                  />
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <select
+                      value={newNotifType}
+                      onChange={e => setNewNotifType(e.target.value as NotificationType)}
+                      disabled={creatingNotif}
+                      className="font-mono text-[12px] tracking-widest uppercase border border-(--ink) bg-(--paper) text-(--ink) px-2 py-1.5 outline-none disabled:opacity-50"
                     >
-                      <span className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink)">
-                        {PROVIDER_LABEL[account.provider] ?? account.provider}
-                      </span>
-                      <span className="font-mono text-[12px] md:text-base tracking-[0.04em] text-(--ink-soft)">
-                        {account.emailAddress}
-                      </span>
-                    </div>
-                  ))}
+                      {(Object.keys(NOTIFICATION_TYPE_CFG) as NotificationType[]).map(t => (
+                        <option key={t} value={t}>{NOTIFICATION_TYPE_CFG[t].label}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleCreateNotification}
+                      disabled={creatingNotif}
+                      className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--paper) bg-(--ink) border border-(--ink) px-4 py-1.5 cursor-pointer transition-colors duration-120 hover:bg-transparent hover:text-(--ink) disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {creatingNotif ? '新增中…' : '發布通知'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {notificationsLoading && (
+                <div className="flex items-center justify-center py-10">
+                  <LoadingSpinner />
+                </div>
+              )}
+
+              {!notificationsLoading && notifications.length === 0 && (
+                <div className="border border-dashed border-(--ink) py-10 px-6 text-center max-w-md">
+                  <div className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink-soft)">
+                    目前沒有通知
+                  </div>
+                </div>
+              )}
+
+              {!notificationsLoading && notifications.length > 0 && (
+                <div className="flex flex-col gap-4">
+                  {notifications.map(n => {
+                    const cfg = NOTIFICATION_TYPE_CFG[n.type] ?? NOTIFICATION_TYPE_CFG.announcement
+                    return (
+                      <div key={n.id} className="border border-(--ink) px-5 py-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className="font-mono text-[11px] tracking-widest uppercase px-2 py-0.5 border"
+                            style={{ color: cfg.color, borderColor: cfg.color }}
+                          >
+                            {cfg.label}
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-[11px] text-(--ink-soft)">
+                              {formatNotificationDate(n.publishedAt)}
+                            </span>
+                            {isNotificationsAdmin && (
+                              <button
+                                onClick={() => handleDeleteNotification(n.id)}
+                                disabled={deletingNotifId === n.id}
+                                className="font-mono text-[12px] text-(--ink-soft) hover:text-(--crimson) cursor-pointer transition-colors duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="刪除通知"
+                              >
+                                {deletingNotifId === n.id ? '…' : '✕'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="font-serif text-[17px] font-medium text-(--ink) mb-1">
+                          {n.title}
+                        </div>
+                        <div className="font-mono text-[13px] leading-relaxed text-(--ink-soft) whitespace-pre-wrap">
+                          {n.body}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>

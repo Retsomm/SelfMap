@@ -11,6 +11,7 @@ import { SubTabBar } from '@/components/SubTabBar'
 import { InputModal } from '@/components/InputModal'
 import { BirthProfileSheet } from '@/components/BirthProfileSheet'
 import ChartListView from '@/components/ChartListView'
+import NotificationsView from '@/components/NotificationsView'
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn'
 import { useLineSignIn } from '@/hooks/useLineSignIn'
 import {
@@ -22,10 +23,11 @@ import {
 } from '@/lib/birthProfiles'
 import { type Chart, getCharts, getChart } from '@/lib/api'
 
-type OuterTab = 'charts' | 'personal'
+type OuterTab = 'charts' | 'personal' | 'notifications'
 const OUTER_TABS = [
-  { id: 'charts',   label: '我的圖表' },
-  { id: 'personal', label: '個人' },
+  { id: 'charts',        label: '我的圖表' },
+  { id: 'personal',      label: '個人' },
+  { id: 'notifications', label: '通知' },
 ] as const satisfies readonly { id: OuterTab; label: string }[]
 
 // ─── 個人頁面內容 ────────────────────────────────────────────────────────────
@@ -195,11 +197,6 @@ function PersonalView() {
     }
   }
 
-  const SUPPORTED_PROVIDERS = new Set(['google', 'line'])
-  const oauthAccounts = (user?.externalAccounts ?? []).filter(
-    acct => SUPPORTED_PROVIDERS.has(acct.provider) && acct.verification?.status === 'verified'
-  )
-
   return (
     <>
       <ScrollView contentContainerStyle={s.inner}>
@@ -235,21 +232,6 @@ function PersonalView() {
             </Pressable>
           </View>
         </View>
-
-        {/* 已連結帳號 */}
-        {oauthAccounts.length > 0 && (
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>已連結帳號</Text>
-            <View style={s.card}>
-              {oauthAccounts.map((acct, i) => (
-                <View key={acct.id} style={[s.oauthRow, i > 0 && s.separator]}>
-                  <Text style={s.oauthProvider}>{acct.providerTitle()}</Text>
-                  <Text style={s.oauthEmail}>{acct.accountIdentifier()}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
 
         {/* 出生資料 */}
         <View style={s.section}>
@@ -309,6 +291,28 @@ function PersonalView() {
             </View>
           )}
         </View>
+
+        {/* 網站連結預覽卡 */}
+        <Pressable
+          style={s.websiteCard}
+          onPress={() => {
+            WebBrowser.openBrowserAsync('https://selfmap.tw').catch(() => {
+              Alert.alert('無法開啟連結', '請稍後再試')
+            })
+          }}
+          accessibilityLabel="前往 selfmap.tw"
+        >
+          <Image
+            source={require('@/assets/website-preview.png')}
+            style={s.websiteCardImage}
+            resizeMode="cover"
+          />
+          <View style={s.websiteCardFooter}>
+            <Text style={s.websiteCardDomain}>selfmap.tw</Text>
+            <Text style={s.websiteCardTitle} numberOfLines={1}>SelfMap — 免費人類圖計算器</Text>
+            <Text style={s.websiteCardDesc} numberOfLines={2}>輸入出生日期、時間與地點，即時生成完整人類圖</Text>
+          </View>
+        </Pressable>
 
         {/* 登出 */}
         <Pressable
@@ -430,6 +434,9 @@ export default function ProfileScreen() {
       <View style={{ flex: 1, display: outerTab === 'personal' ? 'flex' : 'none' }}>
         <PersonalView />
       </View>
+      <View style={{ flex: 1, display: outerTab === 'notifications' ? 'flex' : 'none' }}>
+        <NotificationsView />
+      </View>
     </SafeAreaView>
   )
 }
@@ -459,10 +466,7 @@ const s = StyleSheet.create({
   syncText:       { color: Colors.sub, fontSize: 13 },
   addText:        { color: Colors.accent, fontSize: 14, fontWeight: '600' },
 
-  oauthRow:      { paddingVertical: Spacing.sm, gap: 4 },
   separator:     { borderTopWidth: 1, borderTopColor: Colors.border, marginTop: Spacing.sm, paddingTop: Spacing.sm },
-  oauthProvider: { fontSize: 15, fontWeight: '600', color: Colors.text },
-  oauthEmail:    { fontSize: 13, color: Colors.sub },
 
   emptyCard:    { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 20, alignItems: 'center' },
   emptyText:    { color: Colors.muted, fontSize: 14 },
@@ -473,6 +477,13 @@ const s = StyleSheet.create({
   editProfileIcon: { color: Colors.sub, fontSize: 15 },
   deleteBtn:    { padding: Spacing.xs },
   deleteText:   { color: Colors.muted, fontSize: 14 },
+
+  websiteCard:        { flexDirection: 'row', alignItems: 'center', borderRadius: Radius.lg, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border, backgroundColor: Colors.surface, gap: Spacing.md, padding: Spacing.sm },
+  websiteCardImage:   { width: 64, height: 64, borderRadius: Radius.sm, backgroundColor: Colors.bg },
+  websiteCardFooter:  { flex: 1, gap: 2 },
+  websiteCardDomain:  { color: Colors.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4 },
+  websiteCardTitle:   { color: Colors.text, fontSize: 14, fontWeight: '600' },
+  websiteCardDesc:    { color: Colors.sub, fontSize: 12, lineHeight: 16 },
 
   signOutBtn:   { borderWidth: 1, borderColor: Colors.red, borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center', marginTop: Spacing.sm },
   signOutText:  { color: Colors.red, fontSize: 15, fontWeight: '600' },

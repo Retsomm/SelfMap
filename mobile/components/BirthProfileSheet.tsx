@@ -4,7 +4,7 @@ import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/compo
 import { matchCity } from '@/lib/cities'
 import { type BirthProfile, makeProfileId } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 
 type Props = {
@@ -32,13 +32,15 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
   const [saving, setSaving] = useState(false)
   const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
   const scrollRef = useRef<ScrollView>(null)
+  const [prevVisible, setPrevVisible] = useState(visible)
 
-  useEffect(() => {
+  if (visible !== prevVisible) {
+    setPrevVisible(visible)
     if (visible) {
       setForm(initial ? profileToForm(initial) : defaultBirthFormData())
       setFieldError(null)
     }
-  }, [visible, initial])
+  }
 
   async function handleSave() {
     const matched = matchCity(form.city)
@@ -81,7 +83,7 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
           contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled"
           scrollEnabled={scrollEnabled}
-          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+          automaticallyAdjustKeyboardInsets={false}
         >
           <BirthDataForm
             value={form}
