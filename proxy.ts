@@ -13,6 +13,8 @@ const isPublicRoute = createRouteMatcher([
   '/api/transit/create',     // 未登入可預覽流日但不儲存
   '/api/birth-profiles',     // 手機端 Bearer token 存取，route handler 自行驗證
   '/api/birth-profiles/(.*)',// 包含 /api/birth-profiles/:id
+  '/api/notifications',      // 公開列表；寫入操作由 route handler 自行驗證 x-admin-secret
+  '/api/notifications/(.*)', // 包含 /api/notifications/:id
   '/sitemap.xml',
   '/robots.txt',
 ])

@@ -19,13 +19,6 @@ import { ConfirmModal } from '@/components/ConfirmModal'
 const CompositeView = dynamic(() => import('@/components/humanDesign/CompositeView'), { ssr: false })
 const TransitView = dynamic(() => import('@/components/humanDesign/TransitView'), { ssr: false })
 
-const PROVIDER_LABEL: Record<string, string> = {
-  google: 'Google',
-  apple: 'Apple',
-  line: 'LINE',
-  github: 'GitHub',
-}
-
 interface PersonMeta {
   name: string | null
   birthDate: string
@@ -81,7 +74,28 @@ interface SavedChart {
   planets?: LegacyPlanetRow[] | null
 }
 
-type SidebarSection = 'profile' | 'humandesign' | 'connected'
+type SidebarSection = 'profile' | 'humandesign' | 'notifications'
+
+type NotificationType = 'feature' | 'bugfix' | 'announcement'
+
+interface AppNotification {
+  id: string
+  title: string
+  body: string
+  type: NotificationType
+  publishedAt: string
+}
+
+const NOTIFICATION_TYPE_CFG: Record<NotificationType, { label: string; color: string }> = {
+  feature:      { label: '新功能',  color: 'var(--olive)' },
+  bugfix:       { label: '問題修正', color: 'var(--crimson)' },
+  announcement: { label: '公告',    color: 'var(--tan)' },
+}
+
+function formatNotificationDate(iso: string) {
+  const d = new Date(iso)
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
+}
 
 const CHART_TABS = [
   { id: 'personal', label: '個人' },
@@ -112,7 +126,7 @@ function AccountContent() {
   const searchParams = useSearchParams()
   const rawSection = searchParams.get('section') as SidebarSection | null
   const activeSection: SidebarSection =
-    rawSection && ['profile', 'humandesign', 'connected'].includes(rawSection) ? rawSection : 'profile'
+    rawSection && ['profile', 'humandesign', 'notifications'].includes(rawSection) ? rawSection : 'profile'
 
   const [activeChartId, setActiveChartId] = useState<string | null>(null)
   const [charts, setCharts] = useState<SavedChart[]>([])
@@ -155,6 +169,35 @@ function AccountContent() {
       setChartsLoading(false)
     }
   }, [isSignedIn, isLoaded, chartTab])
+
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [notificationsLoading, setNotificationsLoading] = useState(false)
+  const [notificationsFetched, setNotificationsFetched] = useState(false)
+
+  const fetchNotifications = useCallback(async () => {
+    setNotificationsLoading(true)
+    try {
+      const res = await fetch('/api/notifications')
+      if (!res.ok) {
+        toast.error('通知載入失敗')
+        return
+      }
+      const json = await res.json()
+      setNotifications(json.notifications ?? [])
+      setNotificationsFetched(true)
+    } catch (err) {
+      console.error('[account] fetchNotifications error:', err)
+      toast.error('通知載入失敗')
+    } finally {
+      setNotificationsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeSection === 'notifications' && !notificationsFetched && !notificationsLoading) {
+      startTransition(() => { fetchNotifications() })
+    }
+  }, [activeSection, notificationsFetched, notificationsLoading, fetchNotifications])
 
   const [editingName, setEditingName] = useState(false)
   const [displayName, setDisplayName] = useState('')
@@ -448,7 +491,7 @@ function AccountContent() {
   const NAV_ITEMS: { key: SidebarSection; label: string }[] = [
     { key: 'profile', label: '個人資料' },
     { key: 'humandesign', label: '我的圖表' },
-    { key: 'connected', label: '連結帳號' },
+    { key: 'notifications', label: '通知' },
   ]
 
   return (
@@ -560,10 +603,10 @@ function AccountContent() {
           </div>
 
           <button
-            onClick={() => handleSectionClick('connected')}
-            className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'connected' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
+            onClick={() => handleSectionClick('notifications')}
+            className={`w-full text-left font-mono text-[12px] md:text-base tracking-widest uppercase px-5 py-2.5 cursor-pointer border-l-2 transition-colors duration-120 ${activeSection === 'notifications' ? 'border-(--ink) text-(--ink) bg-(--paper-deep)' : 'border-transparent text-(--ink-soft) hover:text-(--ink) hover:bg-(--paper-deep)'}`}
           >
-            連結帳號
+            通知
           </button>
 
           <div className="mt-auto px-5">
@@ -821,31 +864,55 @@ function AccountContent() {
             </div>
           )}
 
-          {/* Connected Accounts */}
-          {activeSection === 'connected' && (
+          {/* Notifications */}
+          {activeSection === 'notifications' && (
             <div className="px-5 py-8 md:px-10 md:py-10 max-w-3xl">
               <header className="mb-8 pb-3 border-b border-(--ink)">
                 <h1 className="font-serif italic font-medium text-[clamp(24px,3vw,36px)] leading-none m-0 text-(--ink)">
-                  連結帳號
+                  通知
                 </h1>
               </header>
-              {user.externalAccounts.length === 0 ? (
-                <div className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft)">尚未連結任何第三方帳號</div>
-              ) : (
-                <div className="flex flex-col border border-(--ink)">
-                  {user.externalAccounts.map((account) => (
-                    <div
-                      key={account.id}
-                      className="flex items-center justify-between py-3.5 px-5 border-b border-dotted border-[rgba(43,31,20,0.2)] last:border-b-0"
-                    >
-                      <span className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink)">
-                        {PROVIDER_LABEL[account.provider] ?? account.provider}
-                      </span>
-                      <span className="font-mono text-[12px] md:text-base tracking-[0.04em] text-(--ink-soft)">
-                        {account.emailAddress}
-                      </span>
-                    </div>
-                  ))}
+
+              {notificationsLoading && (
+                <div className="flex items-center justify-center py-10">
+                  <LoadingSpinner />
+                </div>
+              )}
+
+              {!notificationsLoading && notifications.length === 0 && (
+                <div className="border border-dashed border-(--ink) py-10 px-6 text-center max-w-md">
+                  <div className="font-mono text-[12px] md:text-base tracking-[0.12em] uppercase text-(--ink-soft)">
+                    目前沒有通知
+                  </div>
+                </div>
+              )}
+
+              {!notificationsLoading && notifications.length > 0 && (
+                <div className="flex flex-col gap-4">
+                  {notifications.map(n => {
+                    const cfg = NOTIFICATION_TYPE_CFG[n.type] ?? NOTIFICATION_TYPE_CFG.announcement
+                    return (
+                      <div key={n.id} className="border border-(--ink) px-5 py-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className="font-mono text-[11px] tracking-widest uppercase px-2 py-0.5 border"
+                            style={{ color: cfg.color, borderColor: cfg.color }}
+                          >
+                            {cfg.label}
+                          </span>
+                          <span className="font-mono text-[11px] text-(--ink-soft)">
+                            {formatNotificationDate(n.publishedAt)}
+                          </span>
+                        </div>
+                        <div className="font-serif text-[17px] font-medium text-(--ink) mb-1">
+                          {n.title}
+                        </div>
+                        <div className="font-mono text-[13px] leading-relaxed text-(--ink-soft) whitespace-pre-wrap">
+                          {n.body}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>

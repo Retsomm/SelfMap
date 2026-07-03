@@ -35,6 +35,18 @@ model BirthProfile {
   @@index([userId, sortOrder])
 }
 
+model Notification {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  type        String   @default("announcement") // feature | bugfix | announcement
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([publishedAt])
+}
+
 model Chart {
   id          String   @id @default(cuid())
   userId      String

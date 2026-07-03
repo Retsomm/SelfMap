@@ -402,3 +402,21 @@ export function deleteBirthProfile(token: string, id: string) {
     token,
   })
 }
+
+// ─── Notifications ─────────────────────────────────────────────────────────────
+
+export type NotificationType = 'feature' | 'bugfix' | 'announcement'
+
+export type AppNotification = {
+  id: string
+  title: string
+  body: string
+  type: NotificationType
+  publishedAt: string
+  createdAt: string
+}
+
+// GET /api/notifications — 公開端點，不需 token
+export function getNotifications() {
+  return request<{ notifications: AppNotification[] }>('/api/notifications')
+}
