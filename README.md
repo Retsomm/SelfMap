@@ -1,6 +1,9 @@
 # SelfMap — 探索你的內在地圖
 
 SelfMap 是一個精準的人類圖（Human Design）計算器，透過出生日期、時間與地點，即時計算並視覺化呈現完整身體圖（Body Graph）。專案包含 **Web（Next.js）** 與 **Mobile（Expo / React Native）** 兩個獨立前端，共用同一組後端 API 與資料庫。
+</br>
+<img width="464" height="638" alt="截圖 2026-05-29 晚上8 16 18" src="https://github.com/user-attachments/assets/f0c4c607-8671-40b6-8584-02bdde387ee1" />
+<img width="680" height="723" alt="截圖 2026-05-29 晚上8 17 19" src="https://github.com/user-attachments/assets/7241b4e9-1cb9-4dbc-9edf-c810cad664af" />
 
 ![Views](https://img.shields.io/endpoint?url=https://selfmap.tw/api/stats)
 
