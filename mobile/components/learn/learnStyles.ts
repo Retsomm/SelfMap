@@ -20,6 +20,7 @@ export const ls = StyleSheet.create({
   },
   accordionBody: {
     paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
     paddingBottom: Spacing.lg,
     gap: Spacing.md,
     borderTopWidth: 1,

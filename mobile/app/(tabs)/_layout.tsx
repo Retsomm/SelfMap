@@ -1,10 +1,11 @@
 import { Tabs } from 'expo-router'
 import Svg, { Path, Circle } from 'react-native-svg'
+import type { ColorValue } from 'react-native'
 import { Colors } from '@/constants/tokens'
 
 // ── 線條型 tab 圖示（24×24 viewBox，strokeWidth 1.8）──────────────────────────
 
-function IconAbout({ color }: { color: string }) {
+function IconAbout({ color }: { color: ColorValue }) {
   return (
     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
       <Circle cx={12} cy={12} r={9} stroke={color} strokeWidth={1.8} />
@@ -14,7 +15,7 @@ function IconAbout({ color }: { color: string }) {
   )
 }
 
-function IconCreate({ color }: { color: string }) {
+function IconCreate({ color }: { color: ColorValue }) {
   return (
     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
       {/* 圓形外框 */}
@@ -25,7 +26,7 @@ function IconCreate({ color }: { color: string }) {
   )
 }
 
-function IconLearn({ color }: { color: string }) {
+function IconLearn({ color }: { color: ColorValue }) {
   return (
     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
       {/* 書本 */}
@@ -41,7 +42,7 @@ function IconLearn({ color }: { color: string }) {
   )
 }
 
-function IconProfile({ color }: { color: string }) {
+function IconProfile({ color }: { color: ColorValue }) {
   return (
     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
       {/* 頭部 */}

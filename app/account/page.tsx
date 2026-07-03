@@ -173,6 +173,7 @@ function AccountContent() {
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [notificationsFetched, setNotificationsFetched] = useState(false)
+  const [isNotificationsAdmin, setIsNotificationsAdmin] = useState(false)
 
   const fetchNotifications = useCallback(async () => {
     setNotificationsLoading(true)
@@ -184,11 +185,13 @@ function AccountContent() {
       }
       const json = await res.json()
       setNotifications(json.notifications ?? [])
-      setNotificationsFetched(true)
+      setIsNotificationsAdmin(!!json.isAdmin)
     } catch (err) {
       console.error('[account] fetchNotifications error:', err)
       toast.error('通知載入失敗')
     } finally {
+      // 無論成功或失敗都標記為已嘗試過，避免失敗時被 useEffect 無限重試
+      setNotificationsFetched(true)
       setNotificationsLoading(false)
     }
   }, [])
@@ -198,6 +201,62 @@ function AccountContent() {
       startTransition(() => { fetchNotifications() })
     }
   }, [activeSection, notificationsFetched, notificationsLoading, fetchNotifications])
+
+  const [newNotifTitle, setNewNotifTitle] = useState('')
+  const [newNotifBody, setNewNotifBody] = useState('')
+  const [newNotifType, setNewNotifType] = useState<NotificationType>('announcement')
+  const [creatingNotif, setCreatingNotif] = useState(false)
+  const [deletingNotifId, setDeletingNotifId] = useState<string | null>(null)
+
+  const handleCreateNotification = async () => {
+    if (creatingNotif) return
+    if (!newNotifTitle.trim() || !newNotifBody.trim()) {
+      toast.error('標題與內容為必填')
+      return
+    }
+    setCreatingNotif(true)
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newNotifTitle.trim(), body: newNotifBody.trim(), type: newNotifType }),
+      })
+      if (!res.ok) {
+        const json = await res.json().catch(() => null)
+        toast.error(json?.error ?? '新增失敗')
+        return
+      }
+      const { notification } = await res.json()
+      setNotifications(prev => [notification, ...prev])
+      setNewNotifTitle('')
+      setNewNotifBody('')
+      setNewNotifType('announcement')
+      toast.success('已新增通知')
+    } catch (err) {
+      console.error('[account] handleCreateNotification error:', err)
+      toast.error('新增失敗')
+    } finally {
+      setCreatingNotif(false)
+    }
+  }
+
+  const handleDeleteNotification = async (id: string) => {
+    if (deletingNotifId) return
+    setDeletingNotifId(id)
+    try {
+      const res = await fetch(`/api/notifications/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        toast.error('刪除失敗')
+        return
+      }
+      setNotifications(prev => prev.filter(n => n.id !== id))
+    } catch (err) {
+      console.error('[account] handleDeleteNotification error:', err)
+      toast.error('刪除失敗')
+    } finally {
+      setDeletingNotifId(null)
+    }
+  }
 
   const [editingName, setEditingName] = useState(false)
   const [displayName, setDisplayName] = useState('')
@@ -873,6 +932,49 @@ function AccountContent() {
                 </h1>
               </header>
 
+              {isNotificationsAdmin && (
+                <div className="border border-(--ink) px-5 py-4 mb-6 flex flex-col gap-3">
+                  <div className="font-mono text-[11px] tracking-widest uppercase text-(--ink-soft)">
+                    新增通知
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="標題"
+                    value={newNotifTitle}
+                    onChange={e => setNewNotifTitle(e.target.value)}
+                    disabled={creatingNotif}
+                    className="font-mono text-base tracking-[0.04em] border border-(--ink) bg-(--paper) text-(--ink) px-3 py-1.5 outline-none placeholder:text-(--ink-soft) disabled:opacity-50"
+                  />
+                  <textarea
+                    placeholder="內容"
+                    value={newNotifBody}
+                    onChange={e => setNewNotifBody(e.target.value)}
+                    disabled={creatingNotif}
+                    rows={3}
+                    className="font-mono text-[13px] leading-relaxed border border-(--ink) bg-(--paper) text-(--ink) px-3 py-1.5 outline-none placeholder:text-(--ink-soft) disabled:opacity-50 resize-y"
+                  />
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <select
+                      value={newNotifType}
+                      onChange={e => setNewNotifType(e.target.value as NotificationType)}
+                      disabled={creatingNotif}
+                      className="font-mono text-[12px] tracking-widest uppercase border border-(--ink) bg-(--paper) text-(--ink) px-2 py-1.5 outline-none disabled:opacity-50"
+                    >
+                      {(Object.keys(NOTIFICATION_TYPE_CFG) as NotificationType[]).map(t => (
+                        <option key={t} value={t}>{NOTIFICATION_TYPE_CFG[t].label}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleCreateNotification}
+                      disabled={creatingNotif}
+                      className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--paper) bg-(--ink) border border-(--ink) px-4 py-1.5 cursor-pointer transition-colors duration-120 hover:bg-transparent hover:text-(--ink) disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {creatingNotif ? '新增中…' : '發布通知'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {notificationsLoading && (
                 <div className="flex items-center justify-center py-10">
                   <LoadingSpinner />
@@ -900,9 +1002,21 @@ function AccountContent() {
                           >
                             {cfg.label}
                           </span>
-                          <span className="font-mono text-[11px] text-(--ink-soft)">
-                            {formatNotificationDate(n.publishedAt)}
-                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-[11px] text-(--ink-soft)">
+                              {formatNotificationDate(n.publishedAt)}
+                            </span>
+                            {isNotificationsAdmin && (
+                              <button
+                                onClick={() => handleDeleteNotification(n.id)}
+                                disabled={deletingNotifId === n.id}
+                                className="font-mono text-[12px] text-(--ink-soft) hover:text-(--crimson) cursor-pointer transition-colors duration-120 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="刪除通知"
+                              >
+                                {deletingNotifId === n.id ? '…' : '✕'}
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="font-serif text-[17px] font-medium text-(--ink) mb-1">
                           {n.title}

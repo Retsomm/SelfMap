@@ -114,7 +114,9 @@ function CreatePersonalView() {
   }
 
   function handleCityFocus() {
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350)
+    if (Platform.OS === 'android') {
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350)
+    }
   }
 
   return (

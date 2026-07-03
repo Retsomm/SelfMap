@@ -295,7 +295,11 @@ function PersonalView() {
         {/* 網站連結預覽卡 */}
         <Pressable
           style={s.websiteCard}
-          onPress={() => WebBrowser.openBrowserAsync('https://selfmap.tw')}
+          onPress={() => {
+            WebBrowser.openBrowserAsync('https://selfmap.tw').catch(() => {
+              Alert.alert('無法開啟連結', '請稍後再試')
+            })
+          }}
           accessibilityLabel="前往 selfmap.tw"
         >
           <Image

@@ -185,7 +185,7 @@ export default function TransitView() {
               namePlaceholder="例如：本人"
               fieldError={fieldError}
               onClearError={() => setFieldError(null)}
-              onCityFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350)}
+              onCityFocus={() => { if (Platform.OS === 'android') setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350) }}
             />
           )}
 

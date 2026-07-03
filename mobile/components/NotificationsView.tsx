@@ -38,18 +38,20 @@ export default function NotificationsView() {
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
+    setLoading(true)
     setError(null)
     try {
       const { notifications } = await getNotifications()
       setNotifications(notifications)
     } catch (err) {
       setError(err instanceof Error ? err.message : '載入失敗，請稍後再試')
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    setLoading(true)
-    load().finally(() => setLoading(false))
+    load()
   }, [load])
 
   async function handleRefresh() {
