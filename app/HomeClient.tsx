@@ -26,7 +26,10 @@ export default function HomeClient() {
         {(['personal', 'composite', 'transit'] as Tab[]).map(tabKey => (
           <button
             key={tabKey}
-            onClick={() => setTab(tabKey)}
+            onClick={() => {
+              window.umami?.track('home-tab-click', { tab: tabKey })
+              setTab(tabKey)
+            }}
             className={[
               'font-mono text-[12px] md:text-base tracking-[0.14em] uppercase px-5 py-2.5 border-b-2 transition-colors duration-[120ms] cursor-pointer bg-transparent',
               tab === tabKey

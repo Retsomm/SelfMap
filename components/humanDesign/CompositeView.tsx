@@ -319,6 +319,7 @@ export default function CompositeView({
     const el = printAreaRef.current
     if (!el) return
     setDownloading(true)
+    window.umami?.track('composite-download')
     try {
       await downloadChart(el)
     } catch (err) {

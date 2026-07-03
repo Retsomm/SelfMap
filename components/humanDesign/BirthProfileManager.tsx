@@ -28,6 +28,7 @@ export default function BirthProfileManager() {
 
   const handleAdd = async (form: BirthFormState) => {
     setSaving(true)
+    window.umami?.track('profile-add-save')
     try {
       await saveProfile({
         id: Date.now().toString(),
@@ -49,6 +50,7 @@ export default function BirthProfileManager() {
   const handleEdit = async (form: BirthFormState) => {
     if (!editingProfile) return
     setSaving(true)
+    window.umami?.track('profile-edit-save')
     try {
       await saveProfile({
         ...editingProfile,
@@ -70,6 +72,7 @@ export default function BirthProfileManager() {
   const handleDelete = async () => {
     if (!confirmDeleteId) return
     setDeleting(true)
+    window.umami?.track('profile-delete-confirm')
     try {
       await deleteProfile(confirmDeleteId)
       setConfirmDeleteId(null)
@@ -88,7 +91,10 @@ export default function BirthProfileManager() {
           出生檔案
         </h2>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => {
+            window.umami?.track('profile-add-open')
+            setShowAddModal(true)
+          }}
           className="font-mono text-[11px] md:text-[13px] tracking-[0.1em] uppercase text-(--ink-soft) border border-(--ink-soft) px-2.5 py-1 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--ink) hover:border-(--ink)"
         >
           新增出生檔案
@@ -114,14 +120,20 @@ export default function BirthProfileManager() {
               </span>
               <div className="flex items-center gap-2 shrink-0">
                 <button
-                  onClick={() => setEditingProfile(p)}
+                  onClick={() => {
+                    window.umami?.track('profile-edit-open')
+                    setEditingProfile(p)
+                  }}
                   className="font-mono text-[12px] md:text-base text-(--ink-soft) hover:text-(--ink) cursor-pointer transition-colors duration-120"
                   title="編輯圖表名稱"
                 >
                   ✎
                 </button>
                 <button
-                  onClick={() => setConfirmDeleteId(p.id)}
+                  onClick={() => {
+                    window.umami?.track('profile-delete-open')
+                    setConfirmDeleteId(p.id)
+                  }}
                   className="font-mono text-[12px] md:text-base text-(--ink-soft) hover:text-(--crimson) cursor-pointer transition-colors duration-120"
                   title="刪除圖表"
                 >

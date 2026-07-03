@@ -25,6 +25,7 @@ export default function DashboardClient({ charts }: { charts: Chart[] }) {
           <div className="flex items-center gap-4">
             <Link
               href="/create"
+              onClick={() => window.umami?.track('dashboard-create-chart-click', { location: 'header' })}
               className="text-[12px] md:text-base bg-zinc-900 text-white px-4 py-2 rounded-full hover:bg-zinc-700 transition-colors"
             >
               + 新圖表
@@ -45,6 +46,7 @@ export default function DashboardClient({ charts }: { charts: Chart[] }) {
             <p className="text-zinc-400 mb-6">還沒有任何圖表</p>
             <Link
               href="/create"
+              onClick={() => window.umami?.track('dashboard-create-chart-click', { location: 'empty-state' })}
               className="bg-zinc-900 text-white text-[12px] md:text-base font-medium px-8 py-3.5 rounded-full hover:bg-zinc-700 transition-colors"
             >
               建立第一份地圖
@@ -56,6 +58,7 @@ export default function DashboardClient({ charts }: { charts: Chart[] }) {
               <Link
                 key={chart.id}
                 href={`/map/${chart.id}`}
+                onClick={() => window.umami?.track('dashboard-chart-click')}
                 className="bg-white rounded-2xl p-5 border border-zinc-100 hover:border-indigo-200 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start justify-between mb-4">
