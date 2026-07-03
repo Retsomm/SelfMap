@@ -89,6 +89,7 @@ export default function AuraFlowPage() {
 
   const handleSave = async (formData: BirthFormState) => {
     setSaving(true)
+    window.umami?.track('aura-flow-save-profile')
     try {
       const birthDate = formData.date.format('YYYY-MM-DD')
       const birthTime = formData.time.format('HH:mm')
@@ -147,7 +148,10 @@ export default function AuraFlowPage() {
             <span className="text-(--ink-soft) text-xs font-mono">{charts[0].name || `${charts[0].birthCity} · ${charts[0].birthDate}` || '未命名'}</span>
           )}
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              window.umami?.track('aura-flow-add-profile-click', { location: 'header' })
+              setShowForm(true)
+            }}
             className="w-6 h-6 flex items-center justify-center text-(--ink-soft) border border-(--ink)/20 rounded hover:text-(--ink) hover:border-(--ink)/50 transition-colors cursor-pointer text-base leading-none"
             title="新增個人資料"
           >
@@ -163,7 +167,10 @@ export default function AuraFlowPage() {
             <div className="text-center space-y-4">
               <p className="text-(--ink-soft) text-sm font-mono">尚未建立個人資料</p>
               <button
-                onClick={() => setShowForm(true)}
+                onClick={() => {
+                  window.umami?.track('aura-flow-add-profile-click', { location: 'empty-state' })
+                  setShowForm(true)
+                }}
                 className="text-(--ink) text-xs border border-(--ink)/30 px-4 py-2 hover:border-(--ink)/60 transition-colors cursor-pointer font-mono tracking-widest"
               >
                 + 新增個人資料

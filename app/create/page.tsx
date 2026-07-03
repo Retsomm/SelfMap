@@ -52,6 +52,7 @@ export default function CreatePage() {
       return
     }
     setLoading(true)
+    window.umami?.track('create-chart-submit')
     try {
       const res = await fetch('/api/charts', {
         method: 'POST',

@@ -54,6 +54,7 @@ export default function TransitTab() {
   const hasAutoFilledRef = useRef(false)
 
   const fillFromProfile = (p: BirthProfile) => {
+    window.umami?.track('transit-quick-fill')
     setInputs({
       birthDate: dayjs(p.date),
       birthTime: dayjs(`${p.date} ${p.time}`),
@@ -103,6 +104,7 @@ export default function TransitTab() {
   const calculatePersonal = useCallback(async () => {
     setError('')
     setLoadingPersonal(true)
+    window.umami?.track('transit-calculate')
     try {
       const { computeHdResult } = await import('@/lib/computeHdResult')
       const [r] = await Promise.all([

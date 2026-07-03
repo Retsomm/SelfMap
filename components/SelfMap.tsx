@@ -69,6 +69,11 @@ interface SelfMapProps {
 export default function SelfMap({ chart, onCenterClick }: SelfMapProps) {
   const [hoveredId, setHoveredId] = useState<CenterName | null>(null)
 
+  const handleCenterClick = (center: Center) => {
+    window.umami?.track('map-center-click', { center: center.id })
+    onCenterClick(center)
+  }
+
   const definedSet = new Set(
     chart.centers.filter((c) => c.defined).map((c) => c.id)
   )
@@ -151,7 +156,7 @@ export default function SelfMap({ chart, onCenterClick }: SelfMapProps) {
             <motion.g
               key={cfg.id}
               style={{ cursor: 'pointer' }}
-              onClick={() => onCenterClick(center)}
+              onClick={() => handleCenterClick(center)}
               onHoverStart={() => setHoveredId(cfg.id)}
               onHoverEnd={() => setHoveredId(null)}
               whileHover={{ scale: 1.06 }}

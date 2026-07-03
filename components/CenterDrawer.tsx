@@ -43,7 +43,10 @@ export default function CenterDrawer({ center, onClose }: CenterDrawerProps) {
                 <h2 className="text-xl font-bold text-zinc-900">{center.name}</h2>
               </div>
               <button
-                onClick={onClose}
+                onClick={() => {
+                  window.umami?.track('map-center-drawer-close')
+                  onClose()
+                }}
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-100 transition-colors text-zinc-400"
               >
                 ✕

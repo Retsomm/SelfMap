@@ -15,6 +15,10 @@ interface DetailDrawerProps {
 
 export default function DetailDrawer({ selection, onClose, onJumpToGate }: DetailDrawerProps) {
   const open = !!selection
+  const jumpToGate = (num: number) => {
+    window.umami?.track('detail-drawer-gate-jump', { gate: num })
+    onJumpToGate(num)
+  }
   const pick = <T,>(obj: { zh: T } | T): T => {
     if (typeof obj === 'object' && obj !== null && 'zh' in obj) return (obj as { zh: T }).zh
     return obj as T
@@ -71,7 +75,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
           <h4>閘門</h4>
           <div className="hd-gates-list">
             {d.gates.map(g => (
-              <button key={g} className="hd-gate-chip" onClick={() => onJumpToGate(g)}>{g}</button>
+              <button key={g} className="hd-gate-chip" onClick={() => jumpToGate(g)}>{g}</button>
             ))}
           </div>
         </>
@@ -111,14 +115,14 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
           <h4>連接</h4>
           <p style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
             <span
-              onClick={() => onJumpToGate(d.from)}
+              onClick={() => jumpToGate(d.from)}
               style={{ cursor: 'pointer', borderBottom: '1px solid #2b1f14' }}
             >
               {fromG ? pick(fromG.name) : `閘門 ${d.from}`} ({d.from})
             </span>
             <span style={{ fontFamily: 'var(--font-mono)', fontStyle: 'normal', color: '#6b5a44' }}>⟷</span>
             <span
-              onClick={() => onJumpToGate(d.to)}
+              onClick={() => jumpToGate(d.to)}
               style={{ cursor: 'pointer', borderBottom: '1px solid #2b1f14' }}
             >
               {toG ? pick(toG.name) : `閘門 ${d.to}`} ({d.to})
@@ -159,7 +163,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
           <h4>涉及閘門</h4>
           <div className="hd-gates-list">
             {[10, 20, 34, 57].map(g => (
-              <button key={g} className="hd-gate-chip" onClick={() => onJumpToGate(g)}>{g}</button>
+              <button key={g} className="hd-gate-chip" onClick={() => jumpToGate(g)}>{g}</button>
             ))}
           </div>
           <h4>備註</h4>
@@ -318,7 +322,14 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
                 <h2 className="hd-drawer-title">{title}</h2>
                 <div className="hd-drawer-sub">{sub}</div>
               </div>
-              <button className="hd-drawer-close" onClick={onClose} aria-label="關閉">✕</button>
+              <button
+                className="hd-drawer-close"
+                onClick={() => {
+                  window.umami?.track('detail-drawer-close')
+                  onClose()
+                }}
+                aria-label="關閉"
+              >✕</button>
             </header>
             <div className="hd-drawer-body">{body}</div>
           </>

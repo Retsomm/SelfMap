@@ -384,6 +384,7 @@ function AccountContent() {
   const filteredCharts = charts.filter(ch => kindOf(ch) === chartTab)
 
   const handleChartTabClick = (tab: ChartTab) => {
+    window.umami?.track('account-chart-tab-click', { tab })
     setChartTab(tab)
     const filtered = charts.filter(ch => kindOf(ch) === tab)
     setActiveChartId(filtered[0]?.id ?? null)
