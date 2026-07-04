@@ -386,6 +386,7 @@ body {
   position: fixed;
   top: 0; right: 0;
   height: 100vh;
+  height: 100dvh;
   width: min(440px, 92vw);
   background: var(--paper);
   border-left: 1px solid var(--ink);
@@ -443,9 +444,16 @@ body {
 .hd-drawer-close:hover { background: var(--ink); color: var(--paper); }
 
 .hd-drawer-body {
-  padding: 22px 28px 32px;
+  padding: 22px 28px calc(32px + env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   flex: 1;
+}
+@media (max-width: 760px) {
+  .hd-drawer-body {
+    /* 手機瀏覽器底部工具列（Android 網址列 / iOS Safari 分頁列）沒有 safe-area 資訊可讀，
+       用固定緩衝再加上 safe-area，確保最後一排內容（如閘門）不會被工具列蓋住 */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
 }
 .hd-drawer-body h4 {
   font-family: var(--font-sans);
@@ -778,6 +786,8 @@ body {
   .hd-chart-row { grid-template-columns: 1fr; }
   .hd-planets-side { display: none; }
   .hd-arrows-col { display: none; }
+  /* 手機版抽屜全寬顯示，避免右側面板未覆蓋到的左側細條讓 Navbar 隱約透出、造成畫面遮擋錯覺 */
+  .hd-drawer { width: 100vw; width: 100dvw; }
 }
 @media (max-width: 640px) {
   .hd-index-strip {
