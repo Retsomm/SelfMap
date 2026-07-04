@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Alert,
   Clipboard,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -32,6 +31,7 @@ import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
 import { matchCity } from '@/lib/cities'
 import { type BirthProfile } from '@/lib/birthProfiles'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 
@@ -68,6 +68,7 @@ export default function CompositeView() {
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
   const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
+  const keyboardHeight = useKeyboardHeight()
 
   const [formA, setFormA] = useState<BirthFormData>(defaultBirthFormData)
   const [formB, setFormB] = useState<BirthFormData>(defaultBirthFormData)
@@ -188,13 +189,12 @@ export default function CompositeView() {
 
   return (
     <ScrollLockContext.Provider value={scrollLockCtx}>
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'android' ? 'height' : undefined}
-    >
     <ScrollView
       ref={scrollRef}
-      contentContainerStyle={s.inner}
+      contentContainerStyle={[
+        s.inner,
+        Platform.OS === 'android' && keyboardHeight > 0 ? { paddingBottom: keyboardHeight + 48 } : null,
+      ]}
       keyboardShouldPersistTaps="handled"
       scrollEnabled={scrollEnabled}
       nestedScrollEnabled
@@ -488,7 +488,6 @@ export default function CompositeView() {
         </>
       )}
     </ScrollView>
-    </KeyboardAvoidingView>
     </ScrollLockContext.Provider>
   )
 }

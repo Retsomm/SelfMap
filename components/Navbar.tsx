@@ -98,7 +98,7 @@ export default function Navbar() {
 
       {/* 手機：左側抽屜 */}
       <aside
-        className={`fixed top-0 left-0 z-70 h-full w-64 bg-(--paper) border-r border-(--ink) flex flex-col transition-transform duration-200 md:hidden ${
+        className={`fixed top-0 left-0 z-70 h-dvh w-64 bg-(--paper) border-r border-(--ink) flex flex-col transition-transform duration-200 md:hidden ${
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-label="導覽選單"
