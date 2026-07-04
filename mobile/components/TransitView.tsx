@@ -3,7 +3,7 @@
  */
 import { useAuth } from '@clerk/expo'
 import { useRouter } from 'expo-router'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -153,12 +153,6 @@ export default function TransitView() {
 
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleString('zh-TW', { hour12: false, timeZone: 'Asia/Taipei' })
-
-  useEffect(() => {
-    if (Platform.OS === 'android' && keyboardHeight > 0) {
-      scrollRef.current?.scrollToEnd({ animated: true })
-    }
-  }, [keyboardHeight])
 
   return (
     <ScrollLockContext.Provider value={scrollLockCtx}>

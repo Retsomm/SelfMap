@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   Platform,
   Pressable,
@@ -119,12 +119,6 @@ function CreatePersonalView() {
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350)
     }
   }
-
-  useEffect(() => {
-    if (Platform.OS === 'android' && keyboardHeight > 0) {
-      scrollRef.current?.scrollToEnd({ animated: true })
-    }
-  }, [keyboardHeight])
 
   return (
     <ScrollLockContext.Provider value={scrollLockCtx}>

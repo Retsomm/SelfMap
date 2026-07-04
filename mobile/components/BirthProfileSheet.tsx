@@ -4,7 +4,7 @@ import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/compo
 import { matchCity } from '@/lib/cities'
 import { type BirthProfile, makeProfileId } from '@/lib/birthProfiles'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight'
 
@@ -35,12 +35,6 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
   const scrollRef = useRef<ScrollView>(null)
   const keyboardHeight = useKeyboardHeight()
   const [prevVisible, setPrevVisible] = useState(visible)
-
-  useEffect(() => {
-    if (Platform.OS === 'android' && keyboardHeight > 0) {
-      scrollRef.current?.scrollToEnd({ animated: true })
-    }
-  }, [keyboardHeight])
 
   if (visible !== prevVisible) {
     setPrevVisible(visible)
