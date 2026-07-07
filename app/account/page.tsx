@@ -372,9 +372,11 @@ function AccountContent() {
   }
 
   useEffect(() => {
-    if (activeSection === 'humandesign') setChartsFetched(false)
-    const t = searchParams.get('tab')
-    if (t === 'composite' || t === 'transit' || t === 'personal') setChartTab(t)
+    startTransition(() => {
+      if (activeSection === 'humandesign') setChartsFetched(false)
+      const t = searchParams.get('tab')
+      if (t === 'composite' || t === 'transit' || t === 'personal') setChartTab(t)
+    })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
