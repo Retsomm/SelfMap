@@ -347,6 +347,9 @@ function AccountContent() {
   const isDeletingRef = useRef(false)
   const chartRequestIdRef = useRef(0)
 
+  const [deletingAccount, setDeletingAccount] = useState(false)
+  const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false)
+
   const handleDeleteChart = async (id: string) => {
     if (isDeletingRef.current) return
     isDeletingRef.current = true
@@ -369,9 +372,11 @@ function AccountContent() {
   }
 
   useEffect(() => {
-    if (activeSection === 'humandesign') setChartsFetched(false)
-    const t = searchParams.get('tab')
-    if (t === 'composite' || t === 'transit' || t === 'personal') setChartTab(t)
+    startTransition(() => {
+      if (activeSection === 'humandesign') setChartsFetched(false)
+      const t = searchParams.get('tab')
+      if (t === 'composite' || t === 'transit' || t === 'personal') setChartTab(t)
+    })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
@@ -540,6 +545,26 @@ function AccountContent() {
       router.push('/')
     } catch {
       toast.error('Sign out failed')
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deletingAccount) return
+    setDeletingAccount(true)
+    window.umami?.track('account-delete-account')
+    try {
+      const res = await fetch('/api/account/delete', { method: 'DELETE' })
+      if (!res.ok) {
+        toast.error('刪除失敗，請稍後再試')
+        return
+      }
+      await signOut()
+      router.push('/')
+    } catch {
+      toast.error('刪除失敗，請稍後再試')
+    } finally {
+      setDeletingAccount(false)
+      setConfirmDeleteAccount(false)
     }
   }
 
@@ -778,6 +803,15 @@ function AccountContent() {
               </div>
 
               <BirthProfileManager />
+
+              <div className="mt-10 pt-6 border-t border-dashed border-(--ink-soft)">
+                <button
+                  onClick={() => setConfirmDeleteAccount(true)}
+                  className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink-soft) border border-(--ink-soft) px-3.5 py-1.5 bg-transparent cursor-pointer transition-colors duration-120 hover:text-(--crimson) hover:border-(--crimson)"
+                >
+                  刪除帳號
+                </button>
+              </div>
             </div>
           )}
 
@@ -1045,6 +1079,17 @@ function AccountContent() {
         onConfirm={() => handleDeleteChart(confirmDeleteId!)}
         onCancel={() => setConfirmDeleteId(null)}
         isLoading={!!deletingId}
+      />
+
+      <ConfirmModal
+        isOpen={confirmDeleteAccount}
+        title="刪除帳號"
+        message="此操作將永久刪除您的帳號與所有資料（出生資料、圖表紀錄），且無法復原。確定要繼續嗎？"
+        confirmLabel="刪除帳號"
+        cancelLabel="取消"
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setConfirmDeleteAccount(false)}
+        isLoading={deletingAccount}
       />
     </>
   )

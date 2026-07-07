@@ -420,3 +420,13 @@ export type AppNotification = {
 export function getNotifications() {
   return request<{ notifications: AppNotification[] }>('/api/notifications')
 }
+
+// ─── Account ──────────────────────────────────────────────────────────────────
+
+// DELETE /api/account/delete — 刪除帳號與所有關聯資料（出生資料、圖表），Clerk 帳號一併刪除
+export function deleteAccount(token: string) {
+  return request<{ ok: true }>('/api/account/delete', {
+    method: 'DELETE',
+    token,
+  })
+}
