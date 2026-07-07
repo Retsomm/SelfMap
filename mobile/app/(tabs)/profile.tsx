@@ -21,7 +21,7 @@ import {
   deleteProfile,
   profileSummary,
 } from '@/lib/birthProfiles'
-import { type Chart, getCharts, getChart } from '@/lib/api'
+import { type Chart, getCharts, getChart, deleteAccount } from '@/lib/api'
 
 type OuterTab = 'charts' | 'personal' | 'notifications'
 const OUTER_TABS = [
@@ -39,6 +39,7 @@ function PersonalView() {
   useEffect(() => { getTokenRef.current = getToken }, [getToken])
 
   const [signingOut, setSigningOut]       = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
   const [editingName, setEditingName]     = useState(false)
   const [nameInput, setNameInput]         = useState('')
   const [savingName, setSavingName]       = useState(false)
@@ -146,6 +147,33 @@ function PersonalView() {
     try { await signOut() }
     catch (err) { Alert.alert('登出失敗', err instanceof Error ? err.message : '請稍後再試') }
     finally { setSigningOut(false) }
+  }
+
+  function handleDeleteAccount() {
+    if (deletingAccount) return
+    Alert.alert(
+      '刪除帳號',
+      '此操作將永久刪除您的帳號與所有資料（出生資料、圖表紀錄），且無法復原。確定要繼續嗎？',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '刪除帳號', style: 'destructive',
+          onPress: async () => {
+            setDeletingAccount(true)
+            try {
+              const token = await getTokenRef.current()
+              if (!token) throw new Error('無法取得登入憑證，請重新登入')
+              await deleteAccount(token)
+              await signOut()
+            } catch (err) {
+              Alert.alert('刪除失敗', err instanceof Error ? err.message : '請稍後再試')
+            } finally {
+              setDeletingAccount(false)
+            }
+          },
+        },
+      ],
+    )
   }
 
   async function handlePickAvatar() {
@@ -323,6 +351,16 @@ function PersonalView() {
         >
           <Text style={s.signOutText}>{signingOut ? '登出中…' : '登出'}</Text>
         </Pressable>
+
+        {/* 刪除帳號 */}
+        <Pressable
+          style={[s.deleteAccountBtn, deletingAccount && s.btnDisabled]}
+          onPress={handleDeleteAccount}
+          disabled={deletingAccount}
+          accessibilityLabel="刪除帳號"
+        >
+          <Text style={s.deleteAccountText}>{deletingAccount ? '刪除中…' : '刪除帳號'}</Text>
+        </Pressable>
       </ScrollView>
 
       <InputModal
@@ -487,6 +525,8 @@ const s = StyleSheet.create({
 
   signOutBtn:   { borderWidth: 1, borderColor: Colors.red, borderRadius: Radius.lg, paddingVertical: Spacing.md, alignItems: 'center', marginTop: Spacing.sm },
   signOutText:  { color: Colors.red, fontSize: 15, fontWeight: '600' },
+  deleteAccountBtn:  { paddingVertical: Spacing.md, alignItems: 'center' },
+  deleteAccountText: { color: Colors.muted, fontSize: 13 },
   btnDisabled:  { opacity: 0.5 },
 
   signInWrap:    { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, gap: Spacing.md },
