@@ -1,4 +1,4 @@
-import { initSwissEph, Planet, LunarPoint } from '@/lib/swissEph'
+import { initSwissEph, Planet, LunarPoint, CalculationFlag } from '@/lib/swissEph'
 import {
   calculatePlanetGates,
   calculateProfile,
@@ -32,11 +32,11 @@ export const computeHdResult = async (
   const offset = getOffsetFromTimezone(timezone, new Date(`${date}T${time}:00`))
   const birthUtc = toUtcDate(date, time, offset)
   const jd = swe.dateToJulianDay(birthUtc)
-  const designJd = getDesignJd(swe, jd)
+  const designJd = getDesignJd(swe, jd, CalculationFlag.SwissEphemeris | CalculationFlag.Speed)
   const designUtc = new Date((designJd - 2440587.5) * 86400 * 1000)
 
   const lon = (body: Parameters<typeof swe.calculatePosition>[1], jdVal: number) =>
-    swe.calculatePosition(jdVal, body).longitude
+    swe.calculatePosition(jdVal, body, CalculationFlag.SwissEphemeris | CalculationFlag.Speed).longitude
 
   const sunP = lon(Planet.Sun, jd)
   const sunD = lon(Planet.Sun, designJd)

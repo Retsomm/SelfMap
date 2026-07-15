@@ -14,9 +14,9 @@ import { resolve } from 'path'
 
 // 數值常數（取自 @swisseph/core）
 const SE_GREG_CAL = 1           // CalendarType.Gregorian
-const SEFLG_MOSEPH = 4          // Moshier ephemeris（內建，不需外部檔案）
+const SEFLG_SWIEPH = 2          // Swiss Ephemeris（JPL 精度，需外部 .se1 檔案）
 const SEFLG_SPEED = 256         // 計算速度
-const DEFAULT_FLAGS = SEFLG_MOSEPH | SEFLG_SPEED  // 260
+const DEFAULT_FLAGS = SEFLG_SWIEPH | SEFLG_SPEED  // 258
 
 export interface SweServerInstance {
   dateToJulianDay(date: Date): number
@@ -74,6 +74,20 @@ export async function initSwissEphServer(): Promise<SweServerInstance> {
       const free   = m._free  as (p: number) => void
       const getValue = m.getValue as (ptr: number, type: string) => number
       const UTF8ToString = m.UTF8ToString as (ptr: number) => string
+      const allocateUTF8 = m.allocateUTF8 as (s: string) => number
+      const FS = m.FS as { mkdir: (p: string) => void; writeFile: (p: string, d: Uint8Array) => void }
+
+      // 載入 Swiss Ephemeris 資料檔（sepl/semo，涵蓋 1800–2399，寫入 wasm 虛擬檔案系統）
+      // 取代預設的 Moshier 近似曆表，Moshier 對北交點等慢速天體的精度不足以撐起 Tone/Base 這麼細的刻度
+      const ephemerisDir = resolve(process.cwd(), 'public/ephe')
+      const eplData = new Uint8Array(readFileSync(resolve(ephemerisDir, 'sepl_18.se1')))
+      const emoData = new Uint8Array(readFileSync(resolve(ephemerisDir, 'semo_18.se1')))
+      try { FS.mkdir('/ephe') } catch { /* already exists */ }
+      FS.writeFile('/ephe/sepl_18.se1', eplData)
+      FS.writeFile('/ephe/semo_18.se1', emoData)
+      const ephePathPtr = allocateUTF8('/ephe')
+      ccall('swe_set_ephe_path_wrap', 'null', ['number'], [ephePathPtr])
+      free(ephePathPtr)
 
       const _julday = cwrap('swe_julday_wrap', 'number', ['number', 'number', 'number', 'number', 'number'])
 

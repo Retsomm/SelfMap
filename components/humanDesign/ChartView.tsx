@@ -87,6 +87,7 @@ export default function ChartView({
   }), [result.planets])
 
   // four-arrow directions from tone (1-3 = left, 4-6 = right) per HD standard
+  // (Color drives the printed variable label/number — see varColors above — Tone drives the arrow shape; independent digits)
   const arrowTones = useMemo(() => ({
     topLeft:     result.planets[0]?.red.tone   ?? 1,  // Design 太陽 (Body)
     bottomLeft:  result.planets[3]?.red.tone   ?? 1,  // Design 北交點 (Environment)
@@ -216,12 +217,20 @@ export default function ChartView({
         </aside>
 
         {/* Left arrows: Body top-left (Design 太陽 tone), Environment bottom-left (Design 北交點 tone) */}
-        <aside className="hd-arrows-col hd-arrows-col--left h-30">
+        <aside className="hd-arrows-col hd-arrows-col--left h-40">
           <div className="hd-arrow-item">
             <div className={`hd-arrow-shape hd-arrow-shape--${arrowTones.topLeft <= 3 ? 'left' : 'right'}`} />
+            <div className="hd-arrow-values">
+              <span className="hd-arrow-value hd-arrow-value--color">{varColors.digestion}</span>
+              <span className="hd-arrow-value hd-arrow-value--tone">{arrowTones.topLeft}</span>
+            </div>
           </div>
           <div className="hd-arrow-item">
             <div className={`hd-arrow-shape hd-arrow-shape--${arrowTones.bottomLeft <= 3 ? 'left' : 'right'}`} />
+            <div className="hd-arrow-values">
+              <span className="hd-arrow-value hd-arrow-value--color">{varColors.environment}</span>
+              <span className="hd-arrow-value hd-arrow-value--tone">{arrowTones.bottomLeft}</span>
+            </div>
           </div>
         </aside>
 
@@ -246,12 +255,20 @@ export default function ChartView({
         </main>
 
         {/* Right arrows: Mind top-right (Personality 太陽 tone), Perspective bottom-right (Personality 北交點 tone) */}
-        <aside className="hd-arrows-col hd-arrows-col--right h-30">
+        <aside className="hd-arrows-col hd-arrows-col--right h-40">
           <div className="hd-arrow-item">
             <div className={`hd-arrow-shape hd-arrow-shape--${arrowTones.topRight <= 3 ? 'left' : 'right'}`} />
+            <div className="hd-arrow-values">
+              <span className="hd-arrow-value hd-arrow-value--color">{varColors.motivation}</span>
+              <span className="hd-arrow-value hd-arrow-value--tone">{arrowTones.topRight}</span>
+            </div>
           </div>
           <div className="hd-arrow-item">
             <div className={`hd-arrow-shape hd-arrow-shape--${arrowTones.bottomRight <= 3 ? 'left' : 'right'}`} />
+            <div className="hd-arrow-values">
+              <span className="hd-arrow-value hd-arrow-value--color">{varColors.perspective}</span>
+              <span className="hd-arrow-value hd-arrow-value--tone">{arrowTones.bottomRight}</span>
+            </div>
           </div>
         </aside>
 

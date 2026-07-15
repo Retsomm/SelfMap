@@ -93,6 +93,13 @@ const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: Min
     bottomRight: result.planets[3]?.black.tone ?? 1,
   }), [result.planets])
 
+  const arrowColors = useMemo(() => ({
+    topLeft:     result.planets[0]?.red.color   ?? 1,
+    bottomLeft:  result.planets[3]?.red.color   ?? 1,
+    topRight:    result.planets[0]?.black.color ?? 1,
+    bottomRight: result.planets[3]?.black.color ?? 1,
+  }), [result.planets])
+
   return (
     <div className="flex flex-col min-w-0">
       {/* Header */}
@@ -119,9 +126,16 @@ const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: Min
         </aside>
 
         <aside className="hd-arrows-col hd-arrows-col--left">
-          {[arrowTones.topLeft, arrowTones.bottomLeft].map((tone, i) => (
+          {[
+            { tone: arrowTones.topLeft, color: arrowColors.topLeft },
+            { tone: arrowTones.bottomLeft, color: arrowColors.bottomLeft },
+          ].map((v, i) => (
             <div key={i} className="hd-arrow-item">
-              <div className={`hd-arrow-shape hd-arrow-shape--${tone <= 3 ? 'left' : 'right'}`} />
+              <div className={`hd-arrow-shape hd-arrow-shape--${v.tone <= 3 ? 'left' : 'right'}`} />
+              <div className="hd-arrow-values">
+                <span className="hd-arrow-value hd-arrow-value--color">{v.color}</span>
+                <span className="hd-arrow-value hd-arrow-value--tone">{v.tone}</span>
+              </div>
             </div>
           ))}
         </aside>
@@ -141,9 +155,16 @@ const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: Min
         </main>
 
         <aside className="hd-arrows-col hd-arrows-col--right">
-          {[arrowTones.topRight, arrowTones.bottomRight].map((tone, i) => (
+          {[
+            { tone: arrowTones.topRight, color: arrowColors.topRight },
+            { tone: arrowTones.bottomRight, color: arrowColors.bottomRight },
+          ].map((v, i) => (
             <div key={i} className="hd-arrow-item">
-              <div className={`hd-arrow-shape hd-arrow-shape--${tone <= 3 ? 'left' : 'right'}`} />
+              <div className={`hd-arrow-shape hd-arrow-shape--${v.tone <= 3 ? 'left' : 'right'}`} />
+              <div className="hd-arrow-values">
+                <span className="hd-arrow-value hd-arrow-value--color">{v.color}</span>
+                <span className="hd-arrow-value hd-arrow-value--tone">{v.tone}</span>
+              </div>
             </div>
           ))}
         </aside>
