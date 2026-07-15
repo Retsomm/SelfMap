@@ -22,10 +22,17 @@ export const initSwissEph = async (): Promise<SweInstance> => {
       await swe.init('/_next/static/chunks/swisseph.wasm')
       // 載入 Swiss Ephemeris 資料檔（取代預設 Moshier 近似曆表）
       // Moshier 對北交點等慢速天體精度不足以撐起 Tone/Base 這麼細的刻度
-      await swe.loadEphemerisFiles([
-        { name: 'sepl_18.se1', url: '/ephe/sepl_18.se1' },
-        { name: 'semo_18.se1', url: '/ephe/semo_18.se1' },
-      ])
+      try {
+        await swe.loadEphemerisFiles([
+          { name: 'sepl_18.se1', url: '/ephe/sepl_18.se1' },
+          { name: 'semo_18.se1', url: '/ephe/semo_18.se1' },
+        ])
+      } catch (err) {
+        throw new Error(
+          '無法載入 Swiss Ephemeris 曆表資料，請檢查網路連線後重試。',
+          { cause: err }
+        )
+      }
       sweInstance = swe
       return swe
     } catch (err) {

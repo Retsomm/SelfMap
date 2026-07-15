@@ -80,8 +80,17 @@ export async function initSwissEphServer(): Promise<SweServerInstance> {
       // 載入 Swiss Ephemeris 資料檔（sepl/semo，涵蓋 1800–2399，寫入 wasm 虛擬檔案系統）
       // 取代預設的 Moshier 近似曆表，Moshier 對北交點等慢速天體的精度不足以撐起 Tone/Base 這麼細的刻度
       const ephemerisDir = resolve(process.cwd(), 'public/ephe')
-      const eplData = new Uint8Array(readFileSync(resolve(ephemerisDir, 'sepl_18.se1')))
-      const emoData = new Uint8Array(readFileSync(resolve(ephemerisDir, 'semo_18.se1')))
+      let eplData: Uint8Array
+      let emoData: Uint8Array
+      try {
+        eplData = new Uint8Array(readFileSync(resolve(ephemerisDir, 'sepl_18.se1')))
+        emoData = new Uint8Array(readFileSync(resolve(ephemerisDir, 'semo_18.se1')))
+      } catch (err) {
+        throw new Error(
+          `找不到 Swiss Ephemeris 曆表資料檔，預期路徑為 ${ephemerisDir}/sepl_18.se1 與 semo_18.se1`,
+          { cause: err }
+        )
+      }
       try { FS.mkdir('/ephe') } catch { /* already exists */ }
       FS.writeFile('/ephe/sepl_18.se1', eplData)
       FS.writeFile('/ephe/semo_18.se1', emoData)

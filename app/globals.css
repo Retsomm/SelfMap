@@ -105,8 +105,8 @@ body {
   font-size: 16.5px;
   line-height: 30px;
   text-align: center;
-  color: currentColor;
-  border: 1px solid currentColor;
+  color: currentcolor;
+  border: 1px solid currentcolor;
   flex-shrink: 0;
 }
 .hd-arrow-value--color { border-radius: 50%; }
@@ -125,7 +125,7 @@ body {
 .hd-arrow-value--tone::before {
   inset: 0;
   z-index: -2;
-  background: var(--hd-arrow-accent, currentColor);
+  background: var(--hd-arrow-accent, currentcolor);
 }
 .hd-arrow-value--tone::after {
   inset: 1.5px 1px 1px 1px;
@@ -273,6 +273,15 @@ body {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+.hd-fixing-mark {
+  display: inline-block;
+  font-size: 0.55em;
+  line-height: 1;
+  margin-left: 2px;
+  vertical-align: super;
+}
+.hd-fixing-mark--exaltation { color: var(--ink); }
+.hd-fixing-mark--detriment  { color: var(--crimson); }
 
 .hd-chart-frame {
   position: relative;
