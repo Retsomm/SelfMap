@@ -1,4 +1,4 @@
-import { initSwissEph, Planet, LunarPoint } from '@/lib/swissEph'
+import { initSwissEph, Planet, LunarPoint, CalculationFlag } from '@/lib/swissEph'
 import { calculatePlanetGates, calculateCentersAndChannels } from '@/lib/humanDesign'
 import type { CenterName } from '@/lib/humanDesign/types'
 import type { ChannelDef } from '@/lib/humanDesign/types'
@@ -33,7 +33,7 @@ export const computeTransit = async (targetDate: Date = new Date()): Promise<Tra
   const now = targetDate
   const jd = swe.dateToJulianDay(now)
   const lon = (body: Parameters<typeof swe.calculatePosition>[1]) =>
-    swe.calculatePosition(jd, body).longitude
+    swe.calculatePosition(jd, body, CalculationFlag.SwissEphemeris | CalculationFlag.Speed).longitude
 
   const sunLon = lon(Planet.Sun)
   const nnLon = lon(LunarPoint.TrueNode)

@@ -68,8 +68,8 @@ body {
   padding-top: 28px;
 }
 
-.hd-arrows-col--left  { color: #c8553d; }
-.hd-arrows-col--right { color: var(--ink); }
+.hd-arrows-col--left  { color: #c8553d; --hd-arrow-accent: #c8553d; }
+.hd-arrows-col--right { color: var(--ink); --hd-arrow-accent: var(--ink); }
 
 .hd-arrow-item {
   display: flex;
@@ -86,6 +86,52 @@ body {
 }
 .hd-arrow-shape--left  { clip-path: polygon(100% 0, 100% 100%, 0 50%); }
 .hd-arrow-shape--right { clip-path: polygon(0 0, 100% 50%, 0 100%); }
+
+.hd-arrow-values {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hd-arrow-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 16.5px;
+  line-height: 30px;
+  text-align: center;
+  color: currentcolor;
+  border: 1px solid currentcolor;
+  flex-shrink: 0;
+}
+.hd-arrow-value--color { border-radius: 50%; }
+.hd-arrow-value--tone {
+  position: relative;
+  z-index: 0;
+  border: none;
+  background: transparent;
+}
+.hd-arrow-value--tone::before,
+.hd-arrow-value--tone::after {
+  content: '';
+  position: absolute;
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+.hd-arrow-value--tone::before {
+  inset: 0;
+  z-index: -2;
+  background: var(--hd-arrow-accent, currentcolor);
+}
+.hd-arrow-value--tone::after {
+  inset: 1.5px 1px 1px 1px;
+  z-index: -1;
+  background: var(--paper);
+}
 
 .hd-arrow-text {
   font-family: var(--font-mono);
@@ -227,6 +273,15 @@ body {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+.hd-fixing-mark {
+  display: inline-block;
+  font-size: 0.55em;
+  line-height: 1;
+  margin-left: 2px;
+  vertical-align: super;
+}
+.hd-fixing-mark--exaltation { color: var(--ink); }
+.hd-fixing-mark--detriment  { color: var(--crimson); }
 
 .hd-chart-frame {
   position: relative;
@@ -597,6 +652,10 @@ body {
 .hd-chart-row--mini .hd-planet-row { gap: 1px; padding: 0; }
 .hd-chart-row--mini .hd-arrows-col { padding-top: 12px; gap: 2px; }
 .hd-chart-row--mini .hd-arrow-shape { width: 8px; height: 8px; }
+.hd-chart-row--mini .hd-arrow-item { gap: 3px; }
+.hd-chart-row--mini .hd-arrow-values { gap: 2px; }
+.hd-chart-row--mini .hd-arrow-value { width: 19.5px; height: 19.5px; font-size: 12px; line-height: 19.5px; }
+.hd-chart-row--mini .hd-arrow-value--tone::after { inset: 1px 0.75px 0.75px 0.75px; }
 
 /* ───────── Composite chart row: [PersonA] [BodyGraph] [PersonB] ───────── */
 /* 比照個人頁 hd-chart-row 的 1fr/5fr/1fr 比例，SVG 佔 ~71% */

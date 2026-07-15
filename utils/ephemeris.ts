@@ -32,14 +32,15 @@ export const toUtcDate = (date: string, time: string, offsetHours: number): Date
 // 精確找到太陽退後 88° 的時刻（迭代法）
 // 88 曆日只是初始估算，月亮每天移動 ~13°，幾小時的誤差就會導致線數錯誤
 export const getDesignJd = (
-  swe: { calculatePosition: (jd: number, body: number) => { longitude: number } },
-  birthJd: number
+  swe: { calculatePosition: (jd: number, body: number, flags?: number) => { longitude: number } },
+  birthJd: number,
+  flags?: number
 ): number => {
   if (!Number.isFinite(birthJd)) {
     throw new Error('Invalid ephemeris data: non-finite longitude/JD')
   }
 
-  const birthSun = swe.calculatePosition(birthJd, 0).longitude
+  const birthSun = swe.calculatePosition(birthJd, 0, flags).longitude
   if (!Number.isFinite(birthSun)) {
     throw new Error('Invalid ephemeris data: non-finite longitude/JD')
   }
@@ -48,7 +49,7 @@ export const getDesignJd = (
   let jd = birthJd - 88
 
   for (let i = 0; i < 10; i++) {
-    const currentSun = swe.calculatePosition(jd, 0).longitude
+    const currentSun = swe.calculatePosition(jd, 0, flags).longitude
     if (!Number.isFinite(currentSun) || !Number.isFinite(jd)) {
       throw new Error('Invalid ephemeris data: non-finite longitude/JD')
     }
