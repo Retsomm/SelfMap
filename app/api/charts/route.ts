@@ -1,8 +1,9 @@
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { computeHdResultServer } from '@/lib/computeHdResultServer'
 import { CROSS_TYPE_LABELS } from '@/lib/humanDesign/constants'
+import { resolveDbUser, getOrCreateDbUser } from '@/lib/dbUser'
 
 export async function POST(req: NextRequest) {
   try {
@@ -122,36 +123,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const clerkUser = await currentUser()
-    const primaryAddr = clerkUser?.emailAddresses.find(
-      e => e.id === clerkUser.primaryEmailAddressId && e.verification?.status === 'verified'
-    )
-    const email = primaryAddr?.emailAddress ?? `clerk_${userId}@placeholder.local`
-
-    const updateData: { email?: string; name?: string | null } = {}
-    if (!email.endsWith('@placeholder.local')) updateData.email = email
-    if (clerkUser?.fullName != null) updateData.name = clerkUser.fullName
-
-    let user = await prisma.user.findUnique({ where: { clerkId: userId } })
-    if (user) {
-      if (Object.keys(updateData).length > 0) {
-        user = await prisma.user.update({ where: { clerkId: userId }, data: updateData })
-      }
-    } else {
-      const byEmail = email.endsWith('@placeholder.local')
-        ? null
-        : await prisma.user.findUnique({ where: { email } })
-      if (byEmail) {
-        user = await prisma.user.update({
-          where: { email },
-          data: { clerkId: userId, ...updateData },
-        })
-      } else {
-        user = await prisma.user.create({
-          data: { clerkId: userId, email, name: clerkUser?.fullName ?? null },
-        })
-      }
-    }
+    const user = await getOrCreateDbUser(userId)
 
     const chart = await prisma.chart.create({
       data: {
@@ -190,12 +162,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-      include: { charts: { orderBy: { createdAt: 'desc' } } },
-    })
-
-    const rawCharts = user?.charts ?? []
+    const user = await resolveDbUser(userId)
+    const rawCharts = user
+      ? await prisma.chart.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } })
+      : []
     // Ensure every chart has a display name — old records may have name=null
     const charts = rawCharts.map(c => ({
       ...c,

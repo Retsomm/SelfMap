@@ -1,4 +1,5 @@
 import { auth } from '@clerk/nextjs/server'
+import { resolveDbUser } from '@/lib/dbUser'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { initSwissEphServer } from '@/lib/swissEphServer'
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
     const { chartId } = await req.json()
     if (!chartId) return NextResponse.json({ error: '缺少 chartId' }, { status: 400 })
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    const user = await resolveDbUser(userId)
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     const chart = await prisma.chart.findFirst({ where: { id: chartId, userId: user.id } })

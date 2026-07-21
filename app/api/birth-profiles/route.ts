@@ -1,35 +1,8 @@
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
 import { after } from 'next/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-
-async function getOrCreateUser(userId: string) {
-  const clerkUser = await currentUser()
-  const primaryAddr = clerkUser?.emailAddresses.find(
-    e => e.id === clerkUser.primaryEmailAddressId && e.verification?.status === 'verified'
-  )
-  const email = primaryAddr?.emailAddress ?? `clerk_${userId}@placeholder.local`
-  const updateData: { email?: string; name?: string | null } = {}
-  if (!email.endsWith('@placeholder.local')) updateData.email = email
-  if (clerkUser?.fullName != null) updateData.name = clerkUser.fullName
-
-  let user = await prisma.user.findUnique({ where: { clerkId: userId } })
-  if (user) {
-    if (Object.keys(updateData).length > 0) {
-      user = await prisma.user.update({ where: { clerkId: userId }, data: updateData })
-    }
-  } else {
-    const byEmail = email.endsWith('@placeholder.local')
-      ? null
-      : await prisma.user.findUnique({ where: { email } })
-    if (byEmail) {
-      user = await prisma.user.update({ where: { email }, data: { clerkId: userId, ...updateData } })
-    } else {
-      user = await prisma.user.create({ data: { clerkId: userId, email, name: clerkUser?.fullName ?? null } })
-    }
-  }
-  return user
-}
+import { resolveDbUser, getOrCreateDbUser } from '@/lib/dbUser'
 
 // GET /api/birth-profiles — 取得目前用戶的所有出生資料
 export async function GET() {
@@ -37,7 +10,7 @@ export async function GET() {
     const { userId } = await auth()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    const user = await resolveDbUser(userId)
     if (!user) return NextResponse.json({ profiles: [] })
 
     const profiles = await prisma.birthProfile.findMany({
@@ -80,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     // auto-create user if not in DB yet (e.g. new user who hasn't created a chart)
-    const user = await getOrCreateUser(userId)
+    const user = await getOrCreateDbUser(userId)
 
     // 批次匯入：{ profiles: [...] }
     if (Array.isArray(body.profiles)) {

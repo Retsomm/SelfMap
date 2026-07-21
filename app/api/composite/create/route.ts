@@ -1,4 +1,5 @@
 import { auth } from '@clerk/nextjs/server'
+import { resolveDbUser } from '@/lib/dbUser'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { computeHdResultServer } from '@/lib/computeHdResultServer'
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    const user = await resolveDbUser(userId)
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     const chart = await prisma.chart.create({

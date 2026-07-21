@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { computeHdResultServer } from '@/lib/computeHdResultServer'
 import { CROSS_TYPE_LABELS } from '@/lib/humanDesign/constants'
+import { resolveDbUser } from '@/lib/dbUser'
 
 export async function GET(
   _req: NextRequest,
@@ -14,7 +15,7 @@ export async function GET(
 
     const { id } = await params
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    const user = await resolveDbUser(userId)
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     let chart = await prisma.chart.findFirst({ where: { id, userId: user.id } })
@@ -108,7 +109,7 @@ export async function PATCH(
     const name: string | undefined = typeof body.name === 'string' ? body.name.trim() : undefined
     if (name === undefined) return NextResponse.json({ error: '缺少 name' }, { status: 400 })
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    const user = await resolveDbUser(userId)
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     const updated = await prisma.chart.updateMany({
@@ -134,7 +135,7 @@ export async function DELETE(
 
     const { id } = await params
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    const user = await resolveDbUser(userId)
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     // deleteMany is idempotent — no error if the record is already gone

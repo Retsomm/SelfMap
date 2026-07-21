@@ -1,4 +1,5 @@
 import { auth } from '@clerk/nextjs/server'
+import { resolveDbUser } from '@/lib/dbUser'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { analyzeComposite } from '@/lib/compositeAnalysis'
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     if (!chartAId || !chartBId || typeof chartAId !== 'string' || typeof chartBId !== 'string')
       return NextResponse.json({ error: '缺少 chartAId 或 chartBId' }, { status: 400 })
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    const user = await resolveDbUser(userId)
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     const [chartA, chartB] = await Promise.all([
