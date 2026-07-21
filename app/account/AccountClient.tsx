@@ -333,10 +333,12 @@ function AccountContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editingChartName }),
       })
-      if (!res.ok) return
+      if (!res.ok) { toast.error('圖表重新命名失敗'); return }
       setCharts(prev => prev.map(c => c.id === id ? { ...c, name: editingChartName.trim() || null } : c))
       setEditingChartId(null)
-    } catch {}
+    } catch {
+      toast.error('圖表重新命名失敗')
+    }
     finally { setRenamingId(null) }
   }
 
@@ -358,13 +360,13 @@ function AccountContent() {
     window.umami?.track('account-delete-chart')
     try {
       const res = await fetch(`/api/charts/${id}`, { method: 'DELETE' })
-      if (!res.ok) return
-      setCharts(prev => {
-        const next = prev.filter(c => c.id !== id)
-        setActiveChartId(cur => cur === id ? (next[0]?.id ?? null) : cur)
-        return next
-      })
-    } catch {}
+      if (!res.ok) { toast.error('圖表刪除失敗'); return }
+      const next = charts.filter(c => c.id !== id)
+      setCharts(next)
+      setActiveChartId(cur => cur === id ? (next[0]?.id ?? null) : cur)
+    } catch {
+      toast.error('圖表刪除失敗')
+    }
     finally {
       setDeletingId(null)
       isDeletingRef.current = false
