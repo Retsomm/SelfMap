@@ -313,7 +313,6 @@ body {
 
 .hd-gate { cursor: pointer; }
 .hd-gate-circle {
-  fill: var(--gate-fill, var(--paper));
   stroke: var(--ink);
   stroke-width: 1.2;
   transition: fill 180ms ease, transform 180ms ease;

@@ -388,7 +388,7 @@ export default function BodyGraph({
                   <circle
                     className="hd-gate-circle"
                     cx={x} cy={y} r={7.5 * gateScale}
-                    style={{ '--gate-fill': circleFill } as React.CSSProperties}
+                    fill={circleFill}
                     stroke={HD_PALETTE.ink}
                     strokeWidth={1.4 * gateScale}
                   />
