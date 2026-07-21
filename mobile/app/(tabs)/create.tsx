@@ -59,26 +59,35 @@ function CreatePersonalView() {
   const birthTime = `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`
 
   async function handleSubmit() {
-    const matched = matchCity(city)
-    if (!matched) {
-      setFieldError('找不到這個地點，請確認拼字或改用資料庫中的地名')
-      setTimezone('')
-      return
+    // 已套用儲存的出生資料時，city/timezone 已經是可信值（來自後端存檔），
+    // 不能再拿去比對 mobile 本地的城市清單——存檔當初可能是用網頁端的地點選擇器，
+    // 格式跟 mobile 這份清單對不上，會導致 matchCity 找不到、誤判成「地點錯誤」
+    let finalCity = city
+    let finalTimezone = timezone
+    if (!appliedProfile) {
+      const matched = matchCity(city)
+      if (!matched) {
+        setFieldError('找不到這個地點，請確認拼字或改用資料庫中的地名')
+        setTimezone('')
+        return
+      }
+      setCity(matched.name)
+      setTimezone(matched.timezone)
+      finalCity = matched.name
+      finalTimezone = matched.timezone
     }
-    setCity(matched.name)
-    setTimezone(matched.timezone)
     setFieldError(null)
     setSubmitError(null)
     setSubmitting(true)
     try {
-      const payload: CreateChartPayload = { birthDate, birthTime, birthCity: matched.name, timezone: matched.timezone, name: name || undefined }
+      const payload: CreateChartPayload = { birthDate, birthTime, birthCity: finalCity, timezone: finalTimezone, name: name || undefined }
       const result = await previewChart(payload)
       setPendingChart({
         name: name || '',
         birthDate,
         birthTime,
-        birthCity: matched.name,
-        timezone: matched.timezone,
+        birthCity: finalCity,
+        timezone: finalTimezone,
         type:             result.type,
         authority:        result.authority,
         profile:          result.profile,
