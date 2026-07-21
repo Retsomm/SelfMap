@@ -1,8 +1,8 @@
 import { auth } from '@clerk/nextjs/server'
-import { after } from 'next/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { resolveDbUser, getOrCreateDbUser } from '@/lib/dbUser'
+import { getOrCreateDbUser } from '@/lib/dbUser'
+import { getBirthProfilesForUser } from '@/lib/getBirthProfiles'
 
 // GET /api/birth-profiles — 取得目前用戶的所有出生資料
 export async function GET() {
@@ -10,35 +10,9 @@ export async function GET() {
     const { userId } = await auth()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const user = await resolveDbUser(userId)
-    if (!user) return NextResponse.json({ profiles: [] })
-
-    const profiles = await prisma.birthProfile.findMany({
-      where: { userId: user.id },
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-    })
-
-    // Deduplicate by (label, date, time, location) — keeps earliest record
-    const seen = new Set<string>()
-    const duplicateIds: string[] = []
-    const uniqueProfiles = profiles.filter(p => {
-      const key = `${p.label}|${p.date}|${p.time}|${p.location}`
-      if (seen.has(key)) { duplicateIds.push(p.id); return false }
-      seen.add(key)
-      return true
-    })
-
-    // Clean up duplicates from DB after response is sent
-    if (duplicateIds.length > 0) {
-      console.log(`[GET /api/birth-profiles] removing ${duplicateIds.length} duplicate(s)`)
-      after(async () => {
-        await prisma.birthProfile.deleteMany({ where: { id: { in: duplicateIds } } })
-          .catch(e => console.error('[GET /api/birth-profiles] dedup cleanup error:', e))
-      })
-    }
-
-    console.log(`[GET /api/birth-profiles] found=${profiles.length} unique=${uniqueProfiles.length}`)
-    return NextResponse.json({ profiles: uniqueProfiles })
+    const profiles = await getBirthProfilesForUser(userId)
+    console.log(`[GET /api/birth-profiles] found=${profiles.length}`)
+    return NextResponse.json({ profiles })
   } catch (err) {
     console.error('[GET /api/birth-profiles]', err)
     return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 })
