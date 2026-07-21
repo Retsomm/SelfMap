@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['react-hot-toast', '@clerk/nextjs', 'lucide-react', 'framer-motion'],
   },
+  // lib/swissEphServer.ts 用 process.cwd() 動態拼出路徑 readFileSync，
+  // 不是靜態 import/require，Vercel 的 @vercel/nft 追蹤不到，
+  // 部署後讀不到檔案（ENOENT .../node_modules/@swisseph/browser/dist/swisseph.js）。
+  // 明確列出這兩個目錄，確保打包進 serverless function。
+  outputFileTracingIncludes: {
+    '/api/**': ['node_modules/@swisseph/browser/dist/**/*', 'public/ephe/**/*'],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'img.clerk.com' },
