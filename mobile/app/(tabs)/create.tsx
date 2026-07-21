@@ -123,6 +123,13 @@ function CreatePersonalView() {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80)
   }
 
+  // 只清掉「套用時自動帶入」的名稱；如果使用者已經手動改成別的名字，視為自訂名稱予以保留，
+  // 避免下次套用另一筆出生資料時，殘留的舊名稱被誤帶進新的圖表
+  function clearAppliedProfile() {
+    setName(n => (appliedProfile && n === appliedProfile.label) ? '' : n)
+    setAppliedProfile(null)
+  }
+
   function handleCityFocus() {
     if (Platform.OS === 'android') {
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350)
@@ -159,7 +166,7 @@ function CreatePersonalView() {
       </Section>
 
       {appliedProfile ? (
-        <AppliedProfileCard profile={appliedProfile} onClear={() => setAppliedProfile(null)} />
+        <AppliedProfileCard profile={appliedProfile} onClear={clearAppliedProfile} />
       ) : (
         <>
           <Section label="出生日期">

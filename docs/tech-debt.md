@@ -31,25 +31,20 @@
 ## Mobile（Expo/React Native, `mobile/`）
 
 ### High
-- [ ] **`Pressable` 包住 `ScrollView`，重犯已知手勢問題** — `mobile/components/BirthProfilePickerModal.tsx:16` 的 `Pressable` 直接包住 `ScrollView`，是先前在 `DetailBottomSheet.tsx` 已經修正過的「touchable 搶走 iOS 捲動手勢」同一類問題，這裡沒套用已知修法（背景 Pressable 與卡片要是手足關係，不是父子，見全域 CLAUDE.md 的 2026-07-13 追記）。
-  → 修法：比照 `DetailBottomSheet.tsx:59-60` 的手足結構重寫。
-- [ ] **未追蹤的大型二進位檔案** — `mobile/bugreport-sdk_gphone16k_arm64-*.zip`（5.3MB）不在 `mobile/.gitignore` 規則內，一次 `git add -A` 就會被永久提交進歷史。
-  → 修法：加進 `.gitignore` 或直接刪除本機檔案。
+- [x] **`Pressable` 包住 `ScrollView`，重犯已知手勢問題**（2026-07-21，待實機驗證）— `mobile/components/BirthProfilePickerModal.tsx` 改成 `DetailBottomSheet.tsx` 的手足結構：`backdrop`（`flex:1` 的 `Pressable`，無子元素）與 `sheet`（純 `View`，內含 `ScrollView`）在 `Modal` 底下是同層手足，靠 column flex 排版天然不重疊，不再有任何 Pressable 包住 ScrollView。`tsc --noEmit` 確認沒有新增型別錯誤（`app/_layout.tsx` 既有的一個錯誤跟這次改動無關，在 stash 前就存在）。**這是 iOS 手勢層級的修正，這個環境無法啟動 app 實機測試，請在裝置上確認清單真的能捲動、點卡片空白處不會誤觸關閉背景。**
+- [x] **未追蹤的大型二進位檔案**（2026-07-21）— 在 `mobile/.gitignore` 加入 `bugreport-*.zip` 規則，避免以後 `git add -A` 誤把此類 adb bugreport 檔案提交進歷史。**本機殘留的 `mobile/bugreport-sdk_gphone16k_arm64-*.zip` 沒有直接刪除**（不確定是否還在用來排查問題），需要的話請自行刪除或告知我刪。
 - [ ] **無測試/lint 設定** — `mobile/package.json` 完全沒有測試或 lint 腳本。
 
 ### Medium
 - [ ] **顯示邏輯與 web 端重複實作** — `mobile/lib/hd-type-meta.ts` 重複了 web 端 `lib/humanDesign/constants.ts` 已有的中文標籤資料；mobile 端 `hd-*.ts` 系列（`hd-cross-data.ts`、`hd-chart-data.ts`、`hd-summary-data.ts`、`hd-sheet-builders.ts`，共約 2150 行）整體都在重新實作 web 已有的顯示邏輯，而非共用一份。
   → 修法：評估抽成 shared package 或至少共用資料來源，避免兩邊各自維護、容易分歧（尤其命理正確性要求高）。
-- [ ] **舊格式判斷邏輯散落 4 處** — `mobile/app/chart/[id].tsx` 中 pipe 分隔的 legacy composite 格式偵測（`birthDate?.includes('|')`）在約 93、150、202、241 行各自出現一次，沒有抽成 helper。
-  → 修法：抽成單一函式集中判斷。
-- [ ] **API 層缺重試機制、timeout 一體適用** — `mobile/lib/api.ts:74` 的共用 `request()` 沒有重試邏輯，且所有 endpoint（含較慢的星曆計算 endpoint）共用固定 10 秒 timeout。
-  → 修法：依 endpoint 類型調整 timeout，考慮加輕量重試（例如網路暫時性錯誤）。
-- [ ] **`mobile/app/chart/[id].tsx` 是 723 行的巨型元件** — 混雜 fetch、legacy 格式遷移、三種圖表（個人/合圖/流日）渲染邏輯，第 203 行註解承認過去曾誤判圖表類型的 bug。
-  → 修法：拆成 fetch hook + 各圖表類型的獨立元件。
+  **2026-07-21 保留原狀**：這項需要跨 web/mobile 合併兩份獨立維護、內容約 2150+ 行的人類圖顯示資料，牽涉命理正確性，風險與工作量都遠高於這批其餘的機械式重構，這次沒有動它，需要另外排時間評估怎麼切、怎麼驗證兩邊資料一致。
+- [x] **舊格式判斷邏輯散落多處**（2026-07-21）— 在 `mobile/lib/api.ts` 加入共用 helper `isLegacyPipeComposite()` / `isCompositeChart()`，取代 `mobile/app/chart/[id].tsx`（4 處）與 `mobile/components/ChartListView.tsx`（1 處）裡各自重複的 `birthDate?.includes('|')` / `type === '合圖'` 判斷。
+- [x] **API 層缺重試機制、timeout 一體適用**（2026-07-21）— `mobile/lib/api.ts` 的 `request()` 加上 `timeoutMs`／`retries` 選項：星曆計算類 endpoint（個人圖／合圖／流日的算圖與 preview）timeout 從 10 秒延長為 20 秒；只對讀取／preview／idempotent 的 PATCH、DELETE 端點加上 1 次輕量重試（只重試逾時或網路層失敗，不重試已收到的 HTTP 錯誤回應），會建立新資料的 create 類 endpoint（`createChart`/`createCompositeChart`/`createTransitChart`/`createBirthProfile`/`importBirthProfiles`）跟帳號刪除刻意不加重試，避免逾時後重送造成重複建立或非預期的重試行為。
+- [x] **`mobile/app/chart/[id].tsx` 是 723 行的巨型元件**（2026-07-21）— 拆成三部分：`mobile/lib/useChartDetail.ts`（fetch/自動補算合圖流日的資料 hook）、`mobile/components/chart/PersonalChartDetails.tsx`（個人圖專屬的類型/設計/九大中心/通道/行星/激活閘門/輪迴交叉/四箭頭區塊）、原檔案降到 443 行，只保留 BodyGraph／出生資訊／流日／合圖區塊組裝與下載/複製按鈕。純搬移程式碼，`activations`/`definedCenterIds` 等命理計算邏輯本身沒有改動，`tsc --noEmit` 確認無新增型別錯誤。
 
 ### Low
-- [ ] **`ErrorBoundary` 只掛在 root layout** — `mobile/app/_layout.tsx:68`，任何畫面層級的 crash 會讓整個 app 白屏，而非只降級單一畫面。
-  → 修法：評估在關鍵畫面（如圖表詳情頁）各自包一層區域性 ErrorBoundary。
+- [x] **`ErrorBoundary` 只掛在 root layout**（2026-07-21）— 在 `mobile/app/chart/[id].tsx` 與 `mobile/app/chart/preview.tsx` 這兩個複雜度最高、資料流最容易因為邊界資料（舊格式合圖/流日、缺欄位）而在 render 階段丟例外的畫面，各自包一層區域性 `ErrorBoundary`（把原本的畫面本體改成內部的 `...Content` 元件，預設匯出的元件只負責包 `ErrorBoundary`），單一畫面 crash 不會再讓整個 app 白屏。其餘畫面（`profile.tsx`、`create.tsx` 等）風險較低，暫不處理。
 
 ---
 

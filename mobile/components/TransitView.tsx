@@ -80,7 +80,7 @@ export default function TransitView() {
   function applyProfile(p: BirthProfile) {
     const [year, month, day] = p.date.split('-').map(Number)
     const [hour, minute] = p.time.split(':').map(Number)
-    setForm(f => ({ ...f, date: { year, month, day }, time: { hour, minute }, city: p.location, timezone: p.timezone, name: f.name || p.label }))
+    setForm(f => ({ ...f, date: { year, month, day }, time: { hour, minute }, city: p.location, timezone: p.timezone, name: p.label }))
     setFieldError(null)
     setAppliedProfile(p)
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80)

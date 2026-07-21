@@ -11,7 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { type Chart, deleteChart, getCharts, renameChart } from '@/lib/api'
+import { type Chart, deleteChart, getCharts, renameChart, isCompositeChart } from '@/lib/api'
 import { SubTabBar } from '@/components/SubTabBar'
 import { InputModal } from '@/components/InputModal'
 import { LoadingView, ErrorView } from '@/components/StateViews'
@@ -31,9 +31,8 @@ const KIND_CFG: Record<string, { label: string; color: string; bg: string }> = {
 }
 
 function kindOf(c: Chart): string {
-  if (c.chartKind === 'composite' || c.chartKind === 'transit') return c.chartKind
-  // 舊格式合圖：網頁端存 type='合圖' 但沒有設 chartKind
-  if (c.type === '合圖' || c.birthDate?.includes('|')) return 'composite'
+  if (c.chartKind === 'transit') return 'transit'
+  if (isCompositeChart(c)) return 'composite'
   return c.chartKind ?? 'personal'
 }
 
@@ -88,7 +87,7 @@ function ChartFlatList({
   if (error) return <ErrorView message={error} onRetry={onRefresh} />
 
   const showMenu = (item: Chart) =>
-    Alert.alert(item.name ?? '未命名圖表', undefined, [
+    Alert.alert(item.name ?? '未命名圖表', '選擇要執行的操作', [
       { text: '重新命名', onPress: () => onRename(item) },
       { text: '刪除圖表', style: 'destructive', onPress: () => onDelete(item) },
       { text: '取消', style: 'cancel' },

@@ -33,10 +33,16 @@ export function InputModal({
       transparent
       animationType="fade"
       onRequestClose={onCancel}
+      onShow={() => setTimeout(() => inputRef?.current?.focus(), 100)}
     >
+      {/* Android 的 windowSoftInputMode 預設是 resize（Expo 56 文件註明），整個視窗（含這個
+          Modal 本身）在鍵盤跳出時已經由系統原生 resize 過一次；這裡如果還用 behavior="height"
+          再手動補一次高度補償，等於跟系統的 resize 互相打架，兩邊都在搶同一段高度變化的計算，
+          會造成畫面/輸入框反覆跳動。Android 交給系統原生 resize 處理就好，不需要 KeyboardAvoidingView
+          介入；iOS 沒有這種原生 resize 行為，仍要靠 padding 手動避開鍵盤。 */}
       <KeyboardAvoidingView
         style={styles.kavWrapper}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
       <Pressable style={styles.overlay} onPress={onCancel}>
         <Pressable style={styles.sheet} onPress={() => {}}>
@@ -48,7 +54,6 @@ export function InputModal({
             onChangeText={onChange}
             placeholder={placeholder}
             placeholderTextColor={Colors.muted}
-            autoFocus
             returnKeyType="done"
             onSubmitEditing={() => { if (!loading) onConfirm() }}
           />
