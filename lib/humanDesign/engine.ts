@@ -1,5 +1,5 @@
 import {
-  CHANNEL_DEFS, CENTER_INFO, AUTHORITY_INFO,
+  CHANNEL_DEFS, AUTHORITY_INFO,
   DIGESTION_MAP, ENVIRONMENT_MAP, PERSPECTIVE_MAP, MOTIVATION_MAP,
 } from './constants'
 import type {
@@ -8,28 +8,11 @@ import type {
   Authority,
   AuthorityInfo,
   ChannelDef,
-  Center,
-  Channel,
-  HumanDesignChart,
   GateAndLine,
   VariablesResult,
   PlanetRow,
   Activations,
 } from './types'
-
-const hashStr = (s: string): number => {
-  let h = 0
-  for (let i = 0; i < s.length; i++) {
-    h = Math.imul(31, h) + s.charCodeAt(i) | 0
-  }
-  return Math.abs(h)
-}
-
-const seededGate = (seed: number, offset: number): number =>
-  (Math.abs(hashStr(`${seed}-${offset}`)) % 64) + 1
-
-const seededLine = (seed: number, offset: number): number =>
-  (Math.abs(hashStr(`${seed}-line-${offset}`)) % 6) + 1
 
 const resolveGraph = (activeGates: Set<number>) => {
   const definedChannels = CHANNEL_DEFS.filter(
@@ -195,55 +178,6 @@ export const calculateAuthority = (definedCenters: Set<CenterName>, type?: Human
   if (definedCenters.has('ego'))         return AUTHORITY_INFO['Ego']
   if (definedCenters.has('g'))           return AUTHORITY_INFO['Self-Projected']
   return AUTHORITY_INFO['Mental']
-}
-
-export const generateChart = (
-  birthDate: string,
-  birthTime: string,
-  birthCity: string
-): HumanDesignChart => {
-  const seed = hashStr(`${birthDate}|${birthTime}|${birthCity}`)
-
-  const activeGates = new Set<number>()
-  const personalityGates: Array<{ gate: number; line: number }> = []
-  const designGates: Array<{ gate: number; line: number }> = []
-
-  for (let i = 0; i < 10; i++) {
-    const pg = seededGate(seed, i)
-    const pl = seededLine(seed, i)
-    personalityGates.push({ gate: pg, line: pl })
-    activeGates.add(pg)
-
-    const dg = seededGate(seed + 88888, i)
-    const dl = seededLine(seed + 88888, i)
-    designGates.push({ gate: dg, line: dl })
-    activeGates.add(dg)
-  }
-
-  const { definedChannels, definedCenterIds } = resolveGraph(activeGates)
-  const type       = deriveType(definedCenterIds, definedChannels)
-  const authority  = deriveAuthority(type, definedCenterIds)
-  const definition = deriveDefinition(definedCenterIds, definedChannels)
-
-  const personalitySunLine = personalityGates[0].line
-  const designSunLine = designGates[0].line
-  const profile = `${personalitySunLine}/${designSunLine}`
-
-  const centers: Center[] = (Object.keys(CENTER_INFO) as CenterName[]).map(id => ({
-    id,
-    ...CENTER_INFO[id],
-    defined: definedCenterIds.has(id),
-  }))
-
-  const channels: Channel[] = CHANNEL_DEFS.map(ch => ({
-    id: ch.id,
-    from: ch.centerA,
-    to: ch.centerB,
-    defined: definedChannels.some(d => d.id === ch.id),
-    gates: [ch.gateA, ch.gateB],
-  }))
-
-  return { type, authority, profile, definition, centers, channels, gates: Array.from(activeGates) }
 }
 
 /**
