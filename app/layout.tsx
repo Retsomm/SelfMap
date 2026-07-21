@@ -96,6 +96,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
+  other: {
+    google: 'notranslate',
+  },
 }
 
 export default async function RootLayout({

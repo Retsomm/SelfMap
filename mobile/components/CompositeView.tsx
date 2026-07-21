@@ -103,31 +103,42 @@ export default function CompositeView() {
   }
 
   const calculate = async () => {
-    const matchedA = matchCity(formA.city)
-    const matchedB = matchCity(formB.city)
-    let valid = true
-    if (!matchedA) { setErrorA('找不到這個地點，請確認拼字或改用資料庫中的地名'); setFormA(f => ({ ...f, timezone: '' })); valid = false }
-    if (!matchedB) { setErrorB('找不到這個地點，請確認拼字或改用資料庫中的地名'); setFormB(f => ({ ...f, timezone: '' })); valid = false }
-    if (!valid || !matchedA || !matchedB) return
+    // 已套用儲存的出生資料時，formA/formB 的 city/timezone 已經是可信值（來自後端存檔），
+    // 不能再拿去比對 mobile 本地的城市清單——存檔當初可能是用網頁端的地點選擇器，
+    // 格式跟 mobile 這份清單對不上，會導致 matchCity 找不到、誤判成「地點錯誤」
+    let finalCityA = formA.city, finalTimezoneA = formA.timezone
+    if (!appliedA) {
+      const matchedA = matchCity(formA.city)
+      if (!matchedA) { setErrorA('找不到這個地點，請確認拼字或改用資料庫中的地名'); setFormA(f => ({ ...f, timezone: '' })); return }
+      setFormA(f => ({ ...f, city: matchedA.name, timezone: matchedA.timezone }))
+      finalCityA = matchedA.name
+      finalTimezoneA = matchedA.timezone
+    }
+    let finalCityB = formB.city, finalTimezoneB = formB.timezone
+    if (!appliedB) {
+      const matchedB = matchCity(formB.city)
+      if (!matchedB) { setErrorB('找不到這個地點，請確認拼字或改用資料庫中的地名'); setFormB(f => ({ ...f, timezone: '' })); return }
+      setFormB(f => ({ ...f, city: matchedB.name, timezone: matchedB.timezone }))
+      finalCityB = matchedB.name
+      finalTimezoneB = matchedB.timezone
+    }
     setErrorA(null)
     setErrorB(null)
-    setFormA(f => ({ ...f, city: matchedA.name, timezone: matchedA.timezone }))
-    setFormB(f => ({ ...f, city: matchedB.name, timezone: matchedB.timezone }))
 
     const payload: CreateCompositePayload = {
       personA: {
         name:      formA.name || undefined,
         birthDate: formToBirthDate(formA),
         birthTime: formToBirthTime(formA),
-        birthCity: matchedA.name,
-        timezone:  matchedA.timezone,
+        birthCity: finalCityA,
+        timezone:  finalTimezoneA,
       },
       personB: {
         name:      formB.name || undefined,
         birthDate: formToBirthDate(formB),
         birthTime: formToBirthTime(formB),
-        birthCity: matchedB.name,
-        timezone:  matchedB.timezone,
+        birthCity: finalCityB,
+        timezone:  finalTimezoneB,
       },
     }
 

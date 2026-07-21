@@ -87,18 +87,27 @@ export default function TransitView() {
   }
 
   const handleSubmit = async () => {
-    const matched = matchCity(form.city)
-    if (!matched) {
-      setFieldError('找不到這個地點，請確認拼字或改用資料庫中的地名')
-      setForm(f => ({ ...f, timezone: '' }))
-      return
+    // 已套用儲存的出生資料時，form.city/timezone 已經是可信值（來自後端存檔），
+    // 不能再拿去比對 mobile 本地的城市清單——存檔當初可能是用網頁端的地點選擇器，
+    // 格式跟 mobile 這份清單對不上，會導致 matchCity 找不到、誤判成「地點錯誤」
+    let finalCity = form.city
+    let finalTimezone = form.timezone
+    if (!appliedProfile) {
+      const matched = matchCity(form.city)
+      if (!matched) {
+        setFieldError('找不到這個地點，請確認拼字或改用資料庫中的地名')
+        setForm(f => ({ ...f, timezone: '' }))
+        return
+      }
+      setForm(f => ({ ...f, city: matched.name, timezone: matched.timezone }))
+      finalCity = matched.name
+      finalTimezone = matched.timezone
     }
-    setForm(f => ({ ...f, city: matched.name, timezone: matched.timezone }))
     const payload = {
       birthDate: formToBirthDate(form),
       birthTime: formToBirthTime(form),
-      birthCity: matched.name,
-      timezone:  matched.timezone,
+      birthCity: finalCity,
+      timezone:  finalTimezone,
       name:      form.name || undefined,
     }
     setFieldError(null)
