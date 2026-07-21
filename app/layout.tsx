@@ -6,6 +6,7 @@ import { zhTW } from '@clerk/localizations'
 import { Toaster } from 'react-hot-toast'
 import { clerkAppearance } from '@/lib/clerkAppearance'
 import Navbar from '@/components/Navbar'
+import QueryProvider from '@/components/QueryProvider'
 import './globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -107,9 +108,11 @@ export default async function RootLayout({
       <body className="min-h-full" suppressHydrationWarning>
         <Script defer src="https://cloud.umami.is/script.js" data-website-id="757127df-87af-47d5-a73b-9feb455d6867" />
         <ClerkProvider appearance={clerkAppearance} localization={zhTW}>
-          <Navbar />
-          {children}
-          <Toaster position="bottom-center" toastOptions={{ duration: 3500 }} />
+          <QueryProvider>
+            <Navbar />
+            {children}
+            <Toaster position="bottom-center" toastOptions={{ duration: 3500 }} />
+          </QueryProvider>
         </ClerkProvider>
       </body>
     </html>

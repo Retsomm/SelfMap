@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { resolveDbUser } from '@/lib/dbUser'
 import { initSwissEphServer } from '@/lib/swissEphServer'
 import { calculatePlanetGates, calculateCentersAndChannels } from '@/lib/humanDesign'
 import type { Activations, CenterName } from '@/lib/humanDesign/types'
@@ -22,7 +23,7 @@ export interface AuraFlowPayload {
 
 /** Resolves chart ownership, runs Swiss Ephemeris, and returns merged gate data. */
 export async function computeAuraFlow(userId: string, chartId: string): Promise<AuraFlowPayload> {
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+  const user = await resolveDbUser(userId)
   if (!user) throw new AuraFlowError('User not found', 404)
 
   const chart = await prisma.chart.findFirst({ where: { id: chartId, userId: user.id } })

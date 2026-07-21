@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { resolveDbUser } from '@/lib/dbUser'
 
 // PATCH /api/birth-profiles/[id] — 更新出生資料
 export async function PATCH(
@@ -30,7 +31,7 @@ export async function PATCH(
       }
     }
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    const user = await resolveDbUser(userId)
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     const updated = await prisma.birthProfile.updateMany({
@@ -46,7 +47,8 @@ export async function PATCH(
     })
     if (updated.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    return NextResponse.json({ ok: true })
+    const profile = await prisma.birthProfile.findUnique({ where: { id } })
+    return NextResponse.json({ profile })
   } catch (err) {
     console.error('[PATCH /api/birth-profiles/[id]]', err)
     return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 })
@@ -63,7 +65,7 @@ export async function DELETE(
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { id } = await params
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    const user = await resolveDbUser(userId)
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     await prisma.birthProfile.deleteMany({ where: { id, userId: user.id } })

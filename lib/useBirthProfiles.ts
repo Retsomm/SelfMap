@@ -1,7 +1,8 @@
 'use client'
 
 import { useUser } from '@clerk/nextjs'
-import { useCallback, useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 
 export type BirthProfile = {
   id: string
@@ -35,6 +36,12 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
+const toBirthProfile = (p: DbProfile): BirthProfile => ({
+  id: p.id, label: p.label, date: p.date, time: p.time, timezone: p.timezone, location: p.location,
+})
+
+const birthProfilesKey = (userId: string | undefined) => ['birthProfiles', userId] as const
+
 // Module-level guard: only for one-time Clerk → DB migration, not for fetching
 const migratedUserIds = new Set<string>()
 // Module-level guard: prevents concurrent migration runs for the same user
@@ -42,44 +49,17 @@ const migratingUserIds = new Set<string>()
 
 export const useBirthProfiles = () => {
   const { isSignedIn, user } = useUser()
-  const [profiles, setProfiles] = useState<BirthProfile[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+  const queryClient = useQueryClient()
+  const queryKey = birthProfilesKey(user?.id)
 
-  // ── 登出時清除狀態 ──────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!isSignedIn) {
-      setProfiles([])
-    }
-  }, [isSignedIn])
+  // ── 從 DB 讀取（伺服器狀態交給 React Query 管快取/重試/重新整理）───────
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey,
+    queryFn: () => apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles'),
+    enabled: !!isSignedIn,
+  })
 
-  // ── 從 DB 讀取 ──────────────────────────────────────────────────────────
-  const refresh = useCallback(async () => {
-    if (!isSignedIn) return
-    setLoading(true)
-    try {
-      const data = await apiFetch<{ profiles: DbProfile[] }>('/api/birth-profiles')
-      setProfiles(data.profiles.map(p => ({
-        id: p.id,
-        label: p.label,
-        date: p.date,
-        time: p.time,
-        timezone: p.timezone,
-        location: p.location,
-      })))
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)))
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [isSignedIn])
-
-  // ── 每次掛載時從 DB 讀取（確保 tab 切換後仍能取得最新資料）──────────────
-  useEffect(() => {
-    refresh().catch(() => { /* error 已存入 state，UI 可自行判斷 */ })
-  }, [refresh])
+  const profiles = (data?.profiles ?? []).map(toBirthProfile)
 
   // ── 一次性遷移：若 DB 空且 Clerk metadata 有舊資料 → 自動遷移 ──────────
   useEffect(() => {
@@ -107,39 +87,60 @@ export const useBirthProfiles = () => {
       })
       console.log('[useBirthProfiles] migration done')
       migratedUserIds.add(userId)
-      await refresh()
+      await queryClient.invalidateQueries({ queryKey: birthProfilesKey(userId) })
     }
 
     migrate()
       .catch(err => console.error('[useBirthProfiles] migration error:', err))
       .finally(() => migratingUserIds.delete(userId))
-  }, [isSignedIn, user, refresh])
+  }, [isSignedIn, user, queryClient])
 
-  // ── CRUD ────────────────────────────────────────────────────────────────
-  const saveProfile = useCallback(async (profile: BirthProfile) => {
-    const exists = profiles.some(p => p.id === profile.id)
-    if (exists) {
-      await apiFetch(`/api/birth-profiles/${profile.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(profile),
-      })
-      setProfiles(prev => prev.map(p => p.id === profile.id ? profile : p))
-    } else {
+  // ── CRUD：mutate 完直接寫回 query cache，維持原本「立即反映在畫面」的體驗 ──
+  const saveMutation = useMutation<DbProfile, Error, BirthProfile>({
+    mutationFn: async (profile: BirthProfile) => {
+      const exists = profiles.some(p => p.id === profile.id)
+      if (exists) {
+        const data = await apiFetch<{ profile: DbProfile }>(`/api/birth-profiles/${profile.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(profile),
+        })
+        return data.profile
+      }
       const data = await apiFetch<{ profile: DbProfile }>('/api/birth-profiles', {
         method: 'POST',
         body: JSON.stringify({ ...profile, sortOrder: profiles.length }),
       })
-      setProfiles(prev => [...prev, {
-        id: data.profile.id, label: data.profile.label, date: data.profile.date,
-        time: data.profile.time, timezone: data.profile.timezone, location: data.profile.location,
-      }])
-    }
-  }, [profiles])
+      return data.profile
+    },
+    onSuccess: (savedDbProfile) => {
+      queryClient.setQueryData<{ profiles: DbProfile[] }>(queryKey, old => {
+        if (!old) return old
+        const exists = old.profiles.some(p => p.id === savedDbProfile.id)
+        return {
+          profiles: exists
+            ? old.profiles.map(p => p.id === savedDbProfile.id ? { ...p, ...savedDbProfile } : p)
+            : [...old.profiles, savedDbProfile],
+        }
+      })
+    },
+  })
 
-  const deleteProfile = useCallback(async (id: string) => {
-    await apiFetch(`/api/birth-profiles/${id}`, { method: 'DELETE' })
-    setProfiles(prev => prev.filter(p => p.id !== id))
-  }, [])
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiFetch(`/api/birth-profiles/${id}`, { method: 'DELETE' }),
+    onSuccess: (_result, id) => {
+      queryClient.setQueryData<{ profiles: DbProfile[] }>(queryKey, old =>
+        old ? { profiles: old.profiles.filter(p => p.id !== id) } : old
+      )
+    },
+  })
 
-  return { profiles, loading, error, saveProfile, deleteProfile, refresh, isSignedIn: !!isSignedIn }
+  return {
+    profiles,
+    loading: isLoading,
+    error: error as Error | null,
+    saveProfile: saveMutation.mutateAsync,
+    deleteProfile: deleteMutation.mutateAsync,
+    refresh: refetch,
+    isSignedIn: !!isSignedIn,
+  }
 }
