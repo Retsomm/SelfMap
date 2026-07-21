@@ -1,7 +1,28 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e '.*')"
+      "Bash(npx --no-install playwright --version)",
+      "Bash(node -e \"require('puppeteer')\")",
+      "Bash(sips -g pixelWidth -g pixelHeight feature-graphic.png)",
+      "Bash(mkdir -p /Users/yutingchan/Projects/SelfMap-main/mobile/assets/store)",
+      "Bash(cp /private/tmp/claude-501/-Users-yutingchan-Projects-SelfMap-main/75d00dbb-147f-4d45-ba27-1841ee5eee0f/scratchpad/feature-graphic.png /Users/yutingchan/Projects/SelfMap-main/mobile/assets/store/feature-graphic.png)",
+      "Bash(mkdir -p /Users/yutingchan/Projects/SelfMap-main/app/private)",
+      "Bash(git -C /Users/yutingchan/Projects/SelfMap-main log --oneline -5 -- app/api/account)",
+      "Bash(git -C /Users/yutingchan/Projects/SelfMap-main status)",
+      "Bash(git -C /Users/yutingchan/Projects/SelfMap-main log -p --follow -L 374,379:app/account/page.tsx -- app/account/page.tsx)",
+      "Bash(git -C /Users/yutingchan/Projects/SelfMap-main show b2c7541~1:app/account/page.tsx)",
+      "Bash(git -C /Users/yutingchan/Projects/SelfMap-main diff app/account/page.tsx)",
+      "Bash(git -C /Users/yutingchan/Projects/SelfMap-main add app/account/page.tsx)",
+      "Bash(git -C /Users/yutingchan/Projects/SelfMap-main push --dry-run origin dev)",
+      "Bash(sips -z 512 512 assets/icon.png --out assets/store/icon-512.png)",
+      "Read(/tmp/claude-*/**)",
+      "Bash(xargs -I{} rm \"{}\")",
+      "Bash(npx tsc *)",
+      "Bash(git -C /Users/yutingchan/Projects/SelfMap-main check-ignore -v .next/dev/types/validator.ts)"
+    ],
+    "additionalDirectories": [
+      "/Users/yutingchan/Projects/SelfMap-main/app",
+      "/Users/yutingchan/Projects/SelfMap-main/mobile/assets/store"
     ]
   }
 }

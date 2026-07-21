@@ -273,16 +273,6 @@ body {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-.hd-fixing-mark {
-  display: inline-block;
-  font-size: 0.55em;
-  line-height: 1;
-  margin-left: 2px;
-  vertical-align: super;
-}
-.hd-fixing-mark--exaltation { color: var(--ink); }
-.hd-fixing-mark--detriment  { color: var(--crimson); }
-
 .hd-chart-frame {
   position: relative;
   width: 100%;

@@ -47,7 +47,7 @@ export type Chart = {
       compromise: ConnectionDynamic[]
       dominance: ConnectionDynamic[]
     }
-    // 流日
+    // 流日（mobile 端 /api/transit/create 存檔格式，頂層 birthDate/birthCity 就是本人真實出生資料）
     transitSnapshot?: {
       computedAt: string
       planets: Array<{ planetName: string; gate: number; line: number }>
@@ -56,6 +56,16 @@ export type Chart = {
       definedChannels: Array<{ id: string }>
       combinedDefinedCenterIds: string[]
       combinedDefinedChannelIds: string[]
+    }
+    // 流日（web 端 saveChart.ts 存檔格式，頂層 birthDate/birthCity 存的是流日計算時刻的
+    // 佔位資料（例如 birthCity 固定是字串 "流日"），真正的本人出生資料在這裡）
+    transitMeta?: {
+      personalBirthDate: string
+      personalBirthTime: string
+      personalBirthCity: string
+      personalTimezone: string
+      transitComputedAt: string
+      transitPlanets: Array<{ planetName: string; gate: number; line: number; full?: string }>
     }
   } | null
   createdAt: string

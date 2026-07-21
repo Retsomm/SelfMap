@@ -1,6 +1,5 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 import { type Chart, type CreateCompositeResult } from '@/lib/api'
-import { findChannelById } from '@/lib/hd-normalizers'
 import { getTypeLabel } from '@/lib/hd-type-meta'
 import { Colors, Spacing } from '@/constants/tokens'
 
@@ -201,26 +200,6 @@ export default function CompositeInfo({
             })}
           </View>
 
-          {/* 合圖定義通道 */}
-          {chart.channels.length > 0 && (
-            <View style={c.section}>
-              <Text style={c.sectionLabel}>合圖定義通道（{chart.channels.length}）</Text>
-              <View style={c.card}>
-                <View style={c.chipRow}>
-                  {chart.channels.map(rawCh => {
-                    const ch = findChannelById(rawCh)
-                    const id = ch ? `${ch.from}-${ch.to}` : rawCh.replace(/^c/, '')
-                    return (
-                      <View key={rawCh} style={c.chip}>
-                        <Text style={c.chipId}>{id}</Text>
-                      </View>
-                    )
-                  })}
-                </View>
-              </View>
-            </View>
-          )}
-
           {/* 人生角色共鳴 */}
           <View style={c.section}>
             <Text style={c.sectionLabel}>人生角色共鳴</Text>
@@ -298,10 +277,6 @@ const c = StyleSheet.create({
   connGateCol:     { flex: 1 },
   connPersonLabel: { fontSize: 11, fontWeight: '600', color: C.sub, marginBottom: 1 },
   connGates:       { fontSize: 13, color: C.text },
-
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, padding: 12 },
-  chip:    { borderWidth: 1, borderColor: C.border, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4 },
-  chipId:  { fontSize: 12, color: C.accent, fontWeight: '600' },
 
   profileRow:    { flexDirection: 'row', gap: 12, padding: 12, borderBottomWidth: 1, borderBottomColor: C.border },
   profileLabel:  { fontSize: 14, fontWeight: '600', color: C.text },
