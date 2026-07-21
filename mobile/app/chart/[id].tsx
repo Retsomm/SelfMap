@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { Circle, Defs, Pattern, Rect, Svg } from 'react-native-svg'
 import { type Chart, type StoredPlanet, type CreateCompositeResult, type CreateTransitResult, getChart, previewCompositeChart, previewTransitChart } from '@/lib/api'
 import { HD_CENTERS_INFO, ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@/lib/hd-chart-data'
 import { normalizeCenterId, normalizeChannelId, findChannelById } from '@/lib/hd-normalizers'
@@ -46,6 +47,21 @@ function toTransitSnapshot(r: CreateTransitResult): TransitSnapshot {
     combinedDefinedCenterIds: r.combined.definedCenterIds,
     combinedDefinedChannelIds: r.combined.definedChannelIds,
   }
+}
+
+/** 圖例用的黑紅相間條紋色點，對應 BodyGraph「個人+流日共有」的條紋填色 */
+function StripeLegendDot() {
+  return (
+    <Svg width={10} height={10}>
+      <Defs>
+        <Pattern id="legend-rb-stripes" patternUnits="userSpaceOnUse" width={4} height={4} patternTransform="rotate(45)">
+          <Rect x={0} y={0} width={2} height={4} fill={ACT_CONSCIOUS} />
+          <Rect x={2} y={0} width={2} height={4} fill={ACT_UNCONSCIOUS} />
+        </Pattern>
+      </Defs>
+      <Circle cx={5} cy={5} r={5} fill="url(#legend-rb-stripes)" />
+    </Svg>
+  )
 }
 
 function ActionButton({
@@ -153,35 +169,56 @@ export default function ChartDetailScreen() {
 
     const payload = buildCompositePayload(chart)
     if (!payload) return
-    setCompositeFetchLoading(true)
-    getToken().then(token => {
-      if (!token) { setCompositeFetchLoading(false); return }
-      const p = payload
-      if (!p) { setCompositeFetchLoading(false); return }
-      return previewCompositeChart(p)
-        .then(r => setCompositeFetched(r))
-        .catch(e => { console.warn('[CompositeInfo] previewCompositeChart failed:', e) })
-        .finally(() => setCompositeFetchLoading(false))
-    }).catch(e => { console.warn('[CompositeInfo] getToken failed:', e); setCompositeFetchLoading(false) })
+
+    async function run() {
+      setCompositeFetchLoading(true)
+      try {
+        const token = await getToken()
+        if (!token) return
+        if (!payload) return
+        const r = await previewCompositeChart(payload)
+        setCompositeFetched(r)
+      } catch (e) {
+        console.warn('[CompositeInfo] previewCompositeChart failed:', e)
+      } finally {
+        setCompositeFetchLoading(false)
+      }
+    }
+    run()
   }, [chart])
 
   // 自動補算缺少 meta.transitSnapshot 的流日圖（舊格式或存檔失敗殘留）。
-  // 頂層 birthDate/birthTime/birthCity/timezone 存的是使用者本命出生資料（非流日計算時刻），
+  //
+  // 兩種來源存檔格式並不相容，本人真實出生資料的位置不一樣：
+  // - mobile 存的（meta.transitSnapshot 存在）：頂層 birthDate/birthTime/birthCity/timezone
+  //   本身就是本人出生資料，不需要這個補算。
+  // - web 存的（meta.transitMeta 存在）：頂層欄位存的是流日計算時刻的佔位資料
+  //   （birthCity 甚至固定是字串 "流日"），本人出生資料在 meta.transitMeta.personalXxx。
   // 可直接餵給 previewTransitChart 重算，但流日行星會是「現在」而非當初存檔當下，僅為盡量還原。
   useEffect(() => {
     if (!chart) return
-    if (chart.chartKind !== 'transit' || chart.meta?.transitSnapshot || !chart.timezone) return
+    if (chart.chartKind !== 'transit' || chart.meta?.transitSnapshot) return
 
-    setTransitFetchLoading(true)
-    previewTransitChart({
-      birthDate: chart.birthDate,
-      birthTime: chart.birthTime,
-      birthCity: chart.birthCity,
-      timezone: chart.timezone,
-    })
-      .then(r => setTransitFetched(toTransitSnapshot(r)))
-      .catch(e => console.warn('[TransitAnalysis] previewTransitChart failed:', e))
-      .finally(() => setTransitFetchLoading(false))
+    const webMeta = chart.meta?.transitMeta
+    const birthDate = webMeta?.personalBirthDate ?? chart.birthDate
+    const birthTime = webMeta?.personalBirthTime ?? chart.birthTime
+    const birthCity = webMeta?.personalBirthCity ?? chart.birthCity
+    const timezone  = webMeta?.personalTimezone ?? chart.timezone
+    if (!timezone) return
+
+    async function run() {
+      setTransitFetchLoading(true)
+      try {
+        if (!timezone) return
+        const r = await previewTransitChart({ birthDate, birthTime, birthCity, timezone })
+        setTransitFetched(toTransitSnapshot(r))
+      } catch (e) {
+        console.warn('[TransitAnalysis] previewTransitChart failed:', e)
+      } finally {
+        setTransitFetchLoading(false)
+      }
+    }
+    run()
   }, [chart])
 
   if (loading) return <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}><NavBackHeader title="圖表詳情" /><LoadingView /></SafeAreaView>
@@ -196,6 +233,18 @@ export default function ChartDetailScreen() {
   // 修正：舊格式流日圖缺少 meta.transitSnapshot 時，不能只靠 transitSnapshot 存在與否
   // 判斷是不是個人圖，否則會誤顯示成個人圖版面（chartKind 才是可靠依據）
   const isPersonal      = !isTransit && !isComposite
+
+  // 「出生資訊」要顯示的本人真實出生資料：
+  // web 存的流日圖（meta.transitMeta 存在）頂層欄位是流日計算時刻的佔位資料，
+  // 要改讀 meta.transitMeta.personalXxx；其餘情況（個人圖、mobile 存的流日圖）
+  // 頂層欄位本來就是本人出生資料
+  const webTransitMeta = isTransit ? chart.meta?.transitMeta : undefined
+  const birthInfo = {
+    date:     webTransitMeta?.personalBirthDate ?? chart.birthDate,
+    time:     webTransitMeta?.personalBirthTime ?? chart.birthTime,
+    city:     webTransitMeta?.personalBirthCity ?? chart.birthCity,
+    timezone: webTransitMeta?.personalTimezone  ?? chart.timezone,
+  }
 
   const definedCenterIds = transitSnapshot
     ? new Set(transitSnapshot.combinedDefinedCenterIds.map(normalizeCenterId))
@@ -240,7 +289,29 @@ export default function ChartDetailScreen() {
   })() : null
 
   const activations: Record<number, { c?: boolean; u?: boolean; t?: boolean }> = {}
-  if (isComposite && compositeConnections) {
+  if (isTransit) {
+    // 流日圖：跟網頁版一致的三色配色——個人(c/黑)、流日限定(u/紅)、
+    // 個人+流日共有的閘門兩個 flag 都設 true，BodyGraph 會畫成黑紅相間條紋
+    const personalGates = new Set<number>()
+    if (planets.length > 0) {
+      for (const p of planets) { personalGates.add(p.blackGate); personalGates.add(p.redGate) }
+    } else {
+      const personalityGates = chart.personalityGates ?? []
+      const designGates      = chart.designGates ?? []
+      if (personalityGates.length > 0 || designGates.length > 0) {
+        for (const g of personalityGates) personalGates.add(g)
+        for (const g of designGates)      personalGates.add(g)
+      } else {
+        for (const g of chart.gates) personalGates.add(g)
+      }
+    }
+    for (const g of personalGates) activations[g] = { c: true }
+    if (transitSnapshot) {
+      for (const g of transitSnapshot.allGates) {
+        activations[g] = personalGates.has(g) ? { ...activations[g], u: true } : { u: true }
+      }
+    }
+  } else if (isComposite && compositeConnections) {
     // 合圖：只標記參與通道的閘門，A=黑(c)，B=紅(u)
     for (const type of ['electromagnetic', 'companionship', 'compromise', 'dominance'] as const) {
       const conns = compositeConnections[type] ?? []
@@ -262,11 +333,6 @@ export default function ChartDetailScreen() {
       for (const g of designGates)      activations[g] = { ...activations[g], u: true }
     } else {
       for (const g of chart.gates) activations[g] = { c: true }
-    }
-  }
-  if (transitSnapshot) {
-    for (const g of transitSnapshot.allGates) {
-      if (!activations[g]) activations[g] = { t: true }
     }
   }
 
@@ -388,11 +454,11 @@ export default function ChartDetailScreen() {
             {transitSnapshot ? (
               <View style={styles.legend}>
                 <View style={[styles.legendDot, { backgroundColor: Colors.text }]} />
-                <Text style={styles.legendText}>個人意識</Text>
+                <Text style={styles.legendText}>個人</Text>
                 <View style={[styles.legendDot, { backgroundColor: Colors.designRed }]} />
-                <Text style={styles.legendText}>個人潛意識</Text>
-                <View style={[styles.legendDot, { backgroundColor: Colors.transit }]} />
                 <Text style={styles.legendText}>流日</Text>
+                <StripeLegendDot />
+                <Text style={styles.legendText}>共有</Text>
               </View>
             ) : isComposite ? (
               <View style={styles.legend}>
@@ -416,10 +482,10 @@ export default function ChartDetailScreen() {
         {/* 出生資訊（合圖不顯示） */}
         {!isComposite && (
           <SectionCard title="出生資訊">
-            <Row label="出生日期" value={chart.birthDate} />
-            <Row label="出生時間" value={chart.birthTime} />
-            <Row label="出生城市" value={chart.birthCity} />
-            {chart.timezone ? <Row label="時區" value={chart.timezone} /> : null}
+            <Row label="出生日期" value={birthInfo.date} />
+            <Row label="出生時間" value={birthInfo.time} />
+            <Row label="出生城市" value={birthInfo.city} />
+            {birthInfo.timezone ? <Row label="時區" value={birthInfo.timezone} /> : null}
           </SectionCard>
         )}
 
