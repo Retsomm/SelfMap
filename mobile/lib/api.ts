@@ -88,7 +88,7 @@ const RETRY_DELAY_MS = 600
 
 /** 只重試網路層失敗（連線中斷、逾時），不重試已收到的 HTTP 錯誤回應，避免對有副作用的請求重複送出 */
 function isTransientError(err: unknown): boolean {
-  if (err instanceof DOMException && err.name === 'AbortError') return true
+  if (err && typeof err === 'object' && (err as { name?: unknown }).name === 'AbortError') return true
   return err instanceof TypeError
 }
 

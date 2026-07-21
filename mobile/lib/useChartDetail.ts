@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   type Chart,
   type CreateCompositeResult,
@@ -54,6 +54,19 @@ function buildCompositePayload(chart: Chart): Parameters<typeof previewComposite
   return null
 }
 
+// 流日圖本人出生資料解析：mobile 存檔格式頂層欄位即是本人資料，
+// web 存檔格式頂層欄位是流日計算時刻的佔位資料，本人資料在 meta.transitMeta。
+// getTransitResult 與自動補算 effect 共用同一份 fallback 邏輯，避免兩處算出不同結果。
+function resolveTransitBirthInfo(chart: Chart) {
+  const webMeta = chart.meta?.transitMeta
+  return {
+    birthDate: webMeta?.personalBirthDate ?? chart.birthDate,
+    birthTime: webMeta?.personalBirthTime ?? chart.birthTime,
+    birthCity: webMeta?.personalBirthCity ?? chart.birthCity,
+    timezone: webMeta?.personalTimezone ?? chart.timezone,
+  }
+}
+
 /**
  * 圖表詳情頁的資料層：載入圖表、自動補算舊格式／缺欄位的合圖與流日資料。
  * 純資料邏輯，不含任何渲染，讓 chart/[id].tsx 專注在畫面呈現。
@@ -67,27 +80,40 @@ export function useChartDetail(id: string) {
   const [compositeFetchLoading, setCompositeFetchLoading] = useState(false)
   const [transitFetched, setTransitFetched]                = useState<TransitSnapshot | null>(null)
   const [transitFetchLoading, setTransitFetchLoading]      = useState(false)
+  const [transitResultFetched, setTransitResultFetched]     = useState<CreateTransitResult | null>(null)
+
+  // 目前有效的圖表 id，供非同步流程在 await 之後判斷自己是否已經過期
+  const currentIdRef = useRef(id)
+  currentIdRef.current = id
+  // unmount 之後任何非同步流程都不可以再 setState
+  const aliveRef = useRef(true)
+  useEffect(() => () => { aliveRef.current = false }, [])
 
   // 切換圖表時清除舊的合圖／流日補算結果，避免渲染過期資料
-  useEffect(() => { setCompositeFetched(null); setTransitFetched(null) }, [id])
+  useEffect(() => { setCompositeFetched(null); setTransitFetched(null); setTransitResultFetched(null) }, [id])
 
   const loadChart = async () => {
+    const requestedId = id
+    const stillCurrent = () => aliveRef.current && currentIdRef.current === requestedId
     setLoading(true)
     setError(null)
     try {
       const token = await getToken()
+      if (!stillCurrent()) return
       if (!token) { setError('未登入，請重新登入'); return }
-      const data = await getChart(token, id)
+      const data = await getChart(token, requestedId)
+      if (!stillCurrent()) return
       const c = data.chart
       if (!c.meta?.incarnationCross) console.warn('[ChartDetail] ⚠️ meta.incarnationCross 不存在，輪迴交叉無法顯示')
       if (!c.meta?.variables || !c.meta?.arrows) console.warn('[ChartDetail] ⚠️ meta.variables/arrows 不存在，四箭頭無法顯示')
       setChart(c)
     } catch (err) {
+      if (!stillCurrent()) return
       console.error(err)
       const msg = err instanceof Error ? err.message : String(err)
       setError(msg.includes('401') || msg.includes('Unauthorized') ? '認證失敗，請重新登入' : `載入失敗：${msg}`)
     } finally {
-      setLoading(false)
+      if (stillCurrent()) setLoading(false)
     }
   }
 
@@ -102,6 +128,9 @@ export function useChartDetail(id: string) {
     const payload = buildCompositePayload(chart)
     if (!payload) return
 
+    const requestedId = id
+    const stillCurrent = () => aliveRef.current && currentIdRef.current === requestedId
+
     async function run() {
       setCompositeFetchLoading(true)
       try {
@@ -109,11 +138,13 @@ export function useChartDetail(id: string) {
         if (!token) return
         if (!payload) return
         const r = await previewCompositeChart(payload)
+        if (!stillCurrent()) return
         setCompositeFetched(r)
       } catch (e) {
+        if (!stillCurrent()) return
         console.warn('[CompositeInfo] previewCompositeChart failed:', e)
       } finally {
-        setCompositeFetchLoading(false)
+        if (stillCurrent()) setCompositeFetchLoading(false)
       }
     }
     run()
@@ -131,23 +162,25 @@ export function useChartDetail(id: string) {
     if (!chart) return
     if (chart.chartKind !== 'transit' || chart.meta?.transitSnapshot) return
 
-    const webMeta = chart.meta?.transitMeta
-    const birthDate = webMeta?.personalBirthDate ?? chart.birthDate
-    const birthTime = webMeta?.personalBirthTime ?? chart.birthTime
-    const birthCity = webMeta?.personalBirthCity ?? chart.birthCity
-    const timezone  = webMeta?.personalTimezone  ?? chart.timezone
+    const { birthDate, birthTime, birthCity, timezone } = resolveTransitBirthInfo(chart)
     if (!timezone) return
+
+    const requestedId = id
+    const stillCurrent = () => aliveRef.current && currentIdRef.current === requestedId
 
     async function run() {
       setTransitFetchLoading(true)
       try {
         if (!timezone) return
         const r = await previewTransitChart({ birthDate, birthTime, birthCity, timezone })
+        if (!stillCurrent()) return
         setTransitFetched(toTransitSnapshot(r))
+        setTransitResultFetched(r)
       } catch (e) {
+        if (!stillCurrent()) return
         console.warn('[TransitAnalysis] previewTransitChart failed:', e)
       } finally {
-        setTransitFetchLoading(false)
+        if (stillCurrent()) setTransitFetchLoading(false)
       }
     }
     run()
@@ -163,14 +196,15 @@ export function useChartDetail(id: string) {
     return result
   }
 
-  async function getTransitResult() {
-    if (!chart || !chart.timezone) return null
-    return previewTransitChart({
-      birthDate: chart.birthDate,
-      birthTime: chart.birthTime,
-      birthCity: chart.birthCity,
-      timezone: chart.timezone,
-    })
+  async function getTransitResult(): Promise<CreateTransitResult | null> {
+    if (transitResultFetched) return transitResultFetched
+    if (!chart) return null
+    const { birthDate, birthTime, birthCity, timezone } = resolveTransitBirthInfo(chart)
+    if (!timezone) return null
+    const result = await previewTransitChart({ birthDate, birthTime, birthCity, timezone })
+    setTransitResultFetched(result)
+    setTransitFetched(toTransitSnapshot(result))
+    return result
   }
 
   return {
