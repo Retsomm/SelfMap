@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { fmtGate } from '@/utils/format'
 import { HD_GATES, HD_CENTERS_INFO, type ChartChannel } from './hd-chart-data'
 import type { SelectionPayload } from './BodyGraph'
 import { HD_TYPE_CONTENT, HD_PROFILE_CONTENT, HD_AUTHORITY_CONTENT, HD_DEFINITION_CONTENT } from './hd-summary-data'
-import { HD_CROSS_CONTENT } from './hd-cross-data'
+import type { GateCrossData } from './hd-cross-data'
 
 interface DetailDrawerProps {
   selection: SelectionPayload | null
@@ -15,6 +15,17 @@ interface DetailDrawerProps {
 
 export default function DetailDrawer({ selection, onClose, onJumpToGate }: DetailDrawerProps) {
   const open = !!selection
+  const [crossContent, setCrossContent] = useState<Record<number, GateCrossData> | null>(null)
+
+  useEffect(() => {
+    if (selection?.kind !== 'cross' || crossContent) return
+    let cancelled = false
+    import('./hd-cross-data').then(m => {
+      if (!cancelled) setCrossContent(m.HD_CROSS_CONTENT)
+    })
+    return () => { cancelled = true }
+  }, [selection, crossContent])
+
   const jumpToGate = (num: number) => {
     window.umami?.track('detail-drawer-gate-jump', { gate: num })
     onJumpToGate(num)
@@ -267,7 +278,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
         variant: number
         gatesLabel: string
       }
-      const gateContent = HD_CROSS_CONTENT[sunGate]
+      const gateContent = crossContent?.[sunGate]
       const crossTypeMap: Record<string, { label: string; key: 'RAC' | 'JC' | 'LAC' }> = {
         RAC: { label: '右角度交叉', key: 'RAC' },
         JC:  { label: '並列交叉',   key: 'JC'  },
@@ -278,7 +289,15 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
       title = `${ctInfo.label}之${crossBaseName}${variant}`
       sub = gatesLabel
 
-      if (gateContent) {
+      if (!crossContent) {
+        body = (
+          <>
+            <p className="lead">載入中…</p>
+            <h4>閘門組合</h4>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#6b5a44' }}>{gatesLabel}</p>
+          </>
+        )
+      } else if (gateContent) {
         const entry = gateContent[ctInfo.key]
         body = (
           <>

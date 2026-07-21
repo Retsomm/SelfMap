@@ -37,7 +37,6 @@
     "copy-webpack-plugin": "14.0.0",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
-    "fp-layers": "^0.3.0",
     "prisma": "5.22.0",
     "tailwindcss": "4.3.0",
     "typescript": "5.9.3"

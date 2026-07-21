@@ -2,7 +2,7 @@
 
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useCallback, startTransition, useRef, Suspense } from 'react'
+import { useEffect, useState, startTransition, useRef, Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
@@ -10,81 +10,18 @@ import ChartView from '@/components/humanDesign/ChartView'
 import BirthProfileManager from '@/components/humanDesign/BirthProfileManager'
 import { computeHdResult } from '@/lib/computeHdResult'
 import type { HdResult } from '@/lib/buildAiPrompt'
-import { computeTransit, type TransitResult, type TransitPlanetRow } from '@/lib/computeTransit'
-import { CHANNEL_DEFS, calculateCentersAndChannels, type CenterName } from '@/lib/humanDesign'
+import { computeTransit, type TransitResult } from '@/lib/computeTransit'
+import { CHANNEL_DEFS, calculateCentersAndChannels } from '@/lib/humanDesign'
 import { toUtcDate, getOffsetFromTimezone } from '@/utils/ephemeris'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmModal } from '@/components/ConfirmModal'
+import { useCharts, type PersonMeta, type ChartMeta, type SavedChart } from '@/lib/useCharts'
+import { useNotifications, type NotificationType } from '@/lib/useNotifications'
 
 const CompositeView = dynamic(() => import('@/components/humanDesign/CompositeView'), { ssr: false })
 const TransitView = dynamic(() => import('@/components/humanDesign/TransitView'), { ssr: false })
 
-interface PersonMeta {
-  name: string | null
-  birthDate: string
-  birthTime: string
-  birthCity: string
-  timezone: string
-  type: string
-  profile: string
-}
-
-interface TransitMeta {
-  personalBirthDate: string
-  personalBirthTime: string
-  personalBirthCity: string
-  personalTimezone: string
-  transitComputedAt: string
-  transitPlanets: TransitPlanetRow[]
-}
-
-interface ChartMeta {
-  personA?: PersonMeta
-  personB?: PersonMeta
-  transitMeta?: TransitMeta
-}
-
-interface LegacyPlanetRow {
-  name: string
-  blackGate: number
-  blackLine: number
-  redGate: number
-  redLine: number
-}
-
-interface SavedChart {
-  id: string
-  name: string | null
-  birthDate: string
-  birthTime: string
-  birthCity: string
-  timezone: string | null
-  type: string
-  authority: string
-  profile: string
-  definition: string
-  createdAt: string
-  chartKind: string | null
-  meta: ChartMeta | null
-  centers: CenterName[]
-  channels: string[]
-  gates: number[]
-  personalityGates?: number[] | null
-  designGates?: number[] | null
-  planets?: LegacyPlanetRow[] | null
-}
-
 type SidebarSection = 'profile' | 'humandesign' | 'notifications'
-
-type NotificationType = 'feature' | 'bugfix' | 'announcement'
-
-interface AppNotification {
-  id: string
-  title: string
-  body: string
-  type: NotificationType
-  publishedAt: string
-}
 
 const NOTIFICATION_TYPE_CFG: Record<NotificationType, { label: string; color: string }> = {
   feature:      { label: '新功能',  color: 'var(--olive)' },
@@ -129,9 +66,6 @@ function AccountContent() {
     rawSection && ['profile', 'humandesign', 'notifications'].includes(rawSection) ? rawSection : 'profile'
 
   const [activeChartId, setActiveChartId] = useState<string | null>(null)
-  const [charts, setCharts] = useState<SavedChart[]>([])
-  const [chartsLoading, setChartsLoading] = useState(false)
-  const [chartsFetched, setChartsFetched] = useState(false)
   const [chartTab, setChartTab] = useState<ChartTab>(() => {
     const t = searchParams.get('tab')
     return t === 'composite' || t === 'transit' || t === 'personal' ? t : 'personal'
@@ -146,67 +80,40 @@ function AccountContent() {
     if (isLoaded && !isSignedIn) router.replace('/')
   }, [isLoaded, isSignedIn, router])
 
-  const fetchCharts = useCallback(async () => {
-    setChartsLoading(true)
-    try {
-      const res = await fetch('/api/charts')
-      if (!res.ok) {
-        toast.error('圖表載入失敗')
-        return
-      }
-      const json = await res.json()
-      const list: SavedChart[] = json.charts ?? []
-      setCharts(list)
+  const {
+    charts, loading: chartsLoading, refetch: refetchCharts,
+    renameChart, renamingId, deleteChart, deletingId,
+  } = useCharts(activeSection === 'humandesign' && !!isSignedIn)
+
+  // 每次帶著 query string 導向 humandesign 分頁時強制重新整理（例如從 /create 存完圖表跳轉回來）
+  useEffect(() => {
+    startTransition(() => {
+      const t = searchParams.get('tab')
+      if (t === 'composite' || t === 'transit' || t === 'personal') setChartTab(t)
+      if (activeSection === 'humandesign') refetchCharts()
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  // 圖表清單變動後，確保目前選取的圖表仍屬於目前分頁，否則改選分頁下第一筆
+  useEffect(() => {
+    startTransition(() => {
       setActiveChartId(prev => {
-        const filtered = list.filter(ch => kindOf(ch) === chartTab)
+        const filtered = charts.filter(ch => kindOf(ch) === chartTab)
         return (prev && filtered.some(c => c.id === prev)) ? prev : (filtered[0]?.id ?? null)
       })
-      setChartsFetched(true)
-    } catch (err) {
-      console.error('[account] fetchCharts error:', err)
-      toast.error('圖表載入失敗')
-    } finally {
-      setChartsLoading(false)
-    }
-  }, [isSignedIn, isLoaded, chartTab])
+    })
+  }, [charts, chartTab])
 
-  const [notifications, setNotifications] = useState<AppNotification[]>([])
-  const [notificationsLoading, setNotificationsLoading] = useState(false)
-  const [notificationsFetched, setNotificationsFetched] = useState(false)
-  const [isNotificationsAdmin, setIsNotificationsAdmin] = useState(false)
-
-  const fetchNotifications = useCallback(async () => {
-    setNotificationsLoading(true)
-    try {
-      const res = await fetch('/api/notifications')
-      if (!res.ok) {
-        toast.error('通知載入失敗')
-        return
-      }
-      const json = await res.json()
-      setNotifications(json.notifications ?? [])
-      setIsNotificationsAdmin(!!json.isAdmin)
-    } catch (err) {
-      console.error('[account] fetchNotifications error:', err)
-      toast.error('通知載入失敗')
-    } finally {
-      // 無論成功或失敗都標記為已嘗試過，避免失敗時被 useEffect 無限重試
-      setNotificationsFetched(true)
-      setNotificationsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (activeSection === 'notifications' && !notificationsFetched && !notificationsLoading) {
-      startTransition(() => { fetchNotifications() })
-    }
-  }, [activeSection, notificationsFetched, notificationsLoading, fetchNotifications])
+  const {
+    notifications, isAdmin: isNotificationsAdmin, loading: notificationsLoading,
+    createNotification, creating: creatingNotif,
+    deleteNotification, deletingId: deletingNotifId,
+  } = useNotifications(activeSection === 'notifications')
 
   const [newNotifTitle, setNewNotifTitle] = useState('')
   const [newNotifBody, setNewNotifBody] = useState('')
   const [newNotifType, setNewNotifType] = useState<NotificationType>('announcement')
-  const [creatingNotif, setCreatingNotif] = useState(false)
-  const [deletingNotifId, setDeletingNotifId] = useState<string | null>(null)
 
   const handleCreateNotification = async () => {
     if (creatingNotif) return
@@ -214,47 +121,25 @@ function AccountContent() {
       toast.error('標題與內容為必填')
       return
     }
-    setCreatingNotif(true)
     try {
-      const res = await fetch('/api/notifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newNotifTitle.trim(), body: newNotifBody.trim(), type: newNotifType }),
-      })
-      if (!res.ok) {
-        const json = await res.json().catch(() => null)
-        toast.error(json?.error ?? '新增失敗')
-        return
-      }
-      const { notification } = await res.json()
-      setNotifications(prev => [notification, ...prev])
+      await createNotification({ title: newNotifTitle.trim(), body: newNotifBody.trim(), type: newNotifType })
       setNewNotifTitle('')
       setNewNotifBody('')
       setNewNotifType('announcement')
       toast.success('已新增通知')
     } catch (err) {
       console.error('[account] handleCreateNotification error:', err)
-      toast.error('新增失敗')
-    } finally {
-      setCreatingNotif(false)
+      toast.error(err instanceof Error ? err.message : '新增失敗')
     }
   }
 
   const handleDeleteNotification = async (id: string) => {
     if (deletingNotifId) return
-    setDeletingNotifId(id)
     try {
-      const res = await fetch(`/api/notifications/${id}`, { method: 'DELETE' })
-      if (!res.ok) {
-        toast.error('刪除失敗')
-        return
-      }
-      setNotifications(prev => prev.filter(n => n.id !== id))
+      await deleteNotification(id)
     } catch (err) {
       console.error('[account] handleDeleteNotification error:', err)
       toast.error('刪除失敗')
-    } finally {
-      setDeletingNotifId(null)
     }
   }
 
@@ -314,7 +199,6 @@ function AccountContent() {
 
   const [editingChartId, setEditingChartId] = useState<string | null>(null)
   const [editingChartName, setEditingChartName] = useState('')
-  const [renamingId, setRenamingId] = useState<string | null>(null)
   const chartNameInputRef = useRef<HTMLInputElement>(null)
 
   const handleStartRenameChart = (ch: SavedChart) => {
@@ -326,25 +210,16 @@ function AccountContent() {
 
   const handleSaveChartName = async (id: string) => {
     if (renamingId) return
-    setRenamingId(id)
     try {
-      const res = await fetch(`/api/charts/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editingChartName }),
-      })
-      if (!res.ok) { toast.error('圖表重新命名失敗'); return }
-      setCharts(prev => prev.map(c => c.id === id ? { ...c, name: editingChartName.trim() || null } : c))
+      await renameChart({ id, name: editingChartName })
       setEditingChartId(null)
     } catch {
       toast.error('圖表重新命名失敗')
     }
-    finally { setRenamingId(null) }
   }
 
   const handleCancelRenameChart = () => setEditingChartId(null)
 
-  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const isDeletingRef = useRef(false)
   const chartRequestIdRef = useRef(0)
@@ -355,38 +230,18 @@ function AccountContent() {
   const handleDeleteChart = async (id: string) => {
     if (isDeletingRef.current) return
     isDeletingRef.current = true
-    setDeletingId(id)
     setConfirmDeleteId(null)
     window.umami?.track('account-delete-chart')
     try {
-      const res = await fetch(`/api/charts/${id}`, { method: 'DELETE' })
-      if (!res.ok) { toast.error('圖表刪除失敗'); return }
-      const next = charts.filter(c => c.id !== id)
-      setCharts(next)
-      setActiveChartId(cur => cur === id ? (next[0]?.id ?? null) : cur)
+      await deleteChart(id)
+      setActiveChartId(cur => cur === id ? null : cur)
     } catch {
       toast.error('圖表刪除失敗')
     }
     finally {
-      setDeletingId(null)
       isDeletingRef.current = false
     }
   }
-
-  useEffect(() => {
-    startTransition(() => {
-      if (activeSection === 'humandesign') setChartsFetched(false)
-      const t = searchParams.get('tab')
-      if (t === 'composite' || t === 'transit' || t === 'personal') setChartTab(t)
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
-
-  useEffect(() => {
-    if (activeSection === 'humandesign' && !chartsFetched && !chartsLoading && isSignedIn) {
-      startTransition(() => { fetchCharts() })
-    }
-  }, [activeSection, chartsFetched, chartsLoading, fetchCharts, isSignedIn])
 
   const filteredCharts = charts.filter(ch => kindOf(ch) === chartTab)
 
