@@ -37,6 +37,15 @@ function kindOf(c: Chart): string {
   return c.chartKind ?? 'personal'
 }
 
+// 合圖沒有單一 Type/Profile，改顯示能量場整合主題（依已定義中心數推算，同 chart/[id].tsx 的算法）
+function integrationThemeOf(definedCenterCount: number): string {
+  const openCount = 9 - definedCenterCount
+  if (openCount === 0) return '9+0'
+  if (openCount === 1) return '8+1'
+  if (openCount === 2) return '7+2'
+  return '6+3+'
+}
+
 function KindBadge({ kind }: { kind: string }) {
   const cfg = KIND_CFG[kind] ?? KIND_CFG.personal
   return (
@@ -121,8 +130,14 @@ function ChartFlatList({
           )}
           <View style={s.badgeRow}>
             <KindBadge kind={kindOf(item)} />
-            <Badge label={item.type} />
-            <Badge label={item.profile} dim />
+            {kindOf(item) === 'composite' ? (
+              <Badge label={`整合 ${integrationThemeOf(item.centers.length)}`} dim />
+            ) : (
+              <>
+                <Badge label={item.type} />
+                <Badge label={item.profile} dim />
+              </>
+            )}
           </View>
         </Pressable>
       )}
