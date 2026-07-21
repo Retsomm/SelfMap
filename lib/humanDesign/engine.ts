@@ -5,7 +5,6 @@ import {
 import type {
   CenterName,
   HumanDesignType,
-  Authority,
   AuthorityInfo,
   ChannelDef,
   GateAndLine,
@@ -75,19 +74,6 @@ const deriveType = (
   }
   if (throat && motorToThroat) return 'Manifestor'
   return 'Projector'
-}
-
-const deriveAuthority = (
-  type: HumanDesignType,
-  definedCenterIds: Set<CenterName>
-): Authority => {
-  if (type === 'Reflector') return 'Lunar'
-  if (isDefined(definedCenterIds, 'solarPlexus')) return 'Emotional'
-  if (isDefined(definedCenterIds, 'sacral')) return 'Sacral'
-  if (isDefined(definedCenterIds, 'spleen')) return 'Splenic'
-  if (isDefined(definedCenterIds, 'ego')) return 'Ego'
-  if (isDefined(definedCenterIds, 'g')) return 'Self-Projected'
-  return 'Mental'
 }
 
 const deriveDefinition = (definedCenterIds: Set<CenterName>, definedChannels: ChannelDef[]): string => {

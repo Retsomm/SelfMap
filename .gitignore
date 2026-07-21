@@ -43,9 +43,3 @@ next-env.d.ts
 .agents
 # clerk configuration (can include secrets)
 /.clerk/
-
-*.fp.js
-*.fp.ts
-*.fp.jsx
-*.fp.tsx
-fp-report.html
