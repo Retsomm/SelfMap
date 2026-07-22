@@ -85,7 +85,7 @@ function ItemRow({ name, sub, offset, onSelect }: {
       }}
       style={{
         padding: '10px 12px',
-        borderBottom: '1px dotted rgba(43,31,20,0.18)',
+        borderBottom: '1px dotted rgba(var(--ink-rgb),0.18)',
         cursor: 'pointer',
         display: 'flex',
         justifyContent: 'space-between',
@@ -316,7 +316,7 @@ export default function LocationPicker({ value, onSelect }: Props) {
       )}
 
       {fetchError && (
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#d04830', marginTop: 4 }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--transit)', marginTop: 4 }}>
           {fetchError}
         </div>
       )}
@@ -333,7 +333,7 @@ export default function LocationPicker({ value, onSelect }: Props) {
             zIndex: 99998,
             background: 'var(--paper)',
             border: '1px solid var(--ink)',
-            boxShadow: '0 8px 24px rgba(43,31,20,0.14)',
+            boxShadow: '0 8px 24px rgba(var(--ink-rgb),0.14)',
           }}
         >
           {results.slice(0, 3).map(r => {

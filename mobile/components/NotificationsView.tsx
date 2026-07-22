@@ -1,14 +1,15 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 import { type AppNotification, type NotificationType, getNotifications } from '@/lib/api'
 import { LoadingView, ErrorView } from '@/components/StateViews'
 
-const TYPE_CFG: Record<NotificationType, { label: string; color: string; bg: string }> = {
+const createTypeCfg = (Colors: ThemeColors): Record<NotificationType, { label: string; color: string; bg: string }> => ({
   feature:      { label: '新功能', color: Colors.comp,   bg: Colors.compDimBg },
   bugfix:       { label: '問題修正', color: Colors.accent, bg: Colors.accentD },
   announcement: { label: '公告',    color: Colors.transit, bg: Colors.transitDimBg },
-}
+})
 
 function formatDate(iso: string) {
   const d = new Date(iso)
@@ -16,7 +17,10 @@ function formatDate(iso: string) {
 }
 
 function NotificationCard({ item }: { item: AppNotification }) {
-  const cfg = TYPE_CFG[item.type] ?? TYPE_CFG.announcement
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
+  const typeCfg = useMemo(() => createTypeCfg(Colors), [Colors])
+  const cfg = typeCfg[item.type] ?? typeCfg.announcement
   return (
     <View style={s.card}>
       <View style={s.cardHeader}>
@@ -32,6 +36,8 @@ function NotificationCard({ item }: { item: AppNotification }) {
 }
 
 export default function NotificationsView() {
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -79,7 +85,7 @@ export default function NotificationsView() {
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   list:       { padding: Spacing.xl, gap: Spacing.md, flexGrow: 1 },
   card:       { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, gap: Spacing.xs },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

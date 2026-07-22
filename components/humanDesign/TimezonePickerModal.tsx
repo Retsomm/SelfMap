@@ -77,8 +77,8 @@ export default function TimezonePickerModal({ onSelect, onClose }: TimezonePicke
               onKeyDown={e => {
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(t.zone, t.label); onClose() }
               }}
-              className="px-3 py-2 cursor-pointer hover:bg-black/5 font-mono text-[13px] text-(--ink)"
-              style={{ borderBottom: '1px dotted rgba(43,31,20,0.18)' }}
+              className="px-3 py-2 cursor-pointer hover:bg-(--ink)/5 font-mono text-[13px] text-(--ink)"
+              style={{ borderBottom: '1px dotted rgba(var(--ink-rgb),0.18)' }}
             >
               {t.label}
             </div>

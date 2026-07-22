@@ -1,6 +1,7 @@
-import { type RefObject } from 'react'
+import { type RefObject, useMemo } from 'react'
 import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 type Props = {
   visible: boolean
@@ -27,6 +28,9 @@ export function InputModal({
   loading = false,
   inputRef,
 }: Props) {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
+
   return (
     <Modal
       visible={visible}
@@ -76,7 +80,7 @@ export function InputModal({
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   kavWrapper:  { flex: 1 },
   overlay:     { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   sheet:       { backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: Spacing.xl, width: '100%' },

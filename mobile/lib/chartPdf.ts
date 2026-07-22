@@ -1,16 +1,18 @@
 import * as Print from 'expo-print'
 import * as Sharing from 'expo-sharing'
+import { File, Paths } from 'expo-file-system'
 import {
   ACT_CONSCIOUS,
   ACT_UNCONSCIOUS,
   CENTER_ORDER,
   CENTERS_GEOM,
+  HD_CENTERS_INFO,
   HD_CHANNELS,
   HD_GATES,
   HD_PALETTE,
   INTEGRATION_PAIRS,
 } from '@shared/humanDesign/hd-chart-data'
-import { findChannelById } from './hd-normalizers'
+import { findChannelById, normalizeCenterId } from './hd-normalizers'
 import {
   STRATEGY_MAP,
   SIGNATURE_MAP,
@@ -19,9 +21,32 @@ import {
   ALL_CENTER_IDS,
   normalizeCenterAlias,
 } from './hd-constants'
-import { getTypeLabel } from './hd-type-meta'
+import { getTypeLabel, getTypeMeta } from './hd-type-meta'
 import type { PendingChart } from './pendingChart'
 import type { CreateCompositeResult, CreateTransitResult, ConnectionDynamic } from './api'
+import { lightColors, darkColors } from '../constants/tokens'
+import { CONN_LABEL, CONN_DESC, INTEGRATION_THEME, PROFILE_RESONANCE_DESC } from '../components/composite/compositeText'
+import { IMPACT_LABEL, IMPACT_DESC, type ImpactKind } from '../components/transit/ImpactCard'
+
+export type PdfThemeMode = 'light' | 'dark'
+
+/** PDF 文件外觀（背景/文字/邊框等版面色）跟著 app 目前的明暗主題走，圖表本身的閘門／中心配色不受影響 */
+function pdfPalette(mode: PdfThemeMode) {
+  const c = mode === 'dark' ? darkColors : lightColors
+  return {
+    bg:      c.bg,
+    ink:     c.text,
+    crimson: c.accent,
+    sub:     c.sub,
+    cardBg:  c.surface,
+    border:  c.border,
+    dimBg:      mode === 'dark' ? darkColors.altRowBg : lightColors.gateBg,
+    altRow:     c.altRowBg,
+    paperDeep:  c.gateBg, // 對應網頁版 --paper-deep，用於頁尾商標色帶
+    accentBg:   c.accentD,       // 對應畫面 Tag active 的底色
+    dimText:    c.planetRedText, // 對應畫面 Row dim 的文字色
+  }
+}
 
 // ─── Gate activation state ─────────────────────────────────────────────────────
 
@@ -87,8 +112,10 @@ function channelSeg(x1: number, y1: number, x2: number, y2: number, fill: string
 
 // ─── Build BodyGraph SVG string ────────────────────────────────────────────────
 
-function buildBodyGraphSvg(chart: PendingChart): string {
-  const act = buildActivations(chart)
+function buildBodyGraphSvg(chart: PendingChart, presetActivations?: Record<number, GateActivation>): string {
+  // 流日圖的黑/紅語意跟個人圖不同（個人 vs 今日流日，而非 Personality vs Design），
+  // 呼叫端會算好對應的 activations 直接傳入，蓋掉這裡預設的 personality/design 判斷法
+  const act = presetActivations ?? buildActivations(chart)
   const definedCenterIds = new Set(chart.centers.map(s => s.toLowerCase().replace(/\s+/g, '')))
 
   // Normalise center keys coming from API (e.g. "Solar Plexus" → "solar")
@@ -224,31 +251,93 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
-function buildHtml(chart: PendingChart): string {
-  const bg      = '#efe5d0'
-  const ink     = '#2b1f14'
-  const crimson = '#c8553d'
-  const sub     = '#6b5a44'
-  const cardBg  = '#faf7f0'
-  const border  = '#c8b99a'
-  const dimBg   = '#e7d9bd'
+// ─── PDF 檔名 ──────────────────────────────────────────────────────────────────
+
+/** 移除檔名不能用的字元（路徑分隔符、萬用字元等），避免使用者自訂名稱裡的符號弄壞檔名 */
+function sanitizeFilenamePart(s: string): string {
+  const cleaned = s.trim().replace(/[\\/:*?"<>|]+/g, '_')
+  return cleaned || '未命名'
+}
+
+function timestampForFilename(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
+}
+
+/** 檔名格式：圖表種類-圖表名稱-下載時間 */
+function buildPdfFilename(kind: string, name: string | null | undefined): string {
+  return `${kind}-${sanitizeFilenamePart(name || '未命名')}-${timestampForFilename()}.pdf`
+}
+
+/** expo-print 產生的檔案在快取目錄裡是隨機檔名，這裡複製一份成使用者看得懂的檔名再分享 */
+async function shareGeneratedPdf(sourceUri: string, filename: string, dialogTitle: string): Promise<void> {
+  const source = new File(sourceUri)
+  const dest = new File(Paths.cache, filename)
+  await source.copy(dest, { overwrite: true })
+
+  if (await Sharing.isAvailableAsync()) {
+    await Sharing.shareAsync(dest.uri, {
+      mimeType: 'application/pdf',
+      dialogTitle,
+      UTI: 'com.adobe.pdf',
+    })
+  } else {
+    const { Alert } = await import('react-native')
+    Alert.alert('PDF 已產生', `報告已儲存至：${dest.uri}`)
+  }
+}
+
+// 以下版面小工具跨三種報告（個人／合圖／流日）共用同一份實作，避免各自維護造成內容/樣式drift
+// （這正是這幾輪修正一直在處理的問題——只改一處，三種報告都會跟著對齊）
+
+function row(label: string, value: string, accent = false, dim = false): string {
+  return `<div class="row"><span class="label">${label}</span><span class="value${accent ? ' accent' : ''}${dim ? ' dim' : ''}">${value}</span></div>`
+}
+
+function tags(items: string[]): string {
+  return `<div class="tags">${items.map(i => `<span class="tag">${i}</span>`).join('')}</div>`
+}
+
+// 中心/通道都需要區分「已定義（active）」與「未定義」樣式，跟畫面上 Tag 元件的 active 狀態對齊
+function stateTags(items: { label: string; active: boolean }[]): string {
+  return `<div class="tags">${items.map(i => `<span class="tag${i.active ? ' tag-active' : ''}">${i.label}</span>`).join('')}</div>`
+}
+
+function gateTags(gates: number[]): string {
+  return `<div class="tags">${[...gates].sort((a, b) => a - b).map(g => `<span class="tag gate-tag">${g}</span>`).join('')}</div>`
+}
+
+function section(title: string, body: string): string {
+  return `<div class="section"><div class="section-title">${title}</div>${body}</div>`
+}
+
+/** 九大中心：跟畫面（preview.tsx / [id].tsx / CompositeInfo.tsx / TransitAnalysis.tsx）算法一致，
+ * 全部 9 個中心都列出、用中文名稱，並標示是否已定義 */
+function centerTagsFor(rawCenterIds: string[]): string {
+  const defined = new Set(rawCenterIds.map(normalizeCenterId))
+  return stateTags(CENTER_ORDER.map(k => ({
+    label: HD_CENTERS_INFO[k]?.name.zh ?? k,
+    active: defined.has(k),
+  })))
+}
+
+/** 定義通道：畫面上一律以 active（強調色）樣式呈現，並轉換成 34–20 這種可讀格式 */
+function channelTagsFor(rawChannelIds: string[]): string {
+  return stateTags(rawChannelIds.map(rawCh => {
+    const ch = findChannelById(rawCh)
+    return { label: ch ? `${ch.from}–${ch.to}` : rawCh, active: true }
+  }))
+}
+
+function buildHtml(chart: PendingChart, mode: PdfThemeMode): string {
+  const { bg, ink, crimson, sub, cardBg, border, dimBg, altRow, paperDeep, accentBg, dimText } = pdfPalette(mode)
 
   const svgMarkup = buildBodyGraphSvg(chart)
 
-  const row = (label: string, value: string, accent = false) =>
-    `<div class="row"><span class="label">${label}</span><span class="value${accent ? ' accent' : ''}">${value}</span></div>`
-
-  const tags = (items: string[]) =>
-    `<div class="tags">${items.map(i => `<span class="tag">${i}</span>`).join('')}</div>`
-
-  const gateTags = (gates: number[]) =>
-    `<div class="tags">${gates.map(g => `<span class="tag gate-tag">${g}</span>`).join('')}</div>`
-
-  const section = (title: string, body: string) =>
-    `<div class="section"><div class="section-title">${title}</div>${body}</div>`
-
-  const now = new Date()
-  const ts  = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+  const typeMeta = getTypeMeta(chart.type)
+  const centerTags = centerTagsFor(chart.centers)
+  const channelTags = channelTagsFor(chart.channels)
 
   const crossSection = chart.incarnationCross ? section('輪迴交叉',
     row('交叉類型', chart.incarnationCross.crossTypeLabel, true) +
@@ -325,28 +414,31 @@ function buildHtml(chart: PendingChart): string {
 
   .graph-card { background: ${cardBg}; border: 1px solid ${border}; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
   .graph-title { color: ${sub}; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 10px 14px 4px; }
+  .graph-container { max-width: 460px; margin: 0 auto; }
 
   .section { background: ${cardBg}; border: 1px solid ${border}; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
   .section-title { background: ${dimBg}; padding: 7px 14px; font-size: 10px; font-weight: 700; color: ${sub}; text-transform: uppercase; letter-spacing: 0.8px; }
-  .row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 14px; border-bottom: 1px solid #ede4d6; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 14px; border-bottom: 1px solid ${border}; }
   .row:last-child { border-bottom: none; }
   .label { color: ${sub}; font-size: 12px; }
   .value { color: ${ink}; font-size: 13px; font-weight: 600; text-align: right; max-width: 60%; }
   .accent { color: ${crimson}; }
+  .dim { color: ${dimText}; }
 
   .tags { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 5px; }
   .tag { background: ${dimBg}; border: 1px solid ${border}; border-radius: 5px; padding: 2px 8px; font-size: 11px; color: ${sub}; }
+  .tag-active { background: ${accentBg}; border-color: ${crimson}; color: ${crimson}; font-weight: 600; }
   .gate-tag { color: ${crimson}; font-weight: 700; }
 
   .planet-table { width: 100%; border-collapse: collapse; }
   .planet-table th { padding: 6px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; border-bottom: 1px solid ${border}; }
   .planet-table td { padding: 6px 14px; font-size: 12px; }
-  .planet-table tr.alt { background: #f7f0e5; }
+  .planet-table tr.alt { background: ${altRow}; }
 
   .arrows-table { width: 100%; border-collapse: collapse; }
   .arrows-table th { padding: 5px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; border-bottom: 1px solid ${border}; color: ${sub}; }
   .arrows-table td { padding: 7px 12px; font-size: 12px; vertical-align: top; }
-  .arrows-table tr.alt { background: #f7f0e5; }
+  .arrows-table tr.alt { background: ${altRow}; }
   .arrows-table .dir { font-size: 18px; font-weight: 700; color: ${crimson}; width: 28px; text-align: center; }
   .arrows-table .cat { font-size: 11px; color: ${sub}; min-width: 80px; }
   .arrows-table .cat small { font-size: 10px; display: block; }
@@ -356,7 +448,7 @@ function buildHtml(chart: PendingChart): string {
   .legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 14px 8px; font-size: 11px; color: ${sub}; }
   .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
-  .footer { margin-top: 24px; text-align: center; color: ${sub}; font-size: 10px; }
+  .footer { margin-top: 20px; padding: 8px 0; background: ${paperDeep}; border-top: 1px solid ${ink}; border-radius: 8px 8px 0 0; text-align: center; color: ${sub}; font-size: 10px; }
 </style>
 </head>
 <body>
@@ -370,22 +462,29 @@ function buildHtml(chart: PendingChart): string {
       <span class="legend-dot" style="background:#111111"></span>意識（黑）
       <span class="legend-dot" style="background:${ACT_UNCONSCIOUS}"></span>潛意識（紅）
     </div>
-    ${svgMarkup}
+    <div class="graph-container">${svgMarkup}</div>
   </div>
 
-  <!-- 設計核心 -->
-  ${section('設計核心',
-    row('能量類型', chart.type, true) +
+  <!-- 類型 -->
+  ${section('類型',
+    row('能量類型', getTypeLabel(chart.type), true) +
+    row('策略', typeMeta.strategy) +
+    row('簽名（成功徵兆）', typeMeta.signature, true) +
+    row('非自我主題', typeMeta.notSelf, false, true)
+  )}
+
+  <!-- 設計 -->
+  ${section('設計',
     row('內在權威', chart.authority, true) +
-    row('人生角色', chart.profile) +
+    row('人生角色（Profile）', chart.profile) +
     row('定義',    chart.definition)
   )}
 
-  <!-- 已定義中心 -->
-  ${chart.centers.length > 0 ? section(`已定義中心（${chart.centers.length}）`, tags(chart.centers)) : ''}
+  <!-- 九大中心 -->
+  ${section('九大中心', centerTags)}
 
   <!-- 定義通道 -->
-  ${chart.channels.length > 0 ? section(`定義通道（${chart.channels.length}）`, tags(chart.channels)) : ''}
+  ${chart.channels.length > 0 ? section(`定義通道（${chart.channels.length}）`, channelTags) : ''}
 
   <!-- 行星對照 -->
   ${planetsSection}
@@ -399,27 +498,18 @@ function buildHtml(chart: PendingChart): string {
   <!-- 激活閘門 -->
   ${section(`激活閘門（${chart.gates.length}）`, gateTags(chart.gates))}
 
-  <div class="footer"><p>© Retsnom · SelfMap · ${ts}</p></div>
+  <div class="footer"><p>© Retsnom</p></div>
 </body>
 </html>`
 }
 
 // ─── Public exports ────────────────────────────────────────────────────────────
 
-export async function downloadChartAsPdf(chart: PendingChart): Promise<void> {
-  const html = buildHtml(chart)
+export async function downloadChartAsPdf(chart: PendingChart, mode: PdfThemeMode = 'light'): Promise<void> {
+  const html = buildHtml(chart, mode)
   const { uri } = await Print.printToFileAsync({ html, base64: false })
-
-  if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(uri, {
-      mimeType: 'application/pdf',
-      dialogTitle: '儲存或分享人類圖報告',
-      UTI: 'com.adobe.pdf',
-    })
-  } else {
-    const { Alert } = await import('react-native')
-    Alert.alert('PDF 已產生', `報告已儲存至：${uri}`)
-  }
+  const filename = buildPdfFilename('個人', chart.name)
+  await shareGeneratedPdf(uri, filename, '儲存或分享人類圖報告')
 }
 
 export function generateAiPrompt(chart: PendingChart): string {
@@ -692,44 +782,24 @@ ${planetRows}
 
 // ─── Composite / Transit PDF download ────────────────────────────────────────
 
-const COMPOSITE_THEME_CFG: Record<string, { label: string; love: string; work: string }> = {
-  '9+0':  { label: '全滿（9+0）— Nowhere to go',    love: '極度甜蜜與黏人。能量場完全自給自足，外人很難融入。兩人會深深沉浸在彼此的世界中，但也容易因為缺乏外在刺激而感到窒息或過度封閉。', work: '過於封閉。團隊內部可能非常有默契，但極易忽略外部市場的變化或同事、客戶的客觀意見。' },
-  '8+1':  { label: '8+1 — Have some fun',            love: '最舒服的互動模式。彼此有足夠的能量連結，同時留有「空白」作為陽光照進來的窗口。雙方擁有各自呼吸與消化的空間，關係健康且長久。',     work: '黃金搭檔。既有共同努力的交集，又有一起去體驗、探索外部世界的窗口。' },
-  '7+2':  { label: '7+2 — Work to do',               love: '最舒服的互動模式之一。保有兩個空白中心，彼此連結同時仍有足夠的獨立呼吸空間，長期相處不易窒息。',                                 work: '黃金搭檔。既有共同努力的交集，又有兩扇開放的窗口迎接外在刺激與機會。' },
-  '6+3+': { label: '6+3+ — Better to be free',       love: '連結感較淡。兩人在一起時仍有太多未定因素，容易流於平淡或像朋友。通常需要藉由共同的興趣、小孩或外在媒介來維繫緊密感。',         work: '適合團隊合作。保持高度的獨立性與自由度，不會對彼此造成過度制約，適合鬆散型的專案合作或大團隊中的平行分工。' },
-}
-
-const COMPOSITE_LINE_RESONANCE: { line: number; label: string; desc: string }[] = [
-  { line: 1, label: '1 爻共鳴', desc: '兩人都需要足夠的安全感與底層研究，能深深理解彼此打基礎的必要。' },
-  { line: 2, label: '2 爻共鳴', desc: '兩人都需要獨處與等待被呼喚的空間，彼此能體諒對方的隱士特質。' },
-  { line: 3, label: '3 爻共鳴', desc: '兩人都能理解試錯與碰撞的學習過程，不會因為失敗而互相責備。' },
-  { line: 4, label: '4 爻共鳴', desc: '兩人都重視人脈與穩定的社群，能在圈子建設上形成默契。' },
-  { line: 5, label: '5 爻共鳴', desc: '兩人都帶有被投射的特質，需要互相留意實際的期待落差。' },
-  { line: 6, label: '6 爻共鳴', desc: '兩人都有長遠的人生週期觀，能理解彼此不同階段的冷靜與退後。' },
-]
-
-function buildCompositeHtml(result: CreateCompositeResult): string {
-  const bg      = '#efe5d0'
-  const ink     = '#2b1f14'
-  const crimson = '#c8553d'
-  const sub     = '#6b5a44'
-  const cardBg  = '#faf7f0'
-  const border  = '#c8b99a'
-  const dimBg   = '#e7d9bd'
+function buildCompositeHtml(result: CreateCompositeResult, mode: PdfThemeMode): string {
+  const { bg, ink, crimson, sub, cardBg, border, dimBg, altRow, paperDeep, accentBg } = pdfPalette(mode)
+  const tc = mode === 'dark' ? darkColors : lightColors
 
   const nameA = escapeHtml(result.personA.name ?? 'A')
   const nameB = escapeHtml(result.personB.name ?? 'B')
   const aDate    = escapeHtml(result.personA.birthDate)
   const aTime    = escapeHtml(result.personA.birthTime)
   const aCity    = escapeHtml(result.personA.birthCity)
-  const aType    = escapeHtml(result.personA.type)
+  // 跟畫面（CompositeInfo.tsx / CompositeView.tsx）一致：顯示中文標籤，不是原始英文 type 值
+  const aType    = escapeHtml(getTypeLabel(result.personA.type))
   const aProfile = escapeHtml(result.personA.profile)
   const aAuth    = escapeHtml(result.personA.authority)
   const aAuthTip = result.personA.authorityTip ? escapeHtml(result.personA.authorityTip) : ''
   const bDate    = escapeHtml(result.personB.birthDate)
   const bTime    = escapeHtml(result.personB.birthTime)
   const bCity    = escapeHtml(result.personB.birthCity)
-  const bType    = escapeHtml(result.personB.type)
+  const bType    = escapeHtml(getTypeLabel(result.personB.type))
   const bProfile = escapeHtml(result.personB.profile)
   const bAuth    = escapeHtml(result.personB.authority)
   const bAuthTip = result.personB.authorityTip ? escapeHtml(result.personB.authorityTip) : ''
@@ -760,51 +830,54 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
   }
   const svgMarkup = buildBodyGraphSvg(svgChart)
 
-  const section = (title: string, body: string) =>
-    `<div class="section"><div class="section-title">${title}</div>${body}</div>`
+  const theme = INTEGRATION_THEME[result.integrationTheme] ?? INTEGRATION_THEME['6+3+']
 
-  const now = new Date()
-  const ts  = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-
-  const theme = COMPOSITE_THEME_CFG[result.integrationTheme] ?? COMPOSITE_THEME_CFG['6+3+']
-
+  // 顏色跟著明暗主題走（畫面 connColors() 也是這樣），避免深色模式下 PDF 顯示淺色配色
   const CONN_META = {
-    electromagnetic: { label: '電磁關係 (Electromagnetic)', color: '#c8553d', desc: '互補吸引 — 一方有 A 閘門，另一方有 B 閘門，合力激活完整通道。最經典的「致命吸引力」，容易一見鍾情但也容易相愛相殺。' },
-    companionship:   { label: '陪伴關係 (Companionship)',   color: '#3a8c6e', desc: '默契安全 — 兩人擁有相同的閘門或通道，相處起來最不費力，如靈魂伴侶或老朋友。' },
-    compromise:      { label: '妥協關係 (Compromise)',      color: '#8a6ba8', desc: '關係摩擦源 — 一方擁有完整通道，另一方只有其中一個閘門，長期易累積委屈與不平衡感。' },
-    dominance:       { label: '支配關係 (Dominance)',       color: '#6b5a44', desc: '單向引導 — 一方在某條通道有能量，另一方完全開放，空白的那方會單向受到能量制約。' },
+    electromagnetic: { label: CONN_LABEL.electromagnetic, color: tc.em,      bg: tc.emDimBg,      desc: CONN_DESC.electromagnetic },
+    companionship:   { label: CONN_LABEL.companionship,   color: tc.comp,    bg: tc.compDimBg,    desc: CONN_DESC.companionship },
+    compromise:      { label: CONN_LABEL.compromise,      color: tc.compro,  bg: tc.comproDimBg,  desc: CONN_DESC.compromise },
+    dominance:       { label: CONN_LABEL.dominance,       color: tc.dom,     bg: tc.domDimBg,     desc: CONN_DESC.dominance },
   } as const
 
+  // 顏色跟畫面 CompositeInfo.tsx 一致：依「意識/潛意識」區分（text/designRed），
+  // 不是依人物 A/B 區分——人物身分改由上方的分組標題列顯示
   const planetTable = (result.personA.planets?.length ?? 0) > 0
     ? section('行星閘門對照',
         `<table class="planet-table">
-          <thead><tr>
-            <th>行星</th>
-            <th style="color:${crimson}">${nameA} 意識（黑）</th>
-            <th style="color:${crimson}">潛意識（紅）</th>
-            <th style="color:${ink}">${nameB} 意識（黑）</th>
-            <th style="color:${ink}">潛意識（紅）</th>
-          </tr></thead>
+          <thead>
+            <tr class="planet-group-row">
+              <th></th>
+              <th colspan="2" style="color:${crimson}">${nameA}</th>
+              <th colspan="2" style="color:${ink}">${nameB}</th>
+            </tr>
+            <tr>
+              <th>行星</th>
+              <th style="color:${ink}">意識</th>
+              <th style="color:${tc.designRed}">潛意識</th>
+              <th style="color:${ink}">意識</th>
+              <th style="color:${tc.designRed}">潛意識</th>
+            </tr>
+          </thead>
           <tbody>${(result.personA.planets ?? []).map((p, i) => {
             const pb = result.personB.planets?.[i]
             return `<tr class="${i % 2 === 1 ? 'alt' : ''}">
               <td style="color:${sub}">${p.name}</td>
-              <td style="color:${crimson};font-weight:700">${p.blackGate}.${p.blackLine}</td>
-              <td style="color:${crimson}">${p.redGate}.${p.redLine}</td>
+              <td style="color:${ink};font-weight:700">${p.blackGate}.${p.blackLine}</td>
+              <td style="color:${tc.designRed}">${p.redGate}.${p.redLine}</td>
               <td style="color:${ink};font-weight:700">${pb?.blackGate ?? '—'}.${pb?.blackLine ?? ''}</td>
-              <td style="color:${ink}">${pb?.redGate ?? '—'}.${pb?.redLine ?? ''}</td>
+              <td style="color:${tc.designRed}">${pb?.redGate ?? '—'}.${pb?.redLine ?? ''}</td>
             </tr>`
           }).join('')}</tbody>
         </table>`)
     : ''
 
+  // 跟畫面一致：標題用一般文字色（不是強調色），下面接一行「合圖定義 X / 9 中心 · 開放 Y 中心」文字
   const themeSection = section('能量場整合主題',
-    `<div class="stat-row">
-      <div class="stat-box"><div class="stat-num">${result.integrationTheme}</div><div class="stat-label">整合主題</div></div>
-      <div class="stat-box"><div class="stat-num">${result.compositeDefinedCount}</div><div class="stat-label">已定義中心</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:${sub}">${result.compositeOpenCount}</div><div class="stat-label">開放中心</div></div>
+    `<div class="theme-header">
+      <div class="theme-label">${theme.label}</div>
+      <div class="theme-sub">合圖定義 ${result.compositeDefinedCount} / 9 中心 · 開放 ${result.compositeOpenCount} 中心</div>
     </div>
-    <div class="theme-label">${theme.label}</div>
     <div class="theme-grid">
       <div class="theme-block"><div class="theme-block-title">戀愛關係</div><p class="theme-block-text">${theme.love}</p></div>
       <div class="theme-block"><div class="theme-block-title">工作夥伴</div><p class="theme-block-text">${theme.work}</p></div>
@@ -818,12 +891,15 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
         ? `<div class="conn-empty">無相關通道</div>`
         : items.map((conn, i) =>
             `<div class="conn-row ${i % 2 === 1 ? 'alt' : ''}">
-              <span class="conn-id" style="color:${cfg.color}">${conn.channelId}</span>
+              <div class="conn-id-col">
+                <span class="conn-id" style="color:${cfg.color}">${conn.channelId}</span>
+                <span class="conn-centers">${CENTER_NAME[conn.centerA] ?? conn.centerA}—${CENTER_NAME[conn.centerB] ?? conn.centerB}</span>
+              </div>
               <span class="conn-gates">${nameA}：${conn.aGates.length ? conn.aGates.join(', ') : '—'} ／ ${nameB}：${conn.bGates.length ? conn.bGates.join(', ') : '—'}</span>
             </div>`
           ).join('')
       return `<div class="conn-group">
-        <div class="conn-header">
+        <div class="conn-header" style="background:${cfg.bg}">
           <span class="conn-title" style="color:${cfg.color}">${cfg.label}（${items.length}）</span>
           <span class="conn-desc">${cfg.desc}</span>
         </div>${rows}</div>`
@@ -832,19 +908,20 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
 
   const definedChIds = result.compositeDefinedChannelIds ?? []
   const channelsSection = definedChIds.length > 0
-    ? section(`合圖定義通道（${definedChIds.length}）`,
-        `<div class="tags">${definedChIds.map(ch => `<span class="tag">${ch}</span>`).join('')}</div>`)
+    ? section(`合圖定義通道（${definedChIds.length}）`, channelTagsFor(definedChIds))
     : ''
 
-  const resonanceItems = COMPOSITE_LINE_RESONANCE.filter(lr => result.profileResonance?.includes(lr.line))
+  const resonanceItems = (result.profileResonance ?? [])
+    .map(line => PROFILE_RESONANCE_DESC[line])
+    .filter((info): info is { title: string; desc: string } => !!info)
   const resonanceSection = section('人生角色共鳴',
     `<div class="profile-names">
       <span style="color:${crimson};font-weight:700">${nameA} ${aProfile}</span>
       <span style="font-weight:700">${nameB} ${bProfile}</span>
     </div>` + (resonanceItems.length === 0
       ? `<p class="resonance-none">兩人人生角色沒有共同爻線，各自的觀點框架較為不同。</p>`
-      : resonanceItems.map(lr =>
-          `<div class="resonance-row"><span class="resonance-label">${lr.label}</span><span class="resonance-desc">${lr.desc}</span></div>`
+      : resonanceItems.map(info =>
+          `<div class="resonance-row"><span class="resonance-label">${info.title}</span><span class="resonance-desc">${info.desc}</span></div>`
         ).join('')
     )
   )
@@ -877,34 +954,37 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
   .person-header-meta { font-size: 11px; color: ${sub}; }
   .graph-card { background: ${cardBg}; border: 1px solid ${border}; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
   .graph-title { color: ${sub}; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 10px 14px 4px; }
+  .graph-container { max-width: 460px; margin: 0 auto; }
   .section { background: ${cardBg}; border: 1px solid ${border}; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
   .section-title { background: ${dimBg}; padding: 7px 14px; font-size: 10px; font-weight: 700; color: ${sub}; text-transform: uppercase; letter-spacing: 0.8px; }
-  .stat-row { display: flex; gap: 10px; padding: 12px 14px; }
-  .stat-box { flex: 1; background: ${bg}; border-radius: 8px; padding: 10px; text-align: center; }
-  .stat-num { font-size: 22px; font-weight: 800; color: ${crimson}; }
-  .stat-label { font-size: 11px; color: ${sub}; margin-top: 2px; }
-  .theme-label { padding: 4px 14px 8px; font-size: 15px; font-weight: 700; color: ${crimson}; }
-  .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 14px 14px; }
+  .theme-header { padding: 12px 14px; border-bottom: 1px solid ${border}; }
+  .theme-label { font-size: 16px; font-weight: 700; color: ${ink}; margin-bottom: 4px; }
+  .theme-sub { font-size: 12px; color: ${sub}; }
+  .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; }
   .theme-block { background: ${bg}; border-radius: 8px; padding: 10px; }
   .theme-block-title { font-size: 10px; font-weight: 700; color: ${sub}; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
   .theme-block-text { font-size: 12px; color: ${sub}; line-height: 1.6; }
-  .conn-group { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin: 6px 14px; }
-  .conn-header { padding: 8px 12px; background: #f7f0e5; }
+  .conn-group { border: 1px solid ${border}; border-radius: 8px; overflow: hidden; margin: 6px 14px; }
+  .conn-header { padding: 8px 12px; background: ${altRow}; }
   .conn-title { font-size: 12px; font-weight: 700; display: block; margin-bottom: 2px; }
   .conn-desc { font-size: 11px; color: ${sub}; }
-  .conn-row { display: flex; gap: 8px; padding: 6px 12px; font-size: 12px; }
+  .conn-row { display: flex; gap: 8px; padding: 6px 12px; font-size: 12px; align-items: flex-start; }
   .conn-row.alt { background: ${bg}; }
-  .conn-id { font-weight: 700; min-width: 60px; }
+  .conn-id-col { min-width: 70px; display: flex; flex-direction: column; }
+  .conn-id { font-weight: 700; }
+  .conn-centers { font-size: 10px; color: ${sub}; margin-top: 1px; }
   .conn-gates { color: ${sub}; }
   .conn-empty { padding: 8px 12px; font-size: 12px; color: ${sub}; }
   .tags { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 5px; }
   .tag { background: ${dimBg}; border: 1px solid ${border}; border-radius: 5px; padding: 2px 8px; font-size: 11px; color: ${sub}; }
+  .tag-active { background: ${accentBg}; border-color: ${crimson}; color: ${crimson}; font-weight: 600; }
   .planet-table { width: 100%; border-collapse: collapse; }
   .planet-table th { padding: 5px 8px; font-size: 10px; font-weight: 700; text-align: left; border-bottom: 1px solid ${border}; }
+  .planet-group-row th { padding-top: 8px; }
   .planet-table td { padding: 5px 8px; font-size: 11px; }
-  .planet-table tr.alt { background: #f7f0e5; }
-  .profile-names { display: flex; gap: 16px; padding: 10px 14px; border-bottom: 1px solid #ede4d6; font-size: 14px; }
-  .resonance-row { padding: 8px 14px; border-bottom: 1px solid #ede4d6; }
+  .planet-table tr.alt { background: ${altRow}; }
+  .profile-names { display: flex; gap: 16px; padding: 10px 14px; border-bottom: 1px solid ${border}; font-size: 14px; }
+  .resonance-row { padding: 8px 14px; border-bottom: 1px solid ${border}; }
   .resonance-row:last-child { border-bottom: none; }
   .resonance-label { font-size: 12px; font-weight: 700; color: ${crimson}; display: block; margin-bottom: 2px; }
   .resonance-desc { font-size: 12px; color: ${sub}; line-height: 1.5; }
@@ -916,7 +996,7 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
   .authority-tip { font-size: 12px; color: ${sub}; line-height: 1.55; }
   .legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 14px 8px; font-size: 11px; color: ${sub}; }
   .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-  .footer { margin-top: 24px; text-align: center; color: ${sub}; font-size: 10px; }
+  .footer { margin-top: 20px; padding: 8px 0; background: ${paperDeep}; border-top: 1px solid ${ink}; border-radius: 8px 8px 0 0; text-align: center; color: ${sub}; font-size: 10px; }
 </style>
 </head>
 <body>
@@ -943,7 +1023,7 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
       <span class="legend-dot" style="background:#111111"></span>${nameA}（黑）
       <span class="legend-dot" style="background:${ACT_UNCONSCIOUS}"></span>${nameB}（紅）
     </div>
-    ${svgMarkup}
+    <div class="graph-container">${svgMarkup}</div>
   </div>
 
   ${planetTable}
@@ -953,60 +1033,40 @@ function buildCompositeHtml(result: CreateCompositeResult): string {
   ${resonanceSection}
   ${authoritySection}
 
-  <div class="footer"><p>© Retsnom · SelfMap · ${ts}</p></div>
+  <div class="footer"><p>© Retsnom</p></div>
 </body>
 </html>`
 }
 
-export async function downloadCompositePdf(result: CreateCompositeResult): Promise<void> {
-  const html = buildCompositeHtml(result)
+export async function downloadCompositePdf(result: CreateCompositeResult, mode: PdfThemeMode = 'light', chartName?: string | null): Promise<void> {
+  const html = buildCompositeHtml(result, mode)
   const { uri } = await Print.printToFileAsync({ html, base64: false })
-
-  if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(uri, {
-      mimeType: 'application/pdf',
-      dialogTitle: '儲存或分享合圖分析報告',
-      UTI: 'com.adobe.pdf',
-    })
-  } else {
-    const { Alert } = await import('react-native')
-    Alert.alert('PDF 已產生', `報告已儲存至：${uri}`)
-  }
+  const fallbackName = `${result.personA.name ?? 'A'} x ${result.personB.name ?? 'B'}`
+  const filename = buildPdfFilename('合圖', chartName || fallbackName)
+  await shareGeneratedPdf(uri, filename, '儲存或分享合圖分析報告')
 }
 
-function buildTransitHtml(result: CreateTransitResult): string {
-  const bg      = '#efe5d0'
-  const ink     = '#2b1f14'
-  const crimson = '#c8553d'
-  const sub     = '#6b5a44'
-  const cardBg  = '#faf7f0'
-  const border  = '#c8b99a'
-  const dimBg   = '#e7d9bd'
+function buildTransitHtml(result: CreateTransitResult, mode: PdfThemeMode): string {
+  const { bg, ink, crimson, sub, cardBg, border, dimBg, altRow, paperDeep, accentBg } = pdfPalette(mode)
+  const tc = mode === 'dark' ? darkColors : lightColors
 
-  // Bodygraph: personal gates keep personality/design colour; transit-only gates shown as conscious
+  // 流日圖的黑/紅語意跟個人圖不同：黑＝個人（personality+design 都算），紅＝今日流日，
+  // 兩者都激活時疊成條紋——這裡要跟畫面共用的 buildTransitBodyGraphProps() 算法完全一致，
+  // 不能沿用 buildActivations() 預設的 personality/design 判斷法（那是給個人圖用的）
+  const activations: Record<number, GateActivation> = {}
+  for (const g of result.personalityGates) activations[g] = { ...activations[g], c: true }
+  for (const g of result.designGates)      activations[g] = { ...activations[g], c: true }
+  for (const g of result.transit.allGates) activations[g] = { ...activations[g], u: true }
+
   const svgChart: PendingChart = {
     name: '流日',
     birthDate: '', birthTime: '', birthCity: '', timezone: '',
     type: '', authority: '', profile: '', definition: '',
     centers: result.combined.definedCenterIds,
     channels: result.combined.definedChannelIds,
-    gates: [...new Set([...result.personalGates, ...result.transit.allGates])],
-    personalityGates: result.personalityGates,
-    designGates: result.designGates,
+    gates: [],
   }
-  const svgMarkup = buildBodyGraphSvg(svgChart)
-
-  const row = (label: string, value: string, accent = false) =>
-    `<div class="row"><span class="label">${label}</span><span class="value${accent ? ' accent' : ''}">${value}</span></div>`
-
-  const tags = (items: string[]) =>
-    `<div class="tags">${items.map(i => `<span class="tag">${i}</span>`).join('')}</div>`
-
-  const gateTags = (gates: number[]) =>
-    `<div class="tags">${gates.map(g => `<span class="tag gate-tag">${g}</span>`).join('')}</div>`
-
-  const section = (title: string, body: string) =>
-    `<div class="section"><div class="section-title">${title}</div>${body}</div>`
+  const svgMarkup = buildBodyGraphSvg(svgChart, activations)
 
   const now = new Date()
   const ts  = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
@@ -1016,33 +1076,52 @@ function buildTransitHtml(result: CreateTransitResult): string {
     ? new Date(result.transit.computedAt).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
     : ts
 
-  // Transit planets table
+  // 今日行星閘門：跟畫面（TransitView.tsx）一致，個人的潛意識/意識 + 今日流日三欄並排比較
   const transitPlanetsTable = result.transit.planets.length > 0
-    ? section('今日流日行星閘門',
+    ? section('今日行星閘門',
         `<table class="planet-table">
           <thead><tr>
             <th>行星</th>
-            <th style="color:${crimson}">閘門.爻</th>
+            <th style="color:${tc.designRed}">潛意識</th>
+            <th style="color:${ink}">意識</th>
+            <th style="color:${tc.transitWarmText}">流日</th>
           </tr></thead>
           <tbody>
-            ${result.transit.planets.map((p, i) =>
-              `<tr class="${i % 2 === 1 ? 'alt' : ''}">
-                <td style="color:${sub}">${p.planetName}</td>
-                <td style="color:${crimson};font-weight:700">${p.gate}.${p.line}</td>
+            ${result.transit.planets.map((tp, i) => {
+              const pp = result.personalPlanets?.find(p => p.planetName === tp.planetName)
+              return `<tr class="${i % 2 === 1 ? 'alt' : ''}">
+                <td style="color:${sub}">${tp.planetName}</td>
+                <td style="color:${tc.designRed};font-weight:700">${pp ? `${pp.design.gate}.${pp.design.line}` : '—'}</td>
+                <td style="color:${ink};font-weight:700">${pp ? `${pp.personality.gate}.${pp.personality.line}` : '—'}</td>
+                <td style="color:${tc.transitWarmText};font-weight:700">${tp.gate}.${tp.line}</td>
               </tr>`
-            ).join('')}
+            }).join('')}
           </tbody>
         </table>`)
     : ''
 
-  // Impact analysis
+  // 流日影響：跟畫面（TransitView.tsx / TransitAnalysis.tsx 共用的 ImpactCard）一致，
+  // 依 kind 分組成卡片（標籤 chips ＋ 固定說明文案），不是每個 layer 各自一行 label/detail
+  const impactKinds = ['center-activated', 'new-channel', 'completing-channel'] as const
+  const impactColor: Record<ImpactKind, string> = {
+    'center-activated':   tc.em,
+    'new-channel':        tc.transit,
+    'completing-channel': tc.compro,
+  }
+  const impactCards = impactKinds.map(kind => {
+    const items = result.impact.layers.filter(l => l.kind === kind)
+    if (items.length === 0) return ''
+    const color = impactColor[kind]
+    return `<div class="impact-card" style="border-left-color:${color}">
+      <div class="impact-kind" style="color:${color}">${IMPACT_LABEL[kind]}</div>
+      <div class="impact-chips">${items.map(l => `<span class="impact-chip" style="background:${color}22;color:${color}">${l.label}</span>`).join('')}</div>
+      <p class="impact-desc">${IMPACT_DESC[kind]}</p>
+    </div>`
+  }).join('')
+
   const impactSection = result.impact.layers.length > 0
-    ? section('流日影響分析',
-        result.impact.layers.map(l =>
-          `<div class="impact-row"><span class="impact-label">${l.label}</span><span class="impact-detail">${l.detail}</span></div>`
-        ).join('')
-      )
-    : ''
+    ? section('流日影響分析', impactCards)
+    : section('流日影響分析', `<div class="impact-empty">今日流日對此圖表影響不顯著</div>`)
 
   const personalGateSet = new Set(result.personalGates)
   const transitOnlyGates = result.transit.allGates.filter(g => !personalGateSet.has(g))
@@ -1060,10 +1139,11 @@ function buildTransitHtml(result: CreateTransitResult): string {
 
   .graph-card { background: ${cardBg}; border: 1px solid ${border}; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
   .graph-title { color: ${sub}; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 10px 14px 4px; }
+  .graph-container { max-width: 460px; margin: 0 auto; }
 
   .section { background: ${cardBg}; border: 1px solid ${border}; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
   .section-title { background: ${dimBg}; padding: 7px 14px; font-size: 10px; font-weight: 700; color: ${sub}; text-transform: uppercase; letter-spacing: 0.8px; }
-  .row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 14px; border-bottom: 1px solid #ede4d6; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 14px; border-bottom: 1px solid ${border}; }
   .row:last-child { border-bottom: none; }
   .label { color: ${sub}; font-size: 12px; }
   .value { color: ${ink}; font-size: 13px; font-weight: 600; text-align: right; max-width: 60%; }
@@ -1071,22 +1151,27 @@ function buildTransitHtml(result: CreateTransitResult): string {
 
   .tags { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 5px; }
   .tag { background: ${dimBg}; border: 1px solid ${border}; border-radius: 5px; padding: 2px 8px; font-size: 11px; color: ${sub}; }
+  .tag-active { background: ${accentBg}; border-color: ${crimson}; color: ${crimson}; font-weight: 600; }
   .gate-tag { color: ${crimson}; font-weight: 700; }
 
   .planet-table { width: 100%; border-collapse: collapse; }
   .planet-table th { padding: 6px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; border-bottom: 1px solid ${border}; }
   .planet-table td { padding: 6px 14px; font-size: 12px; }
-  .planet-table tr.alt { background: #f7f0e5; }
+  .planet-table tr.alt { background: ${altRow}; }
 
-  .impact-row { padding: 8px 14px; border-bottom: 1px solid #ede4d6; display: flex; flex-direction: column; gap: 2px; }
-  .impact-row:last-child { border-bottom: none; }
-  .impact-label { font-size: 12px; font-weight: 700; color: ${crimson}; }
-  .impact-detail { font-size: 12px; color: ${sub}; line-height: 1.5; }
+  .impact-card { border-left: 3px solid; padding: 10px 14px; border-bottom: 1px solid ${border}; }
+  .impact-card:last-child { border-bottom: none; }
+  .impact-kind { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .impact-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+  .impact-chip { border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+  .impact-desc { font-size: 12px; color: ${sub}; line-height: 1.5; }
+  .impact-empty { padding: 10px 14px; font-size: 12px; color: ${sub}; }
 
   .legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 14px 8px; font-size: 11px; color: ${sub}; }
   .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .legend-dot-stripe { background: repeating-linear-gradient(45deg, #111111 0px, #111111 2px, ${ACT_UNCONSCIOUS} 2px, ${ACT_UNCONSCIOUS} 4px); }
 
-  .footer { margin-top: 24px; text-align: center; color: ${sub}; font-size: 10px; }
+  .footer { margin-top: 20px; padding: 8px 0; background: ${paperDeep}; border-top: 1px solid ${ink}; border-radius: 8px 8px 0 0; text-align: center; color: ${sub}; font-size: 10px; }
 </style>
 </head>
 <body>
@@ -1095,12 +1180,13 @@ function buildTransitHtml(result: CreateTransitResult): string {
 
   <!-- Body Graph -->
   <div class="graph-card">
-    <div class="graph-title">合成 Body Graph（個人 + 流日）</div>
+    <div class="graph-title">個人 + 流日 Body Graph</div>
     <div class="legend">
-      <span class="legend-dot" style="background:#111111"></span>個人意識（黑）
-      <span class="legend-dot" style="background:${ACT_UNCONSCIOUS}"></span>個人潛意識（紅）
+      <span class="legend-dot" style="background:#111111"></span>個人
+      <span class="legend-dot" style="background:${ACT_UNCONSCIOUS}"></span>流日
+      <span class="legend-dot legend-dot-stripe"></span>共有
     </div>
-    ${svgMarkup}
+    <div class="graph-container">${svgMarkup}</div>
   </div>
 
   <!-- 流日行星閘門 -->
@@ -1110,10 +1196,10 @@ function buildTransitHtml(result: CreateTransitResult): string {
   ${impactSection}
 
   <!-- 合成已定義中心 -->
-  ${result.combined.definedCenterIds.length > 0 ? section(`合成已定義中心（${result.combined.definedCenterIds.length}）`, tags(result.combined.definedCenterIds)) : ''}
+  ${section(`合成已定義中心（${result.combined.definedCenterIds.length}）`, centerTagsFor(result.combined.definedCenterIds))}
 
   <!-- 合成定義通道 -->
-  ${result.combined.definedChannelIds.length > 0 ? section(`合成定義通道（${result.combined.definedChannelIds.length}）`, tags(result.combined.definedChannelIds)) : ''}
+  ${result.combined.definedChannelIds.length > 0 ? section(`合成定義通道（${result.combined.definedChannelIds.length}）`, channelTagsFor(result.combined.definedChannelIds)) : ''}
 
   <!-- 個人激活閘門 -->
   ${result.personalGates.length > 0 ? section(`個人激活閘門（${result.personalGates.length}）`, gateTags(result.personalGates)) : ''}
@@ -1121,23 +1207,14 @@ function buildTransitHtml(result: CreateTransitResult): string {
   <!-- 流日新增閘門 -->
   ${transitOnlyGates.length > 0 ? section(`今日流日新增閘門（${transitOnlyGates.length}）`, gateTags(transitOnlyGates)) : ''}
 
-  <div class="footer"><p>© Retsnom · SelfMap · ${ts}</p></div>
+  <div class="footer"><p>© Retsnom</p></div>
 </body>
 </html>`
 }
 
-export async function downloadTransitPdf(result: CreateTransitResult): Promise<void> {
-  const html = buildTransitHtml(result)
+export async function downloadTransitPdf(result: CreateTransitResult, mode: PdfThemeMode = 'light', chartName?: string | null): Promise<void> {
+  const html = buildTransitHtml(result, mode)
   const { uri } = await Print.printToFileAsync({ html, base64: false })
-
-  if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(uri, {
-      mimeType: 'application/pdf',
-      dialogTitle: '儲存或分享流日分析報告',
-      UTI: 'com.adobe.pdf',
-    })
-  } else {
-    const { Alert } = await import('react-native')
-    Alert.alert('PDF 已產生', `報告已儲存至：${uri}`)
-  }
+  const filename = buildPdfFilename('流日', chartName)
+  await shareGeneratedPdf(uri, filename, '儲存或分享流日分析報告')
 }

@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { migrateLocalProfilesToDb } from '@/lib/birthProfileMigration'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -64,6 +65,7 @@ function AuthGuard() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
+    <ThemeProvider>
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ErrorBoundary>
         <AuthGuard />
@@ -77,6 +79,7 @@ export default function RootLayout() {
         </Stack>
       </ErrorBoundary>
     </ClerkProvider>
+    </ThemeProvider>
     </SafeAreaProvider>
   )
 }

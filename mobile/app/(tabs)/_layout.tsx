@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router'
-import Svg, { Path, Circle } from 'react-native-svg'
+import { Platform, Pressable, Text } from 'react-native'
+import Svg, { Path, Circle, Line } from 'react-native-svg'
 import type { ColorValue } from 'react-native'
-import { Colors } from '@/constants/tokens'
+import { useThemeColors, useThemeMode } from '@/contexts/ThemeContext'
 
 // ── 線條型 tab 圖示（24×24 viewBox，strokeWidth 1.8）──────────────────────────
 
@@ -53,14 +54,69 @@ function IconProfile({ color }: { color: ColorValue }) {
   )
 }
 
+function IconSun({ color }: { color: ColorValue }) {
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={4.2} stroke={color} strokeWidth={1.8} />
+      <Line x1={12} y1={2.5} x2={12} y2={4.9} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+      <Line x1={12} y1={19.1} x2={12} y2={21.5} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+      <Line x1={4.9} y1={4.9} x2={6.6} y2={6.6} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+      <Line x1={17.4} y1={17.4} x2={19.1} y2={19.1} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+      <Line x1={2.5} y1={12} x2={4.9} y2={12} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+      <Line x1={19.1} y1={12} x2={21.5} y2={12} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+      <Line x1={4.9} y1={19.1} x2={6.6} y2={17.4} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+      <Line x1={17.4} y1={6.6} x2={19.1} y2={4.9} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+    </Svg>
+  )
+}
+
+function IconMoon({ color }: { color: ColorValue }) {
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M20.2 14.4A8.6 8.6 0 019.6 3.8a8.6 8.6 0 1010.6 10.6z"
+        stroke={color} strokeWidth={1.8} strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
+
+// ── 主題切換按鈕：放在 tabs 最右側，不導覽、只切換主題 ──────────────────────────
+
+function ThemeToggleButton() {
+  const colors = useThemeColors()
+  const { mode, toggleTheme } = useThemeMode()
+  const isDark = mode === 'dark'
+
+  return (
+    <Pressable
+      onPress={toggleTheme}
+      accessibilityRole="button"
+      accessibilityLabel={isDark ? '切換為亮色主題' : '切換為暗色主題'}
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        padding: Platform.OS === 'android' ? 10 : 5,
+        gap: 3,
+      }}
+    >
+      {isDark ? <IconSun color={colors.text} /> : <IconMoon color={colors.sub} />}
+      <Text style={{ fontSize: 10, color: isDark ? colors.text : colors.muted }}>主題</Text>
+    </Pressable>
+  )
+}
+
 export default function TabsLayout() {
+  const colors = useThemeColors()
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: Colors.surface, borderTopColor: Colors.border },
-        tabBarActiveTintColor: Colors.accent,
-        tabBarInactiveTintColor: Colors.muted,
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.muted,
       }}
     >
       <Tabs.Screen
@@ -78,6 +134,11 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{ title: '帳號', tabBarIcon: ({ color }) => <IconProfile color={color} /> }}
+      />
+      <Tabs.Screen
+        name="theme-toggle"
+        options={{ tabBarButton: () => <ThemeToggleButton /> }}
+        listeners={{ tabPress: e => e.preventDefault() }}
       />
     </Tabs>
   )

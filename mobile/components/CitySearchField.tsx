@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   View,
   Text,
@@ -7,7 +7,8 @@ import {
   StyleSheet,
 } from 'react-native'
 import Svg, { Circle, Path } from 'react-native-svg'
-import { Colors, Radius } from '@/constants/tokens'
+import { Radius, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 import TimezonePickerModal from '@/components/TimezonePickerModal'
 
 type Props = {
@@ -35,6 +36,8 @@ function IconClock({ color }: { color: string }) {
 export default function CitySearchField({ city, timezone, onChangeCity, onSelectTimezone, onFocus }: Props) {
   const [tzModalVisible, setTzModalVisible] = useState(false)
   const handleClear = useCallback(() => onChangeCity(''), [onChangeCity])
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
 
   return (
     <View>
@@ -79,7 +82,7 @@ export default function CitySearchField({ city, timezone, onChangeCity, onSelect
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',

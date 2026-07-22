@@ -1,14 +1,17 @@
 import { useRouter } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import * as WebBrowser from 'expo-web-browser'
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn'
 import { useLineSignIn } from '@/hooks/useLineSignIn'
 
 export default function SignInScreen() {
   const router = useRouter()
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   const [loadingGoogle, setLoadingGoogle] = useState(false)
 
   useEffect(() => {
@@ -77,7 +80,7 @@ export default function SignInScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container:        { flex: 1, backgroundColor: Colors.bg },
   inner:            { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.lg, padding: Spacing.xl },
   title:            { fontSize: 36, fontWeight: '700', color: Colors.text },

@@ -2,11 +2,11 @@ import { useAuth, useUser } from '@clerk/expo'
 import { useFocusEffect, useLocalSearchParams } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import * as WebBrowser from 'expo-web-browser'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
-import { ScreenHeader } from '@/components/ScreenHeader'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 import { SubTabBar } from '@/components/SubTabBar'
 import { InputModal } from '@/components/InputModal'
 import { BirthProfileSheet } from '@/components/BirthProfileSheet'
@@ -33,6 +33,8 @@ const OUTER_TABS = [
 // ─── 個人頁面內容 ────────────────────────────────────────────────────────────
 
 function PersonalView() {
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
   const { signOut, getToken } = useAuth()
   const { user } = useUser()
   const getTokenRef = useRef(getToken)
@@ -411,6 +413,8 @@ function PersonalView() {
 // ─── 未登入提示 ──────────────────────────────────────────────────────────────
 
 function SignInPrompt() {
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
   const { handleGoogleSignIn } = useGoogleSignIn()
   const { handleLineSignIn } = useLineSignIn()
 
@@ -461,6 +465,8 @@ function SignInPrompt() {
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
   const { isSignedIn } = useAuth()
   const { chartTab: rawChartTab } = useLocalSearchParams<{ chartTab?: string }>()
   const VALID_CHART_TABS = ['personal', 'composite', 'transit'] as const
@@ -477,7 +483,6 @@ export default function ProfileScreen() {
   if (!isSignedIn) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'left', 'right']}>
-        <ScreenHeader title="帳號" />
         <SignInPrompt />
       </SafeAreaView>
     )
@@ -485,7 +490,6 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={s.container} edges={['top', 'left', 'right']}>
-      <ScreenHeader title="帳號" />
       <SubTabBar tabs={OUTER_TABS} active={outerTab} onSelect={setOuterTab} />
 
       <View style={{ flex: 1, display: outerTab === 'charts' ? 'flex' : 'none' }}>
@@ -501,7 +505,7 @@ export default function ProfileScreen() {
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   inner:     { padding: Spacing.xl, gap: Spacing.lg, paddingBottom: 48 },
 

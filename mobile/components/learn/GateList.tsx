@@ -2,14 +2,19 @@ import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { HD_GATES } from '@shared/humanDesign/hd-chart-data'
 import { CENTER_ZH } from '@/lib/hd-normalizers'
-import { Colors, Radius } from '@/constants/tokens'
-import { ls } from './learnStyles'
+import { Radius, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
+import { createLs } from './learnStyles'
 
 export function GateList() {
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
   const toggle = (num: number) =>
     setExpanded(prev => { const n = new Set(prev); n.has(num) ? n.delete(num) : n.add(num); return n })
+
+  const Colors = useThemeColors()
+  const ls = useMemo(() => createLs(Colors), [Colors])
+  const s = useMemo(() => createStyles(Colors), [Colors])
 
   const entries = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -66,7 +71,7 @@ export function GateList() {
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   badge: {
     width: 40,
     height: 40,

@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import WheelPicker from './WheelPicker'
-import { Colors, Radius } from '@/constants/tokens'
+import { Radius, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 // ── 日期 ──────────────────────────────────────────────
 
@@ -20,6 +22,8 @@ type DatePickerProps = {
 }
 
 export function DatePicker({ value, onChange }: DatePickerProps) {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   const days = Array.from(
     { length: daysInMonth(value.year, value.month) },
     (_, i) => String(i + 1).padStart(2, '0'),
@@ -72,6 +76,8 @@ type TimePickerProps = {
 }
 
 export function TimePicker({ value, onChange }: TimePickerProps) {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   return (
     <View style={styles.row}>
       <View style={styles.col}>
@@ -89,7 +95,7 @@ export function TimePicker({ value, onChange }: TimePickerProps) {
 
 // ── styles ──────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

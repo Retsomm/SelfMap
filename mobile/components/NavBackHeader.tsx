@@ -1,11 +1,15 @@
+import { useMemo } from 'react'
 import { useRouter } from 'expo-router'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { Colors, Spacing } from '@/constants/tokens'
+import { Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 // 純箭頭返回鍵，避免使用原生 header：iOS 26 Liquid Glass 會強制在原生 header
 // 的左右按鈕外包一層白色玻璃背景，無法透過 headerLeft 自訂內容關閉
 export function NavBackHeader({ title, fallbackRoute = '/(tabs)' }: { title: string; fallbackRoute?: string }) {
   const router = useRouter()
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -26,7 +30,7 @@ export function NavBackHeader({ title, fallbackRoute = '/(tabs)' }: { title: str
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

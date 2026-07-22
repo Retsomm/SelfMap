@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/expo'
 import { useRouter } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Clipboard,
@@ -22,7 +22,8 @@ import DetailBottomSheet, { type SheetTarget } from '@/components/DetailBottomSh
 import { SectionCard, Row, Tag } from '@/components/chart/ChartPrimitives'
 import { NavBackHeader } from '@/components/NavBackHeader'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors, useThemeMode } from '@/contexts/ThemeContext'
 
 // ─── Action buttons ───────────────────────────────────────────────────────────
 
@@ -44,6 +45,8 @@ function ActionButton({
   variant?: 'primary' | 'outline'
 }) {
   const isPrimary = variant === 'primary'
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   return (
     <Pressable
       style={({ pressed }) => [
@@ -66,6 +69,9 @@ function ActionButton({
 function ChartPreviewScreenContent() {
   const { isSignedIn, getToken } = useAuth()
   const router = useRouter()
+  const Colors = useThemeColors()
+  const { mode } = useThemeMode()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   const [chart, setChart] = useState<PendingChart | null>(null)
   const [sheetTarget, setSheetTarget] = useState<SheetTarget | null>(null)
   const [saveState, setSaveState] = useState<ActionState>('idle')
@@ -114,7 +120,7 @@ function ChartPreviewScreenContent() {
     if (!isSignedIn) { requireLogin(); return }
     setPdfState('loading')
     try {
-      await downloadChartAsPdf(chart!)
+      await downloadChartAsPdf(chart!, mode)
     } catch (err) {
       Alert.alert('下載失敗', err instanceof Error ? err.message : '請稍後再試')
     } finally {
@@ -398,7 +404,7 @@ export default function ChartPreviewScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   inner:     { padding: Spacing.lg, paddingBottom: Spacing.xxl, rowGap: Spacing.md },
 

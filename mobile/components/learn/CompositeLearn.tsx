@@ -1,7 +1,10 @@
+import { useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors, useThemeMode } from '@/contexts/ThemeContext'
 
-const CONNECTION_TYPES = [
+// 四種連結動力的強調色，另立一份深色變體（不完全對應 Colors 既有色票，屬於獨立分類色）
+const CONNECTION_TYPES_LIGHT = [
   {
     label: '電磁關係 (Electromagnetic)',
     desc:  '互補吸引 — 一方有 A 閘門，另一方有 B 閘門，合力激活完整通道。最經典的「致命吸引力」，容易一見鍾情但也容易相愛相殺。',
@@ -26,6 +29,13 @@ const CONNECTION_TYPES = [
     accentColor: '#6b7280',
     bgColor: 'rgba(43,31,20,0.05)',
   },
+] as const
+
+const CONNECTION_TYPES_DARK = [
+  { ...CONNECTION_TYPES_LIGHT[0], accentColor: '#e17761', bgColor: 'rgba(225,119,97,0.18)' },
+  { ...CONNECTION_TYPES_LIGHT[1], accentColor: '#8fc26a', bgColor: 'rgba(143,194,106,0.18)' },
+  { ...CONNECTION_TYPES_LIGHT[2], accentColor: '#dcc04a', bgColor: 'rgba(220,192,74,0.18)' },
+  { ...CONNECTION_TYPES_LIGHT[3], accentColor: '#9aa4b0', bgColor: 'rgba(154,164,176,0.16)' },
 ] as const
 
 const INTEGRATION_THEMES = [
@@ -56,6 +66,11 @@ const INTEGRATION_THEMES = [
 ] as const
 
 export function CompositeLearn() {
+  const Colors = useThemeColors()
+  const { mode } = useThemeMode()
+  const s = useMemo(() => createStyles(Colors), [Colors])
+  const CONNECTION_TYPES = mode === 'dark' ? CONNECTION_TYPES_DARK : CONNECTION_TYPES_LIGHT
+
   return (
     <ScrollView contentContainerStyle={s.inner}>
       <Text style={s.intro}>
@@ -105,7 +120,7 @@ export function CompositeLearn() {
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   inner: { padding: Spacing.lg, gap: Spacing.md, paddingBottom: 48 },
 
   intro: { fontSize: 14, color: Colors.sub, lineHeight: 22, marginBottom: 4 },

@@ -1,7 +1,11 @@
+import { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 export function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{title}</Text>
@@ -25,6 +29,8 @@ export function Row({
   tappable?: boolean
   onPress?: () => void
 }) {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   const inner = (
     <View style={[styles.row, tappable && styles.rowTappable]}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -45,6 +51,8 @@ export function Row({
 }
 
 export function Tag({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   const chip = (
     <View style={[styles.tag, active && styles.tagActive, !!onPress && styles.tagTappable]}>
       <Text style={[styles.tagText, active && styles.tagTextActive]}>{label}</Text>
@@ -58,7 +66,7 @@ export function Tag({ label, active, onPress }: { label: string; active?: boolea
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,

@@ -1,6 +1,7 @@
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, useMemo } from 'react'
 import { ScrollView, Text, View, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native'
-import { Colors } from '@/constants/tokens'
+import { type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 import { useScrollLock } from '@/contexts/ScrollLockContext'
 
 const ITEM_H = 44
@@ -18,6 +19,8 @@ export default function WheelPicker({ items, selectedIndex, onSelect, width = 80
   const isMounting = useRef(true)
   const isLocked = useRef(false)
   const { lockScroll, unlockScroll } = useScrollLock()
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
 
   useEffect(() => {
     const offset = selectedIndex * ITEM_H
@@ -83,7 +86,7 @@ export default function WheelPicker({ items, selectedIndex, onSelect, width = 80
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { position: 'relative', overflow: 'hidden' },
   line: {
     position: 'absolute',

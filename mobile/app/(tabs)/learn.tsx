@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router'
+import { useMemo } from 'react'
 import {
   Pressable,
   ScrollView,
@@ -7,8 +8,8 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { ScreenHeader } from '@/components/ScreenHeader'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 const TOPICS = [
   { id: 'type',       label: '五大類型',  icon: '◉', sub: '你的能量類型決定你如何行動與等待', count: '5 種類型' },
@@ -24,10 +25,11 @@ const TOPICS = [
 
 export default function LearnScreen() {
   const router = useRouter()
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <ScreenHeader title="學習" />
       <ScrollView contentContainerStyle={styles.inner}>
         <Text style={styles.intro}>探索人類圖的核心概念，了解自己的設計藍圖</Text>
 
@@ -55,7 +57,7 @@ export default function LearnScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   inner:     { padding: Spacing.xl, gap: Spacing.md, paddingBottom: 48 },
 

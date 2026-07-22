@@ -181,8 +181,8 @@ export default function BodyGraph({
                C 414 322, 414 302, 413 278
                C 482 260, 504 215, 505 175
                C 505 80, 470 -32, 350 -32 Z"
-            fill="rgba(43, 31, 20, 0.022)"
-            stroke="rgba(43, 31, 20, 0.14)"
+            fill="rgba(var(--ink-rgb), 0.022)"
+            stroke="rgba(var(--ink-rgb), 0.14)"
             strokeWidth="1.1"
           />
         </g>

@@ -20,10 +20,44 @@
   --tan-2:   #c9aa78;
   --crimson: #c8553d;
   --crimson-2: #d96a52;
+  --transit: #d04830;
+
+  /* rgb 分量版本，供 rgba(var(--ink-rgb), alpha) 這類半透明疊層使用 */
+  --ink-rgb: 43, 31, 20;
+  --paper-rgb: 239, 229, 208;
+  /* 遮罩固定為暗色調光，不隨主題翻轉（暗色主題下靠提高透明度加深） */
+  --scrim: rgba(var(--ink-rgb), 0.22);
+  /* --tan-2 等強調色在兩個主題下都維持偏淺，疊在上面的文字固定用深色，不隨主題翻轉，避免暗色主題下淺底配淺字 */
+  --ink-on-tan: #2b1f14;
 
   --font-serif: var(--font-serif, "Georgia", serif);
   --font-sans:  var(--font-sans, system-ui, sans-serif);
   --font-mono:  var(--font-mono, ui-monospace, monospace);
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --paper: #1c1712;
+  --paper-deep: #14100c;
+  --surface-muted: #241d16;
+  --ink: #ede3cf;
+  --ink-soft: #b7a688;
+  --rule: #ede3cf;
+
+  --mustard: #e8cf72;
+  --olive:   #b9d17f;
+  --tan:     #cbb086;
+  --tan-2:   #dcc296;
+  --crimson: #e17761;
+  --crimson-2: #ec8d78;
+  --transit: #e08061;
+
+  --ink-rgb: 237, 227, 207;
+  --paper-rgb: 28, 23, 18;
+  --scrim: rgba(0, 0, 0, 0.55);
+
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -40,9 +74,9 @@ body {
   line-height: 1.45;
   min-height: 100vh;
   background-image:
-    radial-gradient(circle at 30% 20%, rgba(43, 31, 20, 0.025) 0, transparent 50%),
-    radial-gradient(circle at 70% 80%, rgba(43, 31, 20, 0.022) 0, transparent 50%),
-    repeating-linear-gradient(0deg, rgba(43, 31, 20, 0.012) 0 1px, transparent 1px 3px);
+    radial-gradient(circle at 30% 20%, rgba(var(--ink-rgb), 0.025) 0, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(var(--ink-rgb), 0.022) 0, transparent 50%),
+    repeating-linear-gradient(0deg, rgba(var(--ink-rgb), 0.012) 0 1px, transparent 1px 3px);
 }
 
 @media (min-width: 768px) {
@@ -68,7 +102,7 @@ body {
   padding-top: 28px;
 }
 
-.hd-arrows-col--left  { color: #c8553d; --hd-arrow-accent: #c8553d; }
+.hd-arrows-col--left  { color: var(--crimson); --hd-arrow-accent: var(--crimson); }
 .hd-arrows-col--right { color: var(--ink); --hd-arrow-accent: var(--ink); }
 
 .hd-arrow-item {
@@ -180,7 +214,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 4px 0;
-  border-bottom: 1px dotted rgba(43, 31, 20, 0.25);
+  border-bottom: 1px dotted rgba(var(--ink-rgb), 0.25);
   font-size: 16px;
 }
 .hd-legend-row:last-child { border-bottom: 0; }
@@ -219,7 +253,7 @@ body {
   flex-direction: column;
   justify-content: space-between;
 }
-.hd-planets-side--design    { color: #c8553d; }
+.hd-planets-side--design    { color: var(--crimson); }
 .hd-planets-side--personality { color: var(--ink); }
 
 .hd-planets-side-header {
@@ -304,7 +338,7 @@ body {
   transform-origin: center;
   transform-box: fill-box;
 }
-.hd-center-shape:hover { filter: brightness(1.06) drop-shadow(0 4px 12px rgba(43,31,20,0.18)); }
+.hd-center-shape:hover { filter: brightness(1.06) drop-shadow(0 4px 12px rgba(var(--ink-rgb),0.18)); }
 .hd-center-shape.active { filter: brightness(1.08) drop-shadow(0 0 0 2px var(--ink)); }
 
 .hd-channel { cursor: pointer; transition: stroke 180ms ease, opacity 180ms ease; }
@@ -352,7 +386,7 @@ body {
   transition: border-color 120ms ease;
   min-width: 0;
 }
-.hd-input-field:focus { border-color: var(--ink); outline: 2px solid rgba(43,31,20,0.18); outline-offset: 2px; }
+.hd-input-field:focus { border-color: var(--ink); outline: 2px solid rgba(var(--ink-rgb),0.18); outline-offset: 2px; }
 .hd-input-field[type="number"] { width: 64px; }
 .hd-input-field::-webkit-credentials-auto-fill-button { visibility: hidden; display: none !important; width: 0; height: 0; }
 .hd-input-field::-webkit-contacts-auto-fill-button { visibility: hidden; display: none !important; width: 0; height: 0; }
@@ -417,7 +451,7 @@ body {
 
 .hd-drawer-scrim {
   position: fixed; inset: 0;
-  background: rgba(43, 31, 20, 0.22);
+  background: var(--scrim);
   backdrop-filter: blur(1.5px);
   z-index: 50;
   opacity: 0;
@@ -438,7 +472,7 @@ body {
   transform: translateX(100%);
   transition: transform 320ms cubic-bezier(0.7, 0, 0.2, 1);
   display: flex; flex-direction: column;
-  box-shadow: -20px 0 60px rgba(43, 31, 20, 0.18);
+  box-shadow: -20px 0 60px rgba(var(--ink-rgb), 0.18);
 }
 .hd-drawer.open { transform: translateX(0); }
 
@@ -569,7 +603,7 @@ body {
   border: 1px solid var(--ink);
   border-left: 3px solid var(--ink);
   opacity: 1;
-  background: rgba(43, 31, 20, 0.04);
+  background: rgba(var(--ink-rgb), 0.04);
 }
 .hd-center-state-label {
   font-family: var(--font-mono);
@@ -664,7 +698,7 @@ body {
   min-width: 0;
 }
 
-.composite-person-panel--a { color: #c8553d; }
+.composite-person-panel--a { color: var(--crimson); }
 .composite-person-panel--b { color: var(--ink); }
 
 .composite-person-label {
@@ -737,7 +771,7 @@ body {
     border-top: 1px solid var(--ink);
     padding-top: 12px;
   }
-  .composite-planets-mobile-col--a { color: #c8553d; }
+  .composite-planets-mobile-col--a { color: var(--crimson); }
   .composite-planets-mobile-col--b { color: var(--ink); }
   .composite-planets-mobile-header {
     font-size: 12px;
@@ -764,7 +798,7 @@ body {
    （含 ≤760px 自動隱藏規則），列的排版比照個人頁 .hd-planet-row（space-between 撐開寬度） */
 
 .transit-gate-panel--personal { color: var(--ink); }
-.transit-gate-panel--transit { color: #d04830; }
+.transit-gate-panel--transit { color: var(--transit); }
 
 .transit-planet-row {
   display: flex;
@@ -781,9 +815,9 @@ body {
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
-.transit-gate--design      { color: #c8553d; }
+.transit-gate--design      { color: var(--crimson); }
 .transit-gate--personality { color: var(--ink); }
-.transit-gate--transit     { color: #d04830; }
+.transit-gate--transit     { color: var(--transit); }
 
 /* ───────── Planets mobile list (hidden on desktop) ───────── */
 .hd-planets-mobile { display: none; }
@@ -857,7 +891,7 @@ body {
     font-size: 12px;
     line-height: 1.5;
   }
-  .hd-planets-mobile-design     { color: #c8553d; }
+  .hd-planets-mobile-design     { color: var(--crimson); }
   .hd-planets-mobile-personality { color: var(--ink); }
   .hd-planets-mobile-header {
     font-size: 12px;

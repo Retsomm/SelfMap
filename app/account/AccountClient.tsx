@@ -480,7 +480,7 @@ function AccountContent() {
             </button>
 
             {activeSection === 'humandesign' && (
-              <div className="border-l border-dotted border-[rgba(43,31,20,0.3)] ml-5">
+              <div className="border-l border-dotted border-[rgba(var(--ink-rgb),0.3)] ml-5">
                 {CHART_TABS.map(t => (
                   <div key={t.id}>
                     <button

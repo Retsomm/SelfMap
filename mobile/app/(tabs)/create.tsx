@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   Platform,
   Pressable,
@@ -18,11 +18,11 @@ import CitySearchField from '@/components/CitySearchField'
 import { matchCity } from '@/lib/cities'
 import TransitView from '@/components/TransitView'
 import CompositeView from '@/components/CompositeView'
-import { ScreenHeader } from '@/components/ScreenHeader'
 import { SubTabBar } from '@/components/SubTabBar'
 import { BirthProfilePickerModal } from '@/components/BirthProfilePickerModal'
 import { AppliedProfileCard } from '@/components/AppliedProfileCard'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 import { type BirthProfile } from '@/lib/birthProfiles'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight'
@@ -39,6 +39,8 @@ const SUB_TABS = [
 
 function CreatePersonalView() {
   const router = useRouter()
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   const scrollRef = useRef<ScrollView>(null)
   const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
   const keyboardHeight = useKeyboardHeight()
@@ -225,6 +227,8 @@ function CreatePersonalView() {
 }
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>{label}</Text>
@@ -236,12 +240,12 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function CreateScreen() {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   const [subTab, setSubTab] = useState<SubTab>('personal')
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <ScreenHeader title="建立圖表" />
-
       <SubTabBar tabs={SUB_TABS} active={subTab} onSelect={setSubTab} />
 
       {/* 全部保持掛載只切換 display，避免切 sub-tab 時重新 mount + fetch */}
@@ -260,7 +264,7 @@ export default function CreateScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
 
   inner:        { padding: Spacing.xl, gap: 20, paddingBottom: 48 },

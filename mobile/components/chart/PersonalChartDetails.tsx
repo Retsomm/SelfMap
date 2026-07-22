@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { type Chart, type StoredPlanet } from '@/lib/api'
 import { HD_CENTERS_INFO, ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@shared/humanDesign/hd-chart-data'
@@ -5,7 +6,8 @@ import { findChannelById } from '@/lib/hd-normalizers'
 import { getTypeMeta, getTypeLabel } from '@/lib/hd-type-meta'
 import { type SheetTarget } from '@/components/DetailBottomSheet'
 import { SectionCard, Row, Tag } from '@/components/chart/ChartPrimitives'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 type Activations = Record<number, { c?: boolean; u?: boolean; t?: boolean }>
 
@@ -20,6 +22,8 @@ type Props = {
 /** 個人圖專屬區塊：類型／設計／九大中心／通道／行星閘門對照／激活閘門／輪迴交叉／四箭頭 */
 export default function PersonalChartDetails({ chart, personalChartCenterIds, activations, planets, open }: Props) {
   const typeMeta = getTypeMeta(chart.type)
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
 
   return (
     <>
@@ -188,7 +192,7 @@ export default function PersonalChartDetails({ chart, personalChartCenterIds, ac
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 6 },
 
   gateGrid:    { flexDirection: 'row', flexWrap: 'wrap', columnGap: Spacing.sm, rowGap: Spacing.sm },

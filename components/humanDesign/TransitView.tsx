@@ -134,7 +134,7 @@ const CentersSection = ({ personal, transit, combinedCenterIds }: { personal: Hd
               className={[
                 'flex flex-col gap-1.5 px-3 py-2.5 border',
                 openActivated
-                  ? 'border-[#d04830]/50 bg-[#d04830]/5'
+                  ? 'border-(--transit)/50 bg-(--transit)/5'
                   : inPersonal
                   ? 'border-(--ink)/40 bg-(--ink)/5'
                   : 'border-(--ink)/15',
@@ -150,7 +150,7 @@ const CentersSection = ({ personal, transit, combinedCenterIds }: { personal: Hd
                   </span>
                 )}
                 {!inPersonal && combinedCenterIds.has(cId) && (
-                  <span className="font-mono text-[12px] md:text-sm tracking-[0.05em] uppercase bg-[#d04830] text-white px-1.5 py-0.5">
+                  <span className="font-mono text-[12px] md:text-sm tracking-[0.05em] uppercase bg-(--transit) text-white px-1.5 py-0.5">
                     流日
                   </span>
                 )}
@@ -166,8 +166,8 @@ const CentersSection = ({ personal, transit, combinedCenterIds }: { personal: Hd
       </div>
 
       {openActivatedCenters.length > 0 && (
-        <div className="px-4 py-3 border border-[#d04830]/30 bg-[#d04830]/4 mt-3">
-          <p className="font-mono text-[12px] md:text-base font-semibold text-[#d04830] tracking-[0.06em] mb-1">
+        <div className="px-4 py-3 border border-(--transit)/30 bg-(--transit)/4 mt-3">
+          <p className="font-mono text-[12px] md:text-base font-semibold text-(--transit) tracking-[0.06em] mb-1">
             今日被流日暫時啟動：{openActivatedCenters.map(cId => CENTER_INFO[cId].name).join('、')}
           </p>
           <p className="font-mono text-[12px] md:text-base leading-relaxed text-(--ink-soft)">
@@ -186,7 +186,7 @@ const GateRow = ({ gate, planets, shared }: { gate: number; planets: string[]; s
     'flex items-start gap-2 px-3 py-2 border',
     shared ? 'border-(--ink)/25 bg-(--ink)/3' : 'border-(--ink)/10',
   ].join(' ')}>
-    <span className={`font-mono text-[14px] md:text-base font-semibold w-8 shrink-0 mt-0.5 ${shared ? 'text-(--ink)' : 'text-[#d04830]'}`}>
+    <span className={`font-mono text-[14px] md:text-base font-semibold w-8 shrink-0 mt-0.5 ${shared ? 'text-(--ink)' : 'text-(--transit)'}`}>
       {gate}
     </span>
     <div className="flex flex-col gap-1 flex-1 min-w-0">
@@ -311,9 +311,9 @@ const ChannelsSection = ({ personal, transit }: { personal: HdResult; transit: T
                 {newChannels.map(ch => (
                   <div
                     key={ch.id}
-                    className="flex items-center gap-3 px-4 py-2.5 border border-[#d04830]/30 bg-[#d04830]/4"
+                    className="flex items-center gap-3 px-4 py-2.5 border border-(--transit)/30 bg-(--transit)/4"
                   >
-                    <span className="font-mono text-[14px] md:text-base font-semibold text-[#d04830]">{ch.id}</span>
+                    <span className="font-mono text-[14px] md:text-base font-semibold text-(--transit)">{ch.id}</span>
                     <span className="font-mono text-[12px] md:text-sm text-(--ink-soft)">閘門 {ch.gateA} · {ch.gateB}</span>
                   </div>
                 ))}
@@ -338,7 +338,7 @@ const ChannelsSection = ({ personal, transit }: { personal: HdResult; transit: T
                     <span className="font-mono text-[12px] md:text-sm text-(--ink-soft)">
                       <span className="text-(--ink) font-semibold">{personalGate}</span>（個人）
                       {' + '}
-                      <span className="text-[#d04830] font-semibold">{transitGate}</span>（流日）
+                      <span className="text-(--transit) font-semibold">{transitGate}</span>（流日）
                     </span>
                   </div>
                 ))}
@@ -478,17 +478,17 @@ export default function TransitView({ personal, transit, onRefresh, refreshing, 
         <div className="flex flex-wrap gap-4 items-center px-1">
           <span className="font-mono text-[12px] md:text-base text-(--ink-soft) uppercase tracking-[0.1em]">圖例</span>
           <div className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-black" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-(--ink)" />
             <span className="font-mono text-[12px] md:text-base text-(--ink)">個人圖</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-[#d04830]" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-(--transit)" />
             <span className="font-mono text-[12px] md:text-base text-(--ink)">流日</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span
               className="inline-block w-3 h-3 rounded-sm"
-              style={{ background: 'repeating-linear-gradient(45deg, #000 0 3px, #d04830 3px 6px)' }}
+              style={{ background: 'repeating-linear-gradient(45deg, var(--ink) 0 3px, var(--transit) 3px 6px)' }}
             />
             <span className="font-mono text-[12px] md:text-base text-(--ink)">共同激活</span>
           </div>

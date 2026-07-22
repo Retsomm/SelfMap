@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 const SECTIONS = [
   {
@@ -25,6 +27,8 @@ const SECTIONS = [
 ]
 
 export function TransitLearn() {
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
   return (
     <ScrollView contentContainerStyle={s.inner}>
       <Text style={s.intro}>
@@ -44,7 +48,7 @@ export function TransitLearn() {
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   inner: { padding: Spacing.lg, gap: Spacing.md, paddingBottom: 48 },
 
   intro: { fontSize: 14, color: Colors.sub, lineHeight: 22, marginBottom: 4 },

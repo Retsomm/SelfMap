@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Alert,
   Clipboard,
@@ -32,7 +32,8 @@ import CompositeInfo from '@/components/chart/CompositeInfo'
 import { LoadingView, ErrorView } from '@/components/StateViews'
 import { NavBackHeader } from '@/components/NavBackHeader'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors, useThemeMode } from '@/contexts/ThemeContext'
 
 type ActionState = 'idle' | 'loading'
 
@@ -63,6 +64,8 @@ function ActionButton({
   variant?: 'primary' | 'outline'
 }) {
   const isPrimary = variant === 'primary'
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   return (
     <Pressable
       style={({ pressed }) => [
@@ -81,6 +84,9 @@ function ActionButton({
 }
 
 function ChartDetailScreenContent() {
+  const Colors = useThemeColors()
+  const { mode } = useThemeMode()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   const { id } = useLocalSearchParams<{ id: string }>()
   const {
     chart,
@@ -221,11 +227,11 @@ function ChartDetailScreenContent() {
       if (isComposite) {
         const result = await getCompositeResult()
         if (!result) throw new Error('缺少完整出生資料，無法產生合圖報告')
-        await downloadCompositePdf(result)
+        await downloadCompositePdf(result, mode, chart!.name)
       } else if (transitSnapshot) {
         const result = await getTransitResult()
         if (!result) throw new Error('缺少時區資料，無法產生流日報告')
-        await downloadTransitPdf(result)
+        await downloadTransitPdf(result, mode, chart!.name)
       } else {
         await downloadChartAsPdf({
           name: chart!.name ?? '',
@@ -246,7 +252,7 @@ function ChartDetailScreenContent() {
           incarnationCross: chart!.meta?.incarnationCross,
           variables: chart!.meta?.variables,
           arrows: chart!.meta?.arrows,
-        })
+        }, mode)
       }
     } catch (err) {
       Alert.alert('下載失敗', err instanceof Error ? err.message : '請稍後再試')
@@ -416,7 +422,7 @@ export default function ChartDetailScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   inner:     { padding: Spacing.lg, paddingBottom: Spacing.xxl, rowGap: Spacing.md },
 

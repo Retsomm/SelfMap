@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { HD_CENTERS_INFO } from '@shared/humanDesign/hd-chart-data'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
-import { ls } from './learnStyles'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
+import { createLs } from './learnStyles'
 
 const CENTER_ORDER = ['head', 'ajna', 'throat', 'g', 'heart', 'spleen', 'sacral', 'solar', 'root']
 const CENTER_COLOR: Record<string, string> = {
@@ -14,6 +15,10 @@ export function CenterList() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const toggle = (id: string) =>
     setExpanded(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+
+  const Colors = useThemeColors()
+  const ls = useMemo(() => createLs(Colors), [Colors])
+  const s = useMemo(() => createStyles(Colors), [Colors])
 
   return (
     <ScrollView contentContainerStyle={ls.inner}>
@@ -44,8 +49,8 @@ export function CenterList() {
             {open && (
               <View style={ls.accordionBody}>
                 <Text style={ls.paragraph}>{info.description.zh}</Text>
-                <ExpandSection label="已定義" body={info.definedContent.zh} color={Colors.accent} />
-                <ExpandSection label="開放"   body={info.openContent.zh}    color={Colors.sub} />
+                <ExpandSection s={s} ls={ls} label="已定義" body={info.definedContent.zh} color={Colors.accent} />
+                <ExpandSection s={s} ls={ls} label="開放"   body={info.openContent.zh}    color={Colors.sub} />
                 {info.gates.length > 0 && (
                   <View style={s.gatesRow}>
                     <Text style={ls.miniLabel}>包含閘門</Text>
@@ -67,7 +72,13 @@ export function CenterList() {
   )
 }
 
-function ExpandSection({ label, body, color }: { label: string; body: string; color: string }) {
+function ExpandSection({ s, ls, label, body, color }: {
+  s: ReturnType<typeof createStyles>
+  ls: ReturnType<typeof createLs>
+  label: string
+  body: string
+  color: string
+}) {
   return (
     <View style={s.expandSection}>
       <Text style={[s.expandLabel, { color }]}>{label}</Text>
@@ -76,7 +87,7 @@ function ExpandSection({ label, body, color }: { label: string; body: string; co
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   dot:          { width: 12, height: 12, borderRadius: 6, marginTop: 6 },
   expandSection:{ gap: 6 },
   expandLabel:  { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },

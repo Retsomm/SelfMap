@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   StyleSheet,
   Text,
@@ -6,7 +7,8 @@ import {
 } from 'react-native'
 import { DatePicker, TimePicker } from '@/components/DateTimePicker'
 import CitySearchField from '@/components/CitySearchField'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 const TODAY = new Date()
 
@@ -45,6 +47,8 @@ export default function BirthDataForm({
   onClearError,
   onCityFocus,
 }: Props) {
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
   const birthDate = `${value.date.year}-${String(value.date.month).padStart(2, '0')}-${String(value.date.day).padStart(2, '0')}`
   const birthTime = `${String(value.time.hour).padStart(2, '0')}:${String(value.time.minute).padStart(2, '0')}`
 
@@ -97,7 +101,7 @@ export default function BirthDataForm({
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   root:        { gap: Spacing.lg },
   section:     { gap: Spacing.sm },
   label:       { fontSize: 14, color: Colors.sub, fontWeight: '600' },
