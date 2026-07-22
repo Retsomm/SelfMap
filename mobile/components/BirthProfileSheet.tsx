@@ -45,10 +45,18 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
   }
 
   async function handleSave() {
-    const matched = matchCity(form.city)
-    if (!matched) {
-      setFieldError('找不到這個地點，請確認拼字或改用資料庫中的地名')
-      return
+    // 若已透過時區選擇彈窗手動指定時區，form.timezone 已經是可信值，跳過 matchCity——
+    // 手動選的時區不一定在 mobile 這份城市清單裡，硬比對只會誤判成「地點錯誤」
+    let finalLocation = form.city
+    let finalTimezone = form.timezone
+    if (!form.timezone) {
+      const matched = matchCity(form.city)
+      if (!matched) {
+        setFieldError('找不到這個地點，請確認拼字或改用資料庫中的地名')
+        return
+      }
+      finalLocation = matched.name
+      finalTimezone = matched.timezone
     }
     setFieldError(null)
     setSaving(true)
@@ -60,8 +68,8 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
         label: form.name.trim() || '未命名',
         date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
         time: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
-        location: matched.name,
-        timezone: matched.timezone,
+        location: finalLocation,
+        timezone: finalTimezone,
       })
     } finally {
       setSaving(false)
