@@ -380,13 +380,13 @@ export const HD_CENTERS_INFO: Record<string, ChartCenter> = {
 
 // Legend items for the left column
 export const LEGEND_ITEMS = [
-  { id: 'head',   cls: 'tri-up',    color: '#d9c25e', cn: '頭腦',   en: 'Head',         code: 'I' },
-  { id: 'ajna',   cls: 'tri-down',  color: '#a8c065', cn: '邏輯',   en: 'Ajna',         code: 'II' },
-  { id: 'throat', cls: 'square',    color: '#b89968', cn: '喉嚨',   en: 'Throat',       code: 'III' },
-  { id: 'g',      cls: 'diamond',   color: '#d9c25e', cn: 'G 中心', en: 'Identity',     code: 'IV' },
-  { id: 'heart',  cls: 'tri-left',  color: '#c8553d', cn: '意志力', en: 'Will',         code: 'V' },
-  { id: 'spleen', cls: 'tri-right', color: '#b89968', cn: '直覺',   en: 'Spleen',       code: 'VI' },
-  { id: 'sacral', cls: 'square',    color: '#c8553d', cn: '薦骨',   en: 'Sacral',       code: 'VII' },
-  { id: 'solar',  cls: 'tri-left',  color: '#b89968', cn: '情緒',   en: 'Solar Plexus', code: 'VIII' },
-  { id: 'root',   cls: 'square',    color: '#b89968', cn: '根部',   en: 'Root',         code: 'IX' },
+  { id: 'head',   cls: 'tri-up',    color: HD_PALETTE.mustard, cn: '頭腦',   en: 'Head',         code: 'I' },
+  { id: 'ajna',   cls: 'tri-down',  color: HD_PALETTE.olive,   cn: '邏輯',   en: 'Ajna',         code: 'II' },
+  { id: 'throat', cls: 'square',    color: HD_PALETTE.tan,     cn: '喉嚨',   en: 'Throat',       code: 'III' },
+  { id: 'g',      cls: 'diamond',   color: HD_PALETTE.mustard, cn: 'G 中心', en: 'Identity',     code: 'IV' },
+  { id: 'heart',  cls: 'tri-left',  color: HD_PALETTE.crimson, cn: '意志力', en: 'Will',         code: 'V' },
+  { id: 'spleen', cls: 'tri-right', color: HD_PALETTE.tan,     cn: '直覺',   en: 'Spleen',       code: 'VI' },
+  { id: 'sacral', cls: 'square',    color: HD_PALETTE.crimson, cn: '薦骨',   en: 'Sacral',       code: 'VII' },
+  { id: 'solar',  cls: 'tri-left',  color: HD_PALETTE.tan,     cn: '情緒',   en: 'Solar Plexus', code: 'VIII' },
+  { id: 'root',   cls: 'square',    color: HD_PALETTE.tan,     cn: '根部',   en: 'Root',         code: 'IX' },
 ]

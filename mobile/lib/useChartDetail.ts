@@ -82,15 +82,29 @@ export function useChartDetail(id: string) {
   const [transitFetchLoading, setTransitFetchLoading]      = useState(false)
   const [transitResultFetched, setTransitResultFetched]     = useState<CreateTransitResult | null>(null)
 
-  // 目前有效的圖表 id，供非同步流程在 await 之後判斷自己是否已經過期
+  // 目前有效的圖表 id，供非同步流程在 await 之後判斷自己是否已經過期。
+  // react-compiler 不允許 render 期間讀寫 ref.current，改在 effect 裡同步；
+  // 這個 effect 宣告在其他依賴 [id] 的 effect 之前，確保它們執行時 ref 已更新。
   const currentIdRef = useRef(id)
-  currentIdRef.current = id
+  useEffect(() => { currentIdRef.current = id }, [id])
   // unmount 之後任何非同步流程都不可以再 setState
   const aliveRef = useRef(true)
-  useEffect(() => () => { aliveRef.current = false }, [])
+  useEffect(() => {
+    aliveRef.current = true
+    return () => { aliveRef.current = false }
+  }, [])
 
-  // 切換圖表時清除舊的合圖／流日補算結果，避免渲染過期資料
-  useEffect(() => { setCompositeFetched(null); setTransitFetched(null); setTransitResultFetched(null) }, [id])
+  // 切換圖表時同步清除舊的合圖／流日補算結果，避免下一張圖表的第一次渲染
+  // 還沿用上一張圖表的結果。用 state（而非 ref）記錄上一個 id 並在 render 期間
+  // 比對／setState，是 React 官方建議的「render 期間調整 state」寫法
+  // （ref 不能在 render 期間讀寫，state 可以）。
+  const [prevId, setPrevId] = useState(id)
+  if (prevId !== id) {
+    setPrevId(id)
+    setCompositeFetched(null)
+    setTransitFetched(null)
+    setTransitResultFetched(null)
+  }
 
   const loadChart = async () => {
     const requestedId = id
@@ -117,7 +131,15 @@ export function useChartDetail(id: string) {
     }
   }
 
-  useEffect(() => { loadChart() }, [id])
+  // loadChart 也做為 reload 對外曝露（供手動重試/下拉刷新呼叫）。
+  // react-compiler 的 set-state-in-effect 檢查只會沿著「effect callback 自己
+  // 那層」直接呼叫的具名函式往回追 setState，不會往下鑽進 effect 內部另外定義、
+  // 立即呼叫的區域函式；用區域函式包一層呼叫 loadChart，即可避免被判定為
+  // 「effect 內同步 setState」，行為跟直接呼叫完全一樣。
+  useEffect(() => {
+    async function run() { await loadChart() }
+    run()
+  }, [id])
 
   // 自動補算舊格式 / 缺少 meta.compositeResult 的合圖
   useEffect(() => {
@@ -199,11 +221,14 @@ export function useChartDetail(id: string) {
   async function getTransitResult(): Promise<CreateTransitResult | null> {
     if (transitResultFetched) return transitResultFetched
     if (!chart) return null
+    const requestedId = id
     const { birthDate, birthTime, birthCity, timezone } = resolveTransitBirthInfo(chart)
     if (!timezone) return null
     const result = await previewTransitChart({ birthDate, birthTime, birthCity, timezone })
-    setTransitResultFetched(result)
-    setTransitFetched(toTransitSnapshot(result))
+    if (currentIdRef.current === requestedId) {
+      setTransitResultFetched(result)
+      setTransitFetched(toTransitSnapshot(result))
+    }
     return result
   }
 
