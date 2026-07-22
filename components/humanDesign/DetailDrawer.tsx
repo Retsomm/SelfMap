@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { fmtGate } from '@/utils/format'
-import { HD_GATES, HD_CENTERS_INFO, type ChartChannel } from './hd-chart-data'
+import { HD_GATES, HD_CENTERS_INFO, type ChartChannel } from '@/shared/humanDesign/hd-chart-data'
 import type { SelectionPayload } from './BodyGraph'
-import { HD_TYPE_CONTENT, HD_PROFILE_CONTENT, HD_AUTHORITY_CONTENT, HD_DEFINITION_CONTENT } from './hd-summary-data'
-import type { GateCrossData } from './hd-cross-data'
+import { HD_TYPE_CONTENT, HD_PROFILE_CONTENT, HD_AUTHORITY_CONTENT, HD_DEFINITION_CONTENT } from '@/shared/humanDesign/hd-summary-data'
+import type { GateCrossData } from '@/shared/humanDesign/hd-cross-data'
 
 interface DetailDrawerProps {
   selection: SelectionPayload | null
@@ -20,7 +20,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
   useEffect(() => {
     if (selection?.kind !== 'cross' || crossContent) return
     let cancelled = false
-    import('./hd-cross-data').then(m => {
+    import('@/shared/humanDesign/hd-cross-data').then(m => {
       if (!cancelled) setCrossContent(m.HD_CROSS_CONTENT)
     })
     return () => { cancelled = true }

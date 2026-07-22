@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Circle, Defs, Pattern, Rect, Svg } from 'react-native-svg'
 import { type StoredPlanet, isCompositeChart, isLegacyPipeComposite } from '@/lib/api'
-import { ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@/lib/hd-chart-data'
+import { ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@shared/humanDesign/hd-chart-data'
 import { normalizeCenterId, normalizeChannelId } from '@/lib/hd-normalizers'
 import { useChartDetail } from '@/lib/useChartDetail'
 import {

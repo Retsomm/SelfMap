@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { type Chart, type StoredPlanet } from '@/lib/api'
-import { HD_CENTERS_INFO, ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@/lib/hd-chart-data'
+import { HD_CENTERS_INFO, ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@shared/humanDesign/hd-chart-data'
 import { findChannelById } from '@/lib/hd-normalizers'
 import { getTypeMeta, getTypeLabel } from '@/lib/hd-type-meta'
 import { type SheetTarget } from '@/components/DetailBottomSheet'

@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native'
-import { type ChartChannel } from '@/lib/hd-chart-data'
+import { type ChartChannel } from '@shared/humanDesign/hd-chart-data'
 import {
   buildCenterContent,
   buildGateContent,

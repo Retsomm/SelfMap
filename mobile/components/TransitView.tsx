@@ -19,7 +19,7 @@ import { type CreateTransitResult, previewTransitChart, createTransitChart } fro
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 import { downloadTransitPdf, generateTransitAiPrompt } from '@/lib/chartPdf'
 import { buildTransitBodyGraphProps } from '@/lib/hd-bodygraph-utils'
-import { HD_GATES } from '@/lib/hd-chart-data'
+import { HD_GATES } from '@shared/humanDesign/hd-chart-data'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'

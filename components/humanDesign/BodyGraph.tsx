@@ -12,7 +12,7 @@ import {
   ACT_CONSCIOUS,
   ACT_UNCONSCIOUS,
   type ChartChannel,
-} from './hd-chart-data'
+} from '@/shared/humanDesign/hd-chart-data'
 
 export type { GateActivation, Activations }
 

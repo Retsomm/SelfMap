@@ -21,7 +21,7 @@ import {
   HD_PALETTE,
   INTEGRATION_PAIRS,
   type ChartChannel,
-} from '@/lib/hd-chart-data'
+} from '@shared/humanDesign/hd-chart-data'
 
 export interface GateActivation {
   c?: boolean  // Personality / conscious (黑)

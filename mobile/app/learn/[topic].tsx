@@ -6,7 +6,7 @@ import {
   HD_AUTHORITY_CONTENT,
   HD_PROFILE_CONTENT,
   HD_DEFINITION_CONTENT,
-} from '@/lib/hd-summary-data'
+} from '@shared/humanDesign/hd-summary-data'
 import { SummaryList }    from '@/components/learn/SummaryList'
 import { CenterList }     from '@/components/learn/CenterList'
 import { ChannelList }    from '@/components/learn/ChannelList'
