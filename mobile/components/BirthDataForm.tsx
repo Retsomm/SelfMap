@@ -82,6 +82,10 @@ export default function BirthDataForm({
             onChange({ ...value, city, timezone: '' })
             onClearError?.()
           }}
+          onSelectTimezone={(city, timezone) => {
+            onChange({ ...value, city, timezone })
+            onClearError?.()
+          }}
           onFocus={onCityFocus}
         />
         {fieldError ? <Text style={s.errorText}>{fieldError}</Text> : null}

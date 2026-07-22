@@ -59,12 +59,12 @@ function CreatePersonalView() {
   const birthTime = `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`
 
   async function handleSubmit() {
-    // 已套用儲存的出生資料時，city/timezone 已經是可信值（來自後端存檔），
-    // 不能再拿去比對 mobile 本地的城市清單——存檔當初可能是用網頁端的地點選擇器，
-    // 格式跟 mobile 這份清單對不上，會導致 matchCity 找不到、誤判成「地點錯誤」
+    // 已套用儲存的出生資料、或已透過時區選擇彈窗手動指定時區時，city/timezone 已經是可信值，
+    // 不能再拿去比對 mobile 本地的城市清單——存檔當初可能是用網頁端的地點選擇器，或使用者手動選了
+    // 不在這份清單裡的時區，格式跟 mobile 這份清單對不上，會導致 matchCity 找不到、誤判成「地點錯誤」
     let finalCity = city
     let finalTimezone = timezone
-    if (!appliedProfile) {
+    if (!appliedProfile && !timezone) {
       const matched = matchCity(city)
       if (!matched) {
         setFieldError('找不到這個地點，請確認拼字或改用資料庫中的地名')
@@ -184,6 +184,7 @@ function CreatePersonalView() {
               city={city}
               timezone={timezone}
               onChangeCity={(c) => { setCity(c); setTimezone(''); setFieldError(null) }}
+              onSelectTimezone={(c, tz) => { setCity(c); setTimezone(tz); setFieldError(null) }}
               onFocus={handleCityFocus}
             />
             {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}

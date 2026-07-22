@@ -51,6 +51,7 @@ interface Props {
 
 export { getOffsetFromTimezone } from '@/utils/ephemeris'
 import { getOffsetFromTimezone } from '@/utils/ephemeris'
+import TimezonePickerModal from './TimezonePickerModal'
 
 function formatOffset(offset: number): string {
   const totalMinutes = Math.round(offset * 60)
@@ -121,6 +122,7 @@ export default function LocationPicker({ value, onSelect }: Props) {
   const [loading, setLoading] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [dropPos, setDropPos] = useState<DropPos>(null)
+  const [tzModalOpen, setTzModalOpen] = useState(false)
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -247,33 +249,69 @@ export default function LocationPicker({ value, onSelect }: Props) {
     setResults([])
   }
 
+  const handleTimezoneSelect = (zone: string, label: string) => {
+    setQuery(label)
+    onSelect(zone, label)
+    setOpen(false)
+    setResults([])
+  }
+
   return (
-    <div ref={containerRef} className="hd-input-group" style={{ position: 'relative', width: 180 }}>
+    <div ref={containerRef} className="hd-input-group" style={{ position: 'relative', width: 208 }}>
       <label className="hd-input-label">地點</label>
-      <div style={{ position: 'relative' }}>
-        <input
-          ref={inputRef}
-          type="text"
-          className="hd-input-field"
-          value={query}
-          onChange={handleChange}
-          onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="搜尋城市或地點"
-          style={{ width: '100%', paddingRight: loading ? 24 : 8 }}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          data-lpignore="true"
-          data-1p-ignore="true"
-        />
-        {loading && (
-          <span style={{
-            position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-            fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ink-soft)', pointerEvents: 'none',
-          }}>…</span>
-        )}
+      <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+          <input
+            ref={inputRef}
+            type="text"
+            className="hd-input-field"
+            value={query}
+            onChange={handleChange}
+            onFocus={() => results.length > 0 && setOpen(true)}
+            placeholder="搜尋城市或地點"
+            style={{ width: '100%', paddingRight: loading ? 24 : 8 }}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            data-lpignore="true"
+            data-1p-ignore="true"
+          />
+          {loading && (
+            <span style={{
+              position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+              fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ink-soft)', pointerEvents: 'none',
+            }}>…</span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setTzModalOpen(true)}
+          aria-label="手動選擇時區"
+          title="手動選擇時區"
+          style={{
+            flexShrink: 0,
+            width: 28,
+            minHeight: 28,
+            border: '1px solid var(--ink)',
+            background: 'var(--paper)',
+            color: 'var(--ink)',
+            cursor: 'pointer',
+            fontSize: 13,
+            lineHeight: 1,
+            padding: 0,
+          }}
+        >
+          🕐
+        </button>
       </div>
+
+      {tzModalOpen && (
+        <TimezonePickerModal
+          onSelect={handleTimezoneSelect}
+          onClose={() => setTzModalOpen(false)}
+        />
+      )}
 
       {fetchError && (
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#d04830', marginTop: 4 }}>
