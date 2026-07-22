@@ -7,7 +7,7 @@ import PlanetIcon from '@/components/humanDesign/PlanetIcon'
 import { fmtGate, fmtCenterName } from '@/utils/format'
 import BodyGraph, { type SelectionPayload, type AnnotationLabels } from '@/components/humanDesign/BodyGraph'
 import DetailDrawer from '@/components/humanDesign/DetailDrawer'
-import { HD_GATES, HD_CENTERS_INFO, HD_CHANNELS } from '@/components/humanDesign/hd-chart-data'
+import { HD_GATES, HD_CENTERS_INFO, HD_CHANNELS } from '@/shared/humanDesign/hd-chart-data'
 import {
   CENTER_INFO,
   CHANNEL_DEFS,

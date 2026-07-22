@@ -1,4 +1,4 @@
-import { HD_CHANNELS, type ChartChannel } from '@/lib/hd-chart-data'
+import { HD_CHANNELS, type ChartChannel } from '@shared/humanDesign/hd-chart-data'
 
 // lib uses 'ego' / 'solarPlexus'; hd-chart-data uses 'heart' / 'solar'
 const LIB_TO_CHART: Record<string, string> = {

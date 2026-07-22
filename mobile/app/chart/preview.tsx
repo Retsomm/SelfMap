@@ -14,13 +14,14 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { getPendingChart, clearPendingChart, type PendingChart } from '@/lib/pendingChart'
 import { createChart } from '@/lib/api'
 import { downloadChartAsPdf, generateAiPrompt } from '@/lib/chartPdf'
-import { HD_CENTERS_INFO, ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@/lib/hd-chart-data'
+import { HD_CENTERS_INFO, ACT_CONSCIOUS, ACT_UNCONSCIOUS } from '@shared/humanDesign/hd-chart-data'
 import { normalizeCenterId, normalizeChannelId, findChannelById } from '@/lib/hd-normalizers'
 import { getTypeMeta, getTypeLabel } from '@/lib/hd-type-meta'
 import BodyGraph from '@/components/BodyGraph'
 import DetailBottomSheet, { type SheetTarget } from '@/components/DetailBottomSheet'
 import { SectionCard, Row, Tag } from '@/components/chart/ChartPrimitives'
 import { NavBackHeader } from '@/components/NavBackHeader'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 // ─── Action buttons ───────────────────────────────────────────────────────────
@@ -62,7 +63,7 @@ function ActionButton({
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
-export default function ChartPreviewScreen() {
+function ChartPreviewScreenContent() {
   const { isSignedIn, getToken } = useAuth()
   const router = useRouter()
   const [chart, setChart] = useState<PendingChart | null>(null)
@@ -386,6 +387,14 @@ export default function ChartPreviewScreen() {
         onClose={() => setSheetTarget(null)}
       />
     </SafeAreaView>
+  )
+}
+
+export default function ChartPreviewScreen() {
+  return (
+    <ErrorBoundary fallbackTitle="圖表預覽失敗">
+      <ChartPreviewScreenContent />
+    </ErrorBoundary>
   )
 }
 

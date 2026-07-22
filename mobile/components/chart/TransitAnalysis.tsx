@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import { type Chart } from '@/lib/api'
-import { CENTER_ORDER, HD_CHANNELS, HD_GATES } from '@/lib/hd-chart-data'
+import { CENTER_ORDER, HD_CHANNELS, HD_GATES } from '@shared/humanDesign/hd-chart-data'
 import { normalizeCenterId } from '@/lib/hd-normalizers'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
-import { type SummaryContent } from '@/lib/hd-summary-data'
+import { type SummaryContent } from '@shared/humanDesign/hd-summary-data'
 import { ls } from './learnStyles'
 
 interface Props {

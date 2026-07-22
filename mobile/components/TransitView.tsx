@@ -19,7 +19,7 @@ import { type CreateTransitResult, previewTransitChart, createTransitChart } fro
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 import { downloadTransitPdf, generateTransitAiPrompt } from '@/lib/chartPdf'
 import { buildTransitBodyGraphProps } from '@/lib/hd-bodygraph-utils'
-import { HD_GATES } from '@/lib/hd-chart-data'
+import { HD_GATES } from '@shared/humanDesign/hd-chart-data'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
@@ -80,7 +80,7 @@ export default function TransitView() {
   function applyProfile(p: BirthProfile) {
     const [year, month, day] = p.date.split('-').map(Number)
     const [hour, minute] = p.time.split(':').map(Number)
-    setForm(f => ({ ...f, date: { year, month, day }, time: { hour, minute }, city: p.location, timezone: p.timezone, name: f.name || p.label }))
+    setForm(f => ({ ...f, date: { year, month, day }, time: { hour, minute }, city: p.location, timezone: p.timezone, name: p.label }))
     setFieldError(null)
     setAppliedProfile(p)
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80)

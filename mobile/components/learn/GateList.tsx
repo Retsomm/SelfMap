@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import { HD_GATES } from '@/lib/hd-chart-data'
+import { HD_GATES } from '@shared/humanDesign/hd-chart-data'
 import { CENTER_ZH } from '@/lib/hd-normalizers'
 import { Colors, Radius } from '@/constants/tokens'
 import { ls } from './learnStyles'

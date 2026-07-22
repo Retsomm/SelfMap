@@ -10,7 +10,7 @@ import {
   ACT_CONSCIOUS,
   ACT_UNCONSCIOUS,
   INTEGRATION_PAIRS,
-} from '@/components/humanDesign/hd-chart-data'
+} from '@/shared/humanDesign/hd-chart-data'
 
 // Lib CenterName uses 'ego' / 'solarPlexus'; chart data uses 'heart' / 'solar'
 const LIB_TO_CHART: Record<string, string> = { ego: 'heart', solarPlexus: 'solar' }

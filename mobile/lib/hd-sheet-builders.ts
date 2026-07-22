@@ -3,14 +3,14 @@ import {
   HD_CHANNELS,
   HD_GATES,
   type ChartChannel,
-} from '@/lib/hd-chart-data'
+} from '@shared/humanDesign/hd-chart-data'
 import {
   HD_TYPE_CONTENT,
   HD_AUTHORITY_CONTENT,
   HD_PROFILE_CONTENT,
   HD_DEFINITION_CONTENT,
-} from '@/lib/hd-summary-data'
-import { HD_CROSS_CONTENT } from '@/lib/hd-cross-data'
+} from '@shared/humanDesign/hd-summary-data'
+import { HD_CROSS_CONTENT } from '@shared/humanDesign/hd-cross-data'
 import { centerZh } from '@/lib/hd-normalizers'
 
 export interface SheetContent {

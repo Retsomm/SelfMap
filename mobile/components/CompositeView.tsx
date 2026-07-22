@@ -92,11 +92,11 @@ export default function CompositeView() {
     const [hour, minute] = p.time.split(':').map(Number)
     const patch = { date: { year, month, day }, time: { hour, minute }, city: p.location, timezone: p.timezone }
     if (pickerTarget === 'A') {
-      setFormA(f => ({ ...f, ...patch, name: f.name || p.label }))
+      setFormA(f => ({ ...f, ...patch, name: p.label }))
       setErrorA(null)
       setAppliedA(p)
     } else if (pickerTarget === 'B') {
-      setFormB(f => ({ ...f, ...patch, name: f.name || p.label }))
+      setFormB(f => ({ ...f, ...patch, name: p.label }))
       setErrorB(null)
       setAppliedB(p)
     }

@@ -9,7 +9,7 @@ import {
   HD_GATES,
   HD_PALETTE,
   INTEGRATION_PAIRS,
-} from './hd-chart-data'
+} from '@shared/humanDesign/hd-chart-data'
 import { findChannelById } from './hd-normalizers'
 import {
   STRATEGY_MAP,

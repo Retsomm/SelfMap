@@ -1,5 +1,5 @@
 import { useAuth, useUser } from '@clerk/expo'
-import { useLocalSearchParams } from 'expo-router'
+import { useFocusEffect, useLocalSearchParams } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import * as WebBrowser from 'expo-web-browser'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -37,6 +37,22 @@ function PersonalView() {
   const { user } = useUser()
   const getTokenRef = useRef(getToken)
   useEffect(() => { getTokenRef.current = getToken }, [getToken])
+  // user.reload() 成功後會換一個新的 user 物件參照；若把 user 放進下面 useFocusEffect
+  // 的 deps，reload 完成 → user 參照變了 → callback 參照跟著變 → 畫面仍在 focus 中
+  // 會被 useFocusEffect 判定成「callback 變了」再次觸發 → 又呼叫一次 reload()，
+  // 形成不會停的無限重刷迴圈（背景瘋狂 re-render 造成畫面持續晃動）。
+  // 比照上面 getTokenRef 的作法，用 ref 讀取 user，deps 留空，只在真正「切回這個分頁」
+  // 時執行一次，不會因為 user 物件本身更新而重新觸發。
+  const userRef = useRef(user)
+  useEffect(() => { userRef.current = user }, [user])
+
+  // Clerk 的 user 物件是各裝置各自快取的本地副本，不會因為網頁版或其他裝置改了名稱/大頭貼
+  // 就即時推播更新——每次切回這個分頁時強制向 Clerk 重新抓一次最新資料，避免顯示過期名稱
+  useFocusEffect(
+    useCallback(() => {
+      userRef.current?.reload().catch(err => console.warn('[PersonalView] user.reload 失敗:', err))
+    }, []),
+  )
 
   const [signingOut, setSigningOut]       = useState(false)
   const [deletingAccount, setDeletingAccount] = useState(false)
@@ -194,6 +210,9 @@ function PersonalView() {
     if (!asset.base64 || !user) return
     setUploadingAvatar(true)
     try {
+      // 強制刷新 session，避免 Clerk client 端 session 快取過期導致
+      // 直接呼叫 user.setProfileImage() 時噴 "no active session" 錯誤
+      await getTokenRef.current({ skipCache: true })
       const mimeType = asset.mimeType ?? 'image/jpeg'
       await user.setProfileImage({ file: `data:${mimeType};base64,${asset.base64}` })
     } catch (err) {
@@ -213,6 +232,9 @@ function PersonalView() {
     if (!trimmed || !user) return
     setSavingName(true)
     try {
+      // 強制刷新 session，避免 Clerk client 端 session 快取過期導致
+      // 直接呼叫 user.update() 時噴 "no active session" 錯誤
+      await getTokenRef.current({ skipCache: true })
       const spaceIdx = trimmed.indexOf(' ')
       const firstName = spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx)
       const lastName  = spaceIdx === -1 ? ''      : trimmed.slice(spaceIdx + 1).trim()

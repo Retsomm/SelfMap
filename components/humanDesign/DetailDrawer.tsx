@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { fmtGate } from '@/utils/format'
-import { HD_GATES, HD_CENTERS_INFO, type ChartChannel } from './hd-chart-data'
+import { HD_GATES, HD_CENTERS_INFO, HD_CHANNELS, INTEGRATION_PAIRS, type ChartChannel } from '@/shared/humanDesign/hd-chart-data'
 import type { SelectionPayload } from './BodyGraph'
-import { HD_TYPE_CONTENT, HD_PROFILE_CONTENT, HD_AUTHORITY_CONTENT, HD_DEFINITION_CONTENT } from './hd-summary-data'
-import type { GateCrossData } from './hd-cross-data'
+import { HD_TYPE_CONTENT, HD_PROFILE_CONTENT, HD_AUTHORITY_CONTENT, HD_DEFINITION_CONTENT } from '@/shared/humanDesign/hd-summary-data'
+import type { GateCrossData } from '@/shared/humanDesign/hd-cross-data'
 
 interface DetailDrawerProps {
   selection: SelectionPayload | null
@@ -20,7 +20,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
   useEffect(() => {
     if (selection?.kind !== 'cross' || crossContent) return
     let cancelled = false
-    import('./hd-cross-data').then(m => {
+    import('@/shared/humanDesign/hd-cross-data').then(m => {
       if (!cancelled) setCrossContent(m.HD_CROSS_CONTENT)
     })
     return () => { cancelled = true }
@@ -146,26 +146,25 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
         </>
       )
     } else if (kind === 'integration') {
-      const integrationList = [
-        { a: 10, b: 20, name: { zh: '覺醒通道',   en: 'Awakening'     }, desc: { zh: '你對「真不真實」有一種近乎本能的敏感，要求自己活得誠實有原則，這種處世態度讓身邊的人不自覺開始思考「我是不是也可以更做自己一點」。你只在乎「當下」，這種活在當下的能量是你給周圍人最大的禮物之一。', en: 'Awakening to self — authentic expression in the now.' } },
-        { a: 10, b: 34, name: { zh: '探索通道',   en: 'Exploration'   }, desc: { zh: '你就是要走自己的路，當你按照自己的感覺和直覺行動，你會感覺對了、有力量。這條通道有個特別能量：當你真的活出自己的樣子，你身邊的人也會被感染，開始有勇氣去做自己。', en: "Acting in accordance with one's own convictions." } },
-        { a: 10, b: 57, name: { zh: '生存力通道', en: 'Perfected Form' }, desc: { zh: '你有一種很難用邏輯解釋的化險為夷能力，脾中心有一套超靈敏的生存雷達，在危險靠近之前就悄悄提醒你。你的直覺靠「聽起來對不對」來判斷，前提是你要願意相信它。', en: "Intuition of one's own survival and self-expression." } },
-        { a: 20, b: 34, name: { zh: '忙碌通道',   en: 'Charisma'      }, desc: { zh: '當你找到一件真心喜歡的事，你會整個人燃起來，精力充沛停不下來，旁邊的人光看著你就會被帶動。但不是每一件事都值得你去忙——只為你愛的事忙，才是這條通道最美的狀態。', en: 'The present-moment exhibitor. The power of being busy in the now.' } },
-        { a: 34, b: 57, name: { zh: '力量通道',   en: 'Power'         }, desc: { zh: '這條通道讓你天生精力充沛，在關鍵時刻反應特別快特別準，在危機處理上特別厲害。你很自然地想替人療傷解決問題，但要先照顧好自己才能照顧好別人，選擇值得你投入力量的人和事。', en: 'Archetypal existence — perfect survival intuition.' } },
-      ]
+      // 六條整合通道皆已存在於 HD_CHANNELS，直接依 INTEGRATION_PAIRS 篩選，
+      // 不重複維護一份名稱/說明；20-57 是複合圖形的主幹（trunk），與其餘四條
+      // 支線（10-20/10-34/10-57/20-34/34-57）並列顯示，不特別區分。
+      const integrationChannels = Array.from(INTEGRATION_PAIRS)
+        .map(pairId => HD_CHANNELS.find(ch => `${ch.from}-${ch.to}` === pairId))
+        .filter((ch): ch is ChartChannel => !!ch)
       kicker = '整合'
       title = '整合通道'
-      sub = '四條整合通道'
+      sub = `${integrationChannels.length} 條整合通道`
       body = (
         <>
           <p className="lead">這些通道代表你整體的整合力量與表達方式。</p>
-          <h4>四條主要通道</h4>
+          <h4>{integrationChannels.length} 條主要通道</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {integrationList.map(ch => (
-              <div key={`${ch.a}-${ch.b}`} className="hd-ch-card">
+            {integrationChannels.map(ch => (
+              <div key={ch.id} className="hd-ch-card">
                 <div className="hd-ch-card-head">
                   <span className="hd-ch-card-title">{pick(ch.name)}</span>
-                  <span className="hd-ch-card-ref">CH.{ch.a}—{ch.b}</span>
+                  <span className="hd-ch-card-ref">CH.{ch.from}—{ch.to}</span>
                 </div>
                 <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>{pick(ch.desc)}</p>
               </div>

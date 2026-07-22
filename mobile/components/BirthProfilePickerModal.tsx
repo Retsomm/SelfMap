@@ -12,8 +12,9 @@ type Props = {
 export function BirthProfilePickerModal({ visible, profiles, onSelect, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={s.overlay} onPress={onClose}>
-        <Pressable style={s.sheet} onPress={() => {}}>
+      <View style={s.container}>
+        <Pressable style={s.backdrop} onPress={onClose} />
+        <View style={s.sheet}>
           <View style={s.handle} />
           <Text style={s.title}>選擇出生資料</Text>
           <ScrollView>
@@ -28,15 +29,16 @@ export function BirthProfilePickerModal({ visible, profiles, onSelect, onClose }
               </Pressable>
             ))}
           </ScrollView>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   )
 }
 
 const s = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
-  sheet:   { backgroundColor: Colors.surface, borderTopLeftRadius: Radius.xl, borderTopRightRadius: Radius.xl, padding: Spacing.xl, paddingBottom: 48, maxHeight: '60%' },
+  container: { flex: 1, justifyContent: 'flex-end' },
+  backdrop:  { ...StyleSheet.absoluteFill, backgroundColor: Colors.overlay },
+  sheet:    { backgroundColor: Colors.surface, borderTopLeftRadius: Radius.xl, borderTopRightRadius: Radius.xl, padding: Spacing.xl, paddingBottom: 48, maxHeight: '60%' },
   handle:  { width: 40, height: 4, borderRadius: 2, backgroundColor: Colors.border, alignSelf: 'center', marginBottom: Spacing.md },
   title:   { color: Colors.text, fontSize: 16, fontWeight: '700', marginBottom: Spacing.sm },
   row:     { paddingVertical: Spacing.md },

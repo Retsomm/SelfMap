@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import { HD_CHANNELS, type ChartChannel } from '@/lib/hd-chart-data'
+import { HD_CHANNELS, type ChartChannel } from '@shared/humanDesign/hd-chart-data'
 import { Colors } from '@/constants/tokens'
 import { ls } from './learnStyles'
 

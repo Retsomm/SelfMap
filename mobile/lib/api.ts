@@ -71,43 +71,72 @@ export type Chart = {
   createdAt: string
 }
 
+/** 網頁端舊格式合圖偵測：出生資料（birthDate/birthTime/birthCity/timezone）用 '|' 分隔兩人資料 */
+export function isLegacyPipeComposite(c: Pick<Chart, 'birthDate'>): boolean {
+  return !!c.birthDate?.includes('|')
+}
+
+/** 判斷圖表是否為合圖，涵蓋網頁端舊格式（沒有 chartKind，靠 type='合圖' 或 pipe 分隔出生資料判斷） */
+export function isCompositeChart(c: Pick<Chart, 'chartKind' | 'type' | 'birthDate'>): boolean {
+  return c.chartKind === 'composite' || c.type === '合圖' || isLegacyPipeComposite(c)
+}
+
+const DEFAULT_TIMEOUT_MS = 10_000
+// 星曆計算類 endpoint（個人圖／合圖／流日 的算圖與 preview）比較慢，給更長的 timeout
+const EPHEMERIS_TIMEOUT_MS = 20_000
+const RETRY_DELAY_MS = 600
+
+/** 只重試網路層失敗（連線中斷、逾時），不重試已收到的 HTTP 錯誤回應，避免對有副作用的請求重複送出 */
+function isTransientError(err: unknown): boolean {
+  if (err && typeof err === 'object' && (err as { name?: unknown }).name === 'AbortError') return true
+  return err instanceof TypeError
+}
+
 async function request<T>(
   path: string,
-  options: RequestInit & { token?: string } = {},
+  options: RequestInit & { token?: string; timeoutMs?: number; retries?: number } = {},
 ): Promise<T> {
-  const { token, ...init } = options
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 10_000)
-  try {
-    const res = await fetch(`${BASE_URL}${path}`, {
-      ...init,
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...init.headers,
-      },
-    })
-    const contentType = res.headers.get('content-type') ?? ''
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`
-      if (contentType.includes('application/json')) {
-        try { msg = (await res.json())?.error ?? msg } catch { /* ignore */ }
+  const { token, timeoutMs = DEFAULT_TIMEOUT_MS, retries = 0, ...init } = options
+  for (let attempt = 0; ; attempt++) {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const res = await fetch(`${BASE_URL}${path}`, {
+        ...init,
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...init.headers,
+        },
+      })
+      const contentType = res.headers.get('content-type') ?? ''
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`
+        if (contentType.includes('application/json')) {
+          try { msg = (await res.json())?.error ?? msg } catch { /* ignore */ }
+        }
+        throw new Error(msg)
       }
-      throw new Error(msg)
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Unexpected response (${contentType || 'no content-type'}) from ${path}`)
+      }
+      return (await res.json()) as T
+    } catch (err) {
+      if (attempt < retries && isTransientError(err)) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (attempt + 1)))
+        continue
+      }
+      throw err
+    } finally {
+      clearTimeout(timer)
     }
-    if (!contentType.includes('application/json')) {
-      throw new Error(`Unexpected response (${contentType || 'no content-type'}) from ${path}`)
-    }
-    return (await res.json()) as T
-  } finally {
-    clearTimeout(timer)
   }
 }
 
 // GET /api/charts
 export function getCharts(token: string) {
-  return request<{ charts: Chart[] }>('/api/charts', { token })
+  return request<{ charts: Chart[] }>('/api/charts', { token, retries: 1 })
 }
 
 // POST /api/charts — server 端自動計算人類圖，mobile 只需傳出生資料
@@ -142,36 +171,42 @@ export function previewChart(payload: CreateChartPayload) {
   return request<ChartPreviewResponse>('/api/charts', {
     method: 'POST',
     body: JSON.stringify(payload),
+    timeoutMs: EPHEMERIS_TIMEOUT_MS,
+    retries: 1,
   })
 }
 
+// 有寫入副作用（會建立圖表），不重試，避免逾時後重送造成重複建立
 export function createChart(token: string, payload: CreateChartPayload) {
   return request<{ chartId: string }>('/api/charts', {
     method: 'POST',
     body: JSON.stringify(payload),
     token,
+    timeoutMs: EPHEMERIS_TIMEOUT_MS,
   })
 }
 
 // GET /api/charts/[id]
 export function getChart(token: string, id: string) {
-  return request<{ chart: Chart }>(`/api/charts/${id}`, { token })
+  return request<{ chart: Chart }>(`/api/charts/${id}`, { token, retries: 1 })
 }
 
-// PATCH /api/charts/[id]
+// PATCH /api/charts/[id]（idempotent，可安全重試）
 export function renameChart(token: string, id: string, name: string) {
   return request<{ ok: true }>(`/api/charts/${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ name }),
     token,
+    retries: 1,
   })
 }
 
-// DELETE /api/charts/[id]
+// DELETE /api/charts/[id]（idempotent，可安全重試）
 export function deleteChart(token: string, id: string) {
   return request<{ ok: true }>(`/api/charts/${id}`, {
     method: 'DELETE',
     token,
+    retries: 1,
   })
 }
 
@@ -228,15 +263,18 @@ export function previewCompositeChart(payload: CreateCompositePayload) {
   return request<CreateCompositeResult>('/api/composite/create', {
     method: 'POST',
     body: JSON.stringify({ ...payload, previewOnly: true }),
+    timeoutMs: EPHEMERIS_TIMEOUT_MS,
+    retries: 1,
   })
 }
 
-/** 帶 token — 計算合圖並存 DB，chartId 回傳儲存後的 id */
+/** 帶 token — 計算合圖並存 DB，chartId 回傳儲存後的 id。有寫入副作用，不重試 */
 export function createCompositeChart(token: string, payload: CreateCompositePayload) {
   return request<CreateCompositeResult>('/api/composite/create', {
     method: 'POST',
     body: JSON.stringify(payload),
     token,
+    timeoutMs: EPHEMERIS_TIMEOUT_MS,
   })
 }
 
@@ -278,10 +316,12 @@ export function previewTransitChart(
   return request<CreateTransitResult>('/api/transit/create', {
     method: 'POST',
     body: JSON.stringify(payload),
+    timeoutMs: EPHEMERIS_TIMEOUT_MS,
+    retries: 1,
   })
 }
 
-/** 帶 token — 計算流日並存 DB，chartId 回傳儲存後的 id */
+/** 帶 token — 計算流日並存 DB，chartId 回傳儲存後的 id。有寫入副作用，不重試 */
 export function createTransitChart(
   token: string,
   payload: { birthDate: string; birthTime: string; birthCity: string; timezone: string; name?: string },
@@ -290,6 +330,7 @@ export function createTransitChart(
     method: 'POST',
     body: JSON.stringify(payload),
     token,
+    timeoutMs: EPHEMERIS_TIMEOUT_MS,
   })
 }
 
@@ -305,7 +346,7 @@ export type TransitData = {
 }
 
 export function getTransit(token: string) {
-  return request<TransitData>('/api/transit', { token })
+  return request<TransitData>('/api/transit', { token, retries: 1 })
 }
 
 export type ImpactLayer = {
@@ -319,6 +360,7 @@ export function getTransitImpact(token: string, chartId: string) {
     method: 'POST',
     body: JSON.stringify({ chartId }),
     token,
+    retries: 1,
   })
 }
 
@@ -352,6 +394,7 @@ export function getComposite(token: string, chartAId: string, chartBId: string) 
     method: 'POST',
     body: JSON.stringify({ chartAId, chartBId }),
     token,
+    retries: 1,
   })
 }
 
@@ -370,7 +413,7 @@ export type RemoteBirthProfile = {
 }
 
 export function getBirthProfiles(token: string) {
-  return request<{ profiles: RemoteBirthProfile[] }>('/api/birth-profiles', { token })
+  return request<{ profiles: RemoteBirthProfile[] }>('/api/birth-profiles', { token, retries: 1 })
 }
 
 export type BirthProfilePayload = {
@@ -398,18 +441,22 @@ export function importBirthProfiles(token: string, profiles: BirthProfilePayload
   })
 }
 
+// PATCH 是完整覆寫同一組欄位，重送一次結果相同，可安全重試
 export function updateBirthProfile(token: string, id: string, payload: Partial<BirthProfilePayload>) {
   return request<{ ok: true }>(`/api/birth-profiles/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
     token,
+    retries: 1,
   })
 }
 
+// 刪除本來就是 idempotent，重送一次結果相同，可安全重試
 export function deleteBirthProfile(token: string, id: string) {
   return request<{ ok: true }>(`/api/birth-profiles/${id}`, {
     method: 'DELETE',
     token,
+    retries: 1,
   })
 }
 
@@ -428,7 +475,7 @@ export type AppNotification = {
 
 // GET /api/notifications — 公開端點，不需 token
 export function getNotifications() {
-  return request<{ notifications: AppNotification[] }>('/api/notifications')
+  return request<{ notifications: AppNotification[] }>('/api/notifications', { retries: 1 })
 }
 
 // ─── Account ──────────────────────────────────────────────────────────────────

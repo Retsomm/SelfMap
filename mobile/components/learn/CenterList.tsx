@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { HD_CENTERS_INFO } from '@/lib/hd-chart-data'
+import { HD_CENTERS_INFO } from '@shared/humanDesign/hd-chart-data'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 import { ls } from './learnStyles'
 
