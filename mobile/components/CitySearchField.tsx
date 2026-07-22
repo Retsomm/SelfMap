@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native'
+import Svg, { Circle, Path } from 'react-native-svg'
 import { Colors, Radius } from '@/constants/tokens'
 import TimezonePickerModal from '@/components/TimezonePickerModal'
 
@@ -15,6 +16,15 @@ type Props = {
   onChangeCity: (city: string) => void
   onSelectTimezone: (city: string, timezone: string) => void
   onFocus?: () => void
+}
+
+function IconClock({ color }: { color: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={9} stroke={color} strokeWidth={1.8} />
+      <Path d="M12 7v5l3.5 2" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
 }
 
 /**
@@ -44,8 +54,13 @@ export default function CitySearchField({ city, timezone, onChangeCity, onSelect
             <Text style={styles.clearText}>✕</Text>
           </Pressable>
         )}
-        <Pressable style={styles.tzButton} onPress={() => setTzModalVisible(true)}>
-          <Text style={styles.tzButtonText}>🕐</Text>
+        <Pressable
+          style={styles.tzButton}
+          onPress={() => setTzModalVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel="手動選擇時區"
+        >
+          <IconClock color={Colors.sub} />
         </Pressable>
       </View>
 
@@ -81,8 +96,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   clear:     { paddingHorizontal: 14, paddingVertical: 12 },
-  tzButton:     { paddingHorizontal: 14, paddingVertical: 12, borderLeftWidth: 1, borderLeftColor: Colors.border },
-  tzButtonText: { fontSize: 15 },
+  tzButton:  { paddingHorizontal: 14, paddingVertical: 12, borderLeftWidth: 1, borderLeftColor: Colors.border },
   clearText: { color: Colors.muted, fontSize: 14 },
   tzBadge:    { marginTop: 6, paddingHorizontal: 4 },
   tzText:     { color: Colors.accent, fontSize: 12 },

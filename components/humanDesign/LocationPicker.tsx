@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { Clock } from 'lucide-react'
 import {
   type GeoResult,
   TW_LOCATIONS, TW_ALIASES,
@@ -293,16 +294,17 @@ export default function LocationPicker({ value, onSelect }: Props) {
             flexShrink: 0,
             width: 28,
             minHeight: 28,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             border: '1px solid var(--ink)',
             background: 'var(--paper)',
             color: 'var(--ink)',
             cursor: 'pointer',
-            fontSize: 13,
-            lineHeight: 1,
             padding: 0,
           }}
         >
-          🕐
+          <Clock size={14} strokeWidth={1.8} />
         </button>
       </div>
 

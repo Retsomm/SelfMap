@@ -48,6 +48,12 @@ export default function BirthDataForm({
   const birthDate = `${value.date.year}-${String(value.date.month).padStart(2, '0')}-${String(value.date.day).padStart(2, '0')}`
   const birthTime = `${String(value.time.hour).padStart(2, '0')}:${String(value.time.minute).padStart(2, '0')}`
 
+  // 手動選時區彈窗確定後：帶入 city/timezone 並清掉舊的欄位錯誤，跳過送出時的 matchCity。
+  const handleSelectTimezone = (city: string, timezone: string) => {
+    onChange({ ...value, city, timezone })
+    onClearError?.()
+  }
+
   return (
     <View style={s.root}>
       <View style={s.section}>
@@ -82,10 +88,7 @@ export default function BirthDataForm({
             onChange({ ...value, city, timezone: '' })
             onClearError?.()
           }}
-          onSelectTimezone={(city, timezone) => {
-            onChange({ ...value, city, timezone })
-            onClearError?.()
-          }}
+          onSelectTimezone={handleSelectTimezone}
           onFocus={onCityFocus}
         />
         {fieldError ? <Text style={s.errorText}>{fieldError}</Text> : null}

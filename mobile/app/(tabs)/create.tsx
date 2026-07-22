@@ -136,6 +136,13 @@ function CreatePersonalView() {
     }
   }
 
+  // 手動選時區彈窗確定後：帶入 city/timezone 並清掉舊的欄位錯誤，跳過送出時的 matchCity。
+  function handleSelectTimezone(c: string, tz: string) {
+    setCity(c)
+    setTimezone(tz)
+    setFieldError(null)
+  }
+
   return (
     <ScrollLockContext.Provider value={scrollLockCtx}>
     <ScrollView
@@ -184,7 +191,7 @@ function CreatePersonalView() {
               city={city}
               timezone={timezone}
               onChangeCity={(c) => { setCity(c); setTimezone(''); setFieldError(null) }}
-              onSelectTimezone={(c, tz) => { setCity(c); setTimezone(tz); setFieldError(null) }}
+              onSelectTimezone={handleSelectTimezone}
               onFocus={handleCityFocus}
             />
             {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}
