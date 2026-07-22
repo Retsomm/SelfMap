@@ -1,7 +1,17 @@
+// Matches the fixed-offset markers from shared/humanDesign/timezones.ts (e.g. "UTC-03:30"),
+// used for manually-selected offsets whose closest real-world zone observes DST.
+const FIXED_OFFSET_PATTERN = /^UTC([+-])(\d{2}):(\d{2})$/
+
 // Derive UTC offset (hours) from IANA timezone at a specific moment.
 // Uses Intl to handle DST correctly — e.g. "Asia/Taipei" → 8, "America/New_York" in summer → -4
 export function getOffsetFromTimezone(tz: string | undefined | null, at: Date): number {
   if (!tz) return 0
+  const fixed = tz.match(FIXED_OFFSET_PATTERN)
+  if (fixed) {
+    const [, sign, hh, mm] = fixed
+    const magnitude = parseInt(hh) + parseInt(mm) / 60
+    return sign === '-' ? -magnitude : magnitude
+  }
   try {
     const parts = new Intl.DateTimeFormat('en', {
       timeZone: tz,

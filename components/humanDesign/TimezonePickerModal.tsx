@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ALL_TIMEZONES } from '@/shared/humanDesign/timezones'
+import { filterTimezones } from '@/shared/humanDesign/timezones'
 
 interface TimezonePickerModalProps {
   onSelect: (zone: string, label: string) => void
@@ -25,11 +25,7 @@ export default function TimezonePickerModal({ onSelect, onClose }: TimezonePicke
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase().replace(/^utc/, '').trim()
-    if (!q) return ALL_TIMEZONES
-    return ALL_TIMEZONES.filter(t => t.label.toLowerCase().includes(q))
-  }, [query])
+  const filtered = useMemo(() => filterTimezones(query), [query])
 
   if (typeof document === 'undefined') return null
 

@@ -9,7 +9,7 @@ import {
   StyleSheet,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { ALL_TIMEZONES } from '@shared/humanDesign/timezones'
+import { filterTimezones } from '@shared/humanDesign/timezones'
 import { Colors, Radius, Spacing } from '@/constants/tokens'
 
 type Props = {
@@ -21,11 +21,7 @@ type Props = {
 export default function TimezonePickerModal({ visible, onSelect, onClose }: Props) {
   const [query, setQuery] = useState('')
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase().replace(/^utc/, '').trim()
-    if (!q) return ALL_TIMEZONES
-    return ALL_TIMEZONES.filter(t => t.label.toLowerCase().includes(q))
-  }, [query])
+  const filtered = useMemo(() => filterTimezones(query), [query])
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
