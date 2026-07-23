@@ -198,7 +198,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
                 <h4>關鍵特質</h4>
                 <div className="hd-center-states">
                   {d.highlights.map(h => (
-                    <div key={h.label} className="hd-center-state">
+                    <div key={h.label} className="hd-center-state hd-center-state--active">
                       <div className="hd-center-state-label">{h.label}</div>
                       <p>{h.text}</p>
                     </div>
