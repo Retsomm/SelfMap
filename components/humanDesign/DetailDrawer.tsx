@@ -127,14 +127,14 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
           <p style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
             <span
               onClick={() => jumpToGate(d.from)}
-              style={{ cursor: 'pointer', borderBottom: '1px solid #2b1f14' }}
+              style={{ cursor: 'pointer', borderBottom: '1px solid var(--ink)' }}
             >
               {fromG ? pick(fromG.name) : `閘門 ${d.from}`} ({d.from})
             </span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontStyle: 'normal', color: '#6b5a44' }}>⟷</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontStyle: 'normal', color: 'var(--ink-soft)' }}>⟷</span>
             <span
               onClick={() => jumpToGate(d.to)}
-              style={{ cursor: 'pointer', borderBottom: '1px solid #2b1f14' }}
+              style={{ cursor: 'pointer', borderBottom: '1px solid var(--ink)' }}
             >
               {toG ? pick(toG.name) : `閘門 ${d.to}`} ({d.to})
             </span>
@@ -177,7 +177,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
             ))}
           </div>
           <h4>備註</h4>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: '#6b5a44', lineHeight: 1.6 }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
             這些整合通道會影響你的整體節奏與表達方式。
           </p>
         </>
@@ -198,7 +198,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
                 <h4>關鍵特質</h4>
                 <div className="hd-center-states">
                   {d.highlights.map(h => (
-                    <div key={h.label} className="hd-center-state">
+                    <div key={h.label} className="hd-center-state hd-center-state--active">
                       <div className="hd-center-state-label">{h.label}</div>
                       <p>{h.text}</p>
                     </div>
@@ -293,7 +293,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
           <>
             <p className="lead">載入中…</p>
             <h4>閘門組合</h4>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#6b5a44' }}>{gatesLabel}</p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--ink-soft)' }}>{gatesLabel}</p>
           </>
         )
       } else if (gateContent) {
@@ -307,10 +307,10 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
                 {entry.body.split('\n').filter(Boolean).map((p, i) => <p key={i}>{p}</p>)}
               </>
             ) : (
-              <p style={{ color: '#6b5a44' }}>沒有找到對應的交叉閘門內容。</p>
+              <p style={{ color: 'var(--ink-soft)' }}>沒有找到對應的交叉閘門內容。</p>
             )}
             <h4>閘門組合</h4>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#6b5a44' }}>{gatesLabel}</p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--ink-soft)' }}>{gatesLabel}</p>
           </>
         )
       } else {
@@ -318,7 +318,7 @@ export default function DetailDrawer({ selection, onClose, onJumpToGate }: Detai
           <>
             <p className="lead">沒有找到對應的交叉內容。</p>
             <h4>閘門組合</h4>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#6b5a44' }}>{gatesLabel}</p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--ink-soft)' }}>{gatesLabel}</p>
           </>
         )
       }

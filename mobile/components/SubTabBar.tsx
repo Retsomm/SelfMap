@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { Colors, Spacing } from '@/constants/tokens'
+import { Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 export type TabItem<T extends string = string> = { id: T; label: string }
 
@@ -12,6 +14,9 @@ export function SubTabBar<T extends string>({
   active: T
   onSelect: (id: T) => void
 }) {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
+
   return (
     <View style={styles.bar}>
       {tabs.map(tab => (
@@ -32,7 +37,7 @@ export function SubTabBar<T extends string>({
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   bar:        { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: Colors.border },
   item:       { flex: 1, alignItems: 'center', paddingVertical: Spacing.md, borderBottomWidth: 2, borderBottomColor: 'transparent' },
   itemActive: { borderBottomColor: Colors.accent },

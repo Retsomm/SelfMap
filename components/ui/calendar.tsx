@@ -117,7 +117,7 @@ function CalendarDropdown({ value, onChange, options = [] }: DropdownProps) {
                 'font-mono text-[12.5px] px-2 py-1 cursor-pointer',
                 opt.value === value
                   ? 'bg-(--ink) text-(--paper)'
-                  : 'text-(--ink) hover:bg-(--tan-2)',
+                  : 'text-(--ink) hover:bg-(--tan-2) hover:text-(--ink-on-tan)',
                 opt.disabled && 'opacity-30 pointer-events-none',
               )}
             >
@@ -151,12 +151,12 @@ const Calendar = ({ className, classNames, showOutsideDays = true, ...props }: C
       weekday: 'w-8 font-mono text-[11px] text-[var(--ink-soft)] text-center',
       week: 'flex w-full mt-1',
       day: 'h-8 w-8 text-center font-mono text-[12.5px] p-0 relative',
-      day_button: 'h-8 w-8 flex items-center justify-center font-mono text-[12.5px] text-[var(--ink)] cursor-pointer hover:bg-[var(--tan-2)] transition-colors duration-100 w-full h-full',
-      selected: '[&>button]:bg-[var(--ink)] [&>button]:text-[var(--paper)] [&>button]:hover:bg-[var(--ink)]',
+      day_button: 'h-8 w-8 flex items-center justify-center font-mono text-[12.5px] text-[var(--ink)] cursor-pointer hover:bg-[var(--tan-2)] hover:text-[var(--ink-on-tan)] transition-colors duration-100 w-full h-full',
+      selected: '[&>button]:bg-[var(--ink)] [&>button]:text-[var(--paper)] [&>button]:hover:bg-[var(--ink)] [&>button]:hover:text-[var(--paper)]',
       today: '[&>button]:border [&>button]:border-[var(--ink)]',
       outside: 'opacity-30',
       disabled: 'opacity-20 pointer-events-none',
-      range_middle: '[&>button]:bg-[var(--tan-2)] [&>button]:rounded-none',
+      range_middle: '[&>button]:bg-[var(--tan-2)] [&>button]:text-[var(--ink-on-tan)] [&>button]:rounded-none',
       hidden: 'invisible',
       ...classNames,
     }}

@@ -3,8 +3,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
 import { matchCity } from '@/lib/cities'
 import { type BirthProfile, makeProfileId } from '@/lib/birthProfiles'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
-import { useState, useRef } from 'react'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
+import { useMemo, useState, useRef } from 'react'
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight'
 
@@ -28,6 +29,8 @@ function profileToForm(p: BirthProfile): BirthFormData {
 }
 
 export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props) {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   const [form, setForm] = useState<BirthFormData>(defaultBirthFormData)
   const [fieldError, setFieldError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -125,7 +128,7 @@ export function BirthProfileSheet({ visible, initial, onSave, onCancel }: Props)
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   header: {
     alignItems: 'center',

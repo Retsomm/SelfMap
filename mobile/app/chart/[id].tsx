@@ -1,9 +1,8 @@
 import { useLocalSearchParams } from 'expo-router'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Alert,
   Clipboard,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -25,16 +24,15 @@ import {
 } from '@/lib/chartPdf'
 import BodyGraph from '@/components/BodyGraph'
 import DetailBottomSheet, { type SheetTarget } from '@/components/DetailBottomSheet'
-import { SectionCard, Row } from '@/components/chart/ChartPrimitives'
+import { SectionCard, Row, ActionButton, type ActionState } from '@/components/chart/ChartPrimitives'
 import PersonalChartDetails from '@/components/chart/PersonalChartDetails'
 import TransitAnalysis from '@/components/chart/TransitAnalysis'
 import CompositeInfo from '@/components/chart/CompositeInfo'
 import { LoadingView, ErrorView } from '@/components/StateViews'
 import { NavBackHeader } from '@/components/NavBackHeader'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
-
-type ActionState = 'idle' | 'loading'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors, useThemeMode } from '@/contexts/ThemeContext'
 
 /** 圖例用的黑紅相間條紋色點，對應 BodyGraph「個人+流日共有」的條紋填色 */
 function StripeLegendDot() {
@@ -51,36 +49,10 @@ function StripeLegendDot() {
   )
 }
 
-function ActionButton({
-  label,
-  onPress,
-  state,
-  variant,
-}: {
-  label: string
-  onPress: () => void
-  state?: ActionState
-  variant?: 'primary' | 'outline'
-}) {
-  const isPrimary = variant === 'primary'
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.actionBtn,
-        isPrimary ? styles.actionBtnPrimary : styles.actionBtnOutline,
-        (state === 'loading' || pressed) && styles.actionBtnDisabled,
-      ]}
-      onPress={onPress}
-      disabled={state === 'loading'}
-    >
-      <Text style={[styles.actionBtnText, isPrimary ? styles.actionBtnTextPrimary : styles.actionBtnTextOutline]}>
-        {state === 'loading' ? '處理中…' : label}
-      </Text>
-    </Pressable>
-  )
-}
-
 function ChartDetailScreenContent() {
+  const Colors = useThemeColors()
+  const { mode } = useThemeMode()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
   const { id } = useLocalSearchParams<{ id: string }>()
   const {
     chart,
@@ -221,11 +193,11 @@ function ChartDetailScreenContent() {
       if (isComposite) {
         const result = await getCompositeResult()
         if (!result) throw new Error('缺少完整出生資料，無法產生合圖報告')
-        await downloadCompositePdf(result)
+        await downloadCompositePdf(result, mode, chart!.name)
       } else if (transitSnapshot) {
         const result = await getTransitResult()
         if (!result) throw new Error('缺少時區資料，無法產生流日報告')
-        await downloadTransitPdf(result)
+        await downloadTransitPdf(result, mode, chart!.name)
       } else {
         await downloadChartAsPdf({
           name: chart!.name ?? '',
@@ -246,7 +218,7 @@ function ChartDetailScreenContent() {
           incarnationCross: chart!.meta?.incarnationCross,
           variables: chart!.meta?.variables,
           arrows: chart!.meta?.arrows,
-        })
+        }, mode)
       }
     } catch (err) {
       Alert.alert('下載失敗', err instanceof Error ? err.message : '請稍後再試')
@@ -416,7 +388,7 @@ export default function ChartDetailScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   inner:     { padding: Spacing.lg, paddingBottom: Spacing.xxl, rowGap: Spacing.md },
 
@@ -433,11 +405,4 @@ const styles = StyleSheet.create({
   transitRebuiltNote: { fontSize: 12, color: Colors.sub, marginTop: 4 },
 
   actionSection: { gap: Spacing.sm, marginTop: Spacing.sm },
-  actionBtn:         { paddingVertical: 14, borderRadius: Radius.lg, alignItems: 'center' },
-  actionBtnPrimary:  { backgroundColor: Colors.accent },
-  actionBtnOutline:  { borderWidth: 1.5, borderColor: Colors.accent, backgroundColor: Colors.accentD },
-  actionBtnDisabled: { opacity: 0.5 },
-  actionBtnText:        { fontSize: 15, fontWeight: '600' },
-  actionBtnTextPrimary: { color: Colors.bg },
-  actionBtnTextOutline: { color: Colors.accent },
 })

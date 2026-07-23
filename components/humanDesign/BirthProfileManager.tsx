@@ -86,7 +86,7 @@ export default function BirthProfileManager() {
 
   return (
     <div className="mt-8">
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-dotted border-[rgba(43,31,20,0.3)]">
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-dotted border-[rgba(var(--ink-rgb),0.3)]">
         <h2 className="font-mono text-[12px] md:text-base tracking-widest uppercase text-(--ink)">
           出生檔案
         </h2>
@@ -110,7 +110,7 @@ export default function BirthProfileManager() {
           {profiles.map(p => (
             <div
               key={p.id}
-              className="flex items-center py-2.5 px-4 border-b border-dotted border-[rgba(43,31,20,0.2)] last:border-b-0 gap-3"
+              className="flex items-center py-2.5 px-4 border-b border-dotted border-[rgba(var(--ink-rgb),0.2)] last:border-b-0 gap-3"
             >
               <span className="font-mono text-[13px] md:text-sm tracking-[0.08em] text-(--ink) font-semibold min-w-16 shrink-0">
                 {p.label}

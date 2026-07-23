@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from 'expo-router'
+import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
@@ -14,7 +15,8 @@ import { GateList }       from '@/components/learn/GateList'
 import { TransitLearn }   from '@/components/learn/TransitLearn'
 import { CompositeLearn } from '@/components/learn/CompositeLearn'
 import { NavBackHeader }  from '@/components/NavBackHeader'
-import { Colors } from '@/constants/tokens'
+import { type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 const TITLE: Record<string, string> = {
   type:       '五大類型',
@@ -31,6 +33,8 @@ const SUPPORTED_TOPICS = new Set(Object.keys(TITLE))
 
 export default function TopicScreen() {
   const { topic } = useLocalSearchParams<{ topic: string }>()
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
 
   return (
     <SafeAreaView style={s.container}>
@@ -54,6 +58,6 @@ export default function TopicScreen() {
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
 })

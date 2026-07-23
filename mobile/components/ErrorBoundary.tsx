@@ -1,9 +1,26 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 type Props = { children: React.ReactNode; fallbackTitle?: string }
 type State = { error: Error | null }
+
+// class component 不能呼叫 hook，主題色改由這個 function component 承接後往下傳
+function ErrorFallback({ title, onReset }: { title: string; onReset: () => void }) {
+  const colors = useThemeColors()
+  const styles = useMemo(() => createStyles(colors), [colors])
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.message}>發生未預期的錯誤，請點擊重試。</Text>
+      <Pressable style={styles.btn} onPress={onReset}>
+        <Text style={styles.btnText}>重試</Text>
+      </Pressable>
+    </View>
+  )
+}
 
 export class ErrorBoundary extends React.Component<Props, State> {
   state: State = { error: null }
@@ -20,21 +37,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (this.state.error) {
-      return (
-        <View style={styles.container}>
-          <Text style={styles.title}>{this.props.fallbackTitle ?? '發生錯誤'}</Text>
-          <Text style={styles.message}>發生未預期的錯誤，請點擊重試。</Text>
-          <Pressable style={styles.btn} onPress={this.handleReset}>
-            <Text style={styles.btnText}>重試</Text>
-          </Pressable>
-        </View>
-      )
+      return <ErrorFallback title={this.props.fallbackTitle ?? '發生錯誤'} onReset={this.handleReset} />
     }
     return this.props.children
   }
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.bg,

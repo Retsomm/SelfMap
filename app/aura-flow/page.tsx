@@ -197,17 +197,17 @@ export default function AuraFlowPage() {
       {data && (
         <div className="shrink-0 mb-4 flex items-center justify-center gap-6 select-none">
           <span className="flex items-center gap-1.5 text-(--ink-soft) text-xs font-mono">
-            <span className="inline-block w-3 h-3 rounded-sm bg-black" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-(--ink)" />
             個人圖
           </span>
           <span className="flex items-center gap-1.5 text-(--ink-soft) text-xs font-mono">
-            <span className="inline-block w-3 h-3 rounded-sm bg-[#d04830]" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-(--transit)" />
             今日流日
           </span>
           <span className="flex items-center gap-1.5 text-(--ink-soft) text-xs font-mono">
             <span
               className="inline-block w-3 h-3 rounded-sm"
-              style={{ background: 'repeating-linear-gradient(45deg, #000 0 3px, #d04830 3px 6px)' }}
+              style={{ background: 'repeating-linear-gradient(45deg, var(--ink) 0 3px, var(--transit) 3px 6px)' }}
             />
             共同激活
           </span>

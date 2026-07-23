@@ -362,7 +362,7 @@ export default function ChartView({
             <span className="text-(--ink-soft) uppercase tracking-[0.15em]">時區</span>
             <span className="text-(--ink)">{timezone}</span>
           </div>
-          <div className="flex gap-3 sm:col-span-2 mt-1 pt-2 border-t border-dotted border-[rgba(43,31,20,0.25)]">
+          <div className="flex gap-3 sm:col-span-2 mt-1 pt-2 border-t border-dotted border-[rgba(var(--ink-rgb),0.25)]">
             <span className="text-(--ink-soft) uppercase tracking-[0.15em]">生成時間</span>
             <span className="text-(--ink)">{generatedAt}</span>
           </div>
@@ -433,7 +433,7 @@ export default function ChartView({
             { category: '動機', val: varLabels.motivation },
           ].map(r => (
             <div
-              className="grid grid-cols-1 sm:grid-cols-[180px_160px_1fr] gap-1 sm:gap-4 py-2.5 px-4 border-b border-dotted border-[rgba(43,31,20,0.2)] items-start last:border-b-0"
+              className="grid grid-cols-1 sm:grid-cols-[180px_160px_1fr] gap-1 sm:gap-4 py-2.5 px-4 border-b border-dotted border-[rgba(var(--ink-rgb),0.2)] items-start last:border-b-0"
               key={r.category}
             >
               <div className="font-mono text-[12px] md:text-base tracking-[0.04em] text-[var(--ink-soft)] leading-[1.5]">{r.category}</div>

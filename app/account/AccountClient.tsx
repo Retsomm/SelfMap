@@ -24,9 +24,9 @@ const TransitView = dynamic(() => import('@/components/humanDesign/TransitView')
 type SidebarSection = 'profile' | 'humandesign' | 'notifications'
 
 const NOTIFICATION_TYPE_CFG: Record<NotificationType, { label: string; color: string }> = {
-  feature:      { label: '新功能',  color: 'var(--olive)' },
+  feature:      { label: '新功能',  color: 'var(--olive-text)' },
   bugfix:       { label: '問題修正', color: 'var(--crimson)' },
-  announcement: { label: '公告',    color: 'var(--tan)' },
+  announcement: { label: '公告',    color: 'var(--tan-text)' },
 }
 
 function formatNotificationDate(iso: string) {
@@ -480,7 +480,7 @@ function AccountContent() {
             </button>
 
             {activeSection === 'humandesign' && (
-              <div className="border-l border-dotted border-[rgba(43,31,20,0.3)] ml-5">
+              <div className="border-l border-dotted border-[rgba(var(--ink-rgb),0.3)] ml-5">
                 {CHART_TABS.map(t => (
                   <div key={t.id}>
                     <button

@@ -3,7 +3,7 @@
  */
 import { useAuth } from '@clerk/expo'
 import { useRouter } from 'expo-router'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -19,7 +19,6 @@ import { type CreateTransitResult, previewTransitChart, createTransitChart } fro
 import { ScrollLockContext, useScrollLockState } from '@/contexts/ScrollLockContext'
 import { downloadTransitPdf, generateTransitAiPrompt } from '@/lib/chartPdf'
 import { buildTransitBodyGraphProps } from '@/lib/hd-bodygraph-utils'
-import { HD_GATES } from '@shared/humanDesign/hd-chart-data'
 import { useBirthProfiles } from '@/hooks/useBirthProfiles'
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight'
 import BirthDataForm, { type BirthFormData, defaultBirthFormData } from '@/components/BirthDataForm'
@@ -29,32 +28,16 @@ import { formToBirthDate, formToBirthTime } from '@/lib/birthFormUtils'
 import { matchCity } from '@/lib/cities'
 import BodyGraph from '@/components/BodyGraph'
 import { type BirthProfile } from '@/lib/birthProfiles'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors, useThemeMode } from '@/contexts/ThemeContext'
+import { GateChip } from '@/components/transit/GateChip'
+import { ImpactCard } from '@/components/transit/ImpactCard'
 
 const PLANET_SYM: Record<string, string> = {
   '太陽': '☉', '地球': '⊕', '月亮': '☽', '北交點': '☊', '南交點': '☋',
   '水星': '☿', '金星': '♀', '火星': '♂', '木星': '♃', '土星': '♄',
   '天王星': '♅', '海王星': '♆', '冥王星': '♇',
 }
-
-const CENTER_ZH: Record<string, string> = {
-  head: '頭頂', ajna: '邏輯', throat: '喉嚨', g: 'G',
-  ego: '意志力', sacral: '薦骨', solarPlexus: '情緒',
-  spleen: '脾臟', root: '根部',
-}
-
-const IMPACT_CFG = {
-  'center-activated':   { color: Colors.em,     icon: '⚡', label: '空白中心被激活' },
-  'new-channel':        { color: Colors.transit, icon: '🌊', label: '全新流日通道' },
-  'completing-channel': { color: Colors.compro,  icon: '🔗', label: '通道補全' },
-} as const
-
-const GateRow = ({ g, color, bg }: { g: number; color: string; bg: string }) => (
-  <View style={[s.gateTag, { backgroundColor: bg }]}>
-    <Text style={[s.gateTagNum, { color }]}>{g}</Text>
-    <Text style={[s.gateTagName, { color }]} numberOfLines={1}>{HD_GATES[g]?.name.zh ?? ''}</Text>
-  </View>
-)
 
 
 export default function TransitView() {
@@ -63,6 +46,9 @@ export default function TransitView() {
   const scrollRef = useRef<ScrollView>(null)
   const { ctx: scrollLockCtx, scrollEnabled } = useScrollLockState()
   const keyboardHeight = useKeyboardHeight()
+  const Colors = useThemeColors()
+  const { mode } = useThemeMode()
+  const s = useMemo(() => createStyles(Colors), [Colors])
 
   const [form, setForm]               = useState<BirthFormData>(defaultBirthFormData)
   const [fieldError, setFieldError]   = useState<string | null>(null)
@@ -131,7 +117,7 @@ export default function TransitView() {
   const handleDownload = async () => {
     if (!result) return
     setPdfLoading(true)
-    try { await downloadTransitPdf(result) }
+    try { await downloadTransitPdf(result, mode, lastPayload?.name) }
     catch { Alert.alert('錯誤', '下載失敗，請稍後再試') }
     finally { setPdfLoading(false) }
   }
@@ -303,14 +289,14 @@ export default function TransitView() {
                   <>
                     <Text style={s.gateGroupLabel}>個人 + 流日共有</Text>
                     <View style={s.chipRow}>
-                      {shared.map(g => <GateRow key={g} g={g} color={Colors.successText} bg={Colors.successBg} />)}
+                      {shared.map(g => <GateChip key={g} g={g} color={Colors.successText} bg={Colors.successBg} />)}
                     </View>
                   </>
                 )}
 
                 <Text style={[s.gateGroupLabel, { marginTop: Spacing.sm }]}>流日影響</Text>
                 <View style={s.chipRow}>
-                  {transitOnly.map(g => <GateRow key={g} g={g} color={Colors.designRed} bg={Colors.accentD} />)}
+                  {transitOnly.map(g => <GateChip key={g} g={g} color={Colors.designRed} bg={Colors.accentD} />)}
                 </View>
               </View>
             )
@@ -325,29 +311,7 @@ export default function TransitView() {
             (['center-activated', 'new-channel', 'completing-channel'] as const)
               .map(kind => {
                 const layers = result.impact.layers.filter(l => l.kind === kind)
-                if (layers.length === 0) return null
-                const cfg = IMPACT_CFG[kind]
-                const SHARED_DESC: Record<typeof kind, string> = {
-                  'center-activated':   '這些原本開放的中心今天借到了「限定體驗卡」，可以善用這股暫時的能量去執行或創作，但不建議在這些地方做出長期承諾——能量退去後，條件會不同。',
-                  'new-channel':        '流日帶給你的限定天賦，可以借來執行任務、享受那股靈感。只是記得這件衣服明天會換掉，不要在它還穿著的時候做需要長久負責的承諾。',
-                  'completing-channel': '你本身擁有一半，今天流日借你補齊了另一半，讓你短暫體驗完整通道的感覺。這股能量來了可以好好享用，能量退潮後回到原本的節奏就好。',
-                }
-                return (
-                  <View key={kind} style={[s.card, { borderLeftWidth: 3, borderLeftColor: cfg.color }]}>
-                    <View style={{ flexDirection: 'row', gap: Spacing.sm, marginBottom: 8 }}>
-                      <Text style={{ fontSize: 18 }}>{cfg.icon}</Text>
-                      <Text style={[s.impactKind, { color: cfg.color, alignSelf: 'center' }]}>{cfg.label}</Text>
-                    </View>
-                    <View style={[s.chipRow, { marginBottom: 8 }]}>
-                      {layers.map((layer, i) => (
-                        <View key={i} style={[s.chip, { backgroundColor: `${cfg.color}22` }]}>
-                          <Text style={[s.chipText, { color: cfg.color }]}>{layer.label}</Text>
-                        </View>
-                      ))}
-                    </View>
-                    <Text style={s.muted}>{SHARED_DESC[kind]}</Text>
-                  </View>
-                )
+                return <ImpactCard key={kind} kind={kind} items={layers.map(l => l.label)} />
               })
           )}
 
@@ -384,7 +348,7 @@ export default function TransitView() {
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   inner:          { padding: Spacing.lg, gap: Spacing.md, paddingBottom: 48 },
   card:           { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
   sectionLabel:   { fontSize: 11, fontWeight: '600', color: Colors.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 },
@@ -396,8 +360,6 @@ const s = StyleSheet.create({
   legendText:      { fontSize: 11, color: Colors.sub, marginRight: Spacing.sm },
   graphContainer:  { width: '100%', aspectRatio: 590 / 1030 },
   chipRow:        { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip:           { backgroundColor: Colors.accentD, borderRadius: 6, paddingHorizontal: 10, paddingVertical: Spacing.xs },
-  chipText:       { fontSize: 12, fontWeight: '500', color: Colors.accent },
   planetRow:      { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: 6 },
   sym:            { fontSize: 15, width: 24, textAlign: 'center', color: Colors.sub },
   planetName:     { flex: 1, fontSize: 14, color: Colors.text, marginLeft: Spacing.sm },
@@ -419,12 +381,7 @@ const s = StyleSheet.create({
   disabled:       { opacity: 0.5 },
   errorBox:       { backgroundColor: Colors.errorBg, borderRadius: Radius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.errorBorder },
   errorText:      { color: Colors.red, fontSize: 13 },
-  impactKind:     { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
-  impactLabel:    { fontSize: 15, fontWeight: '700', color: Colors.text, marginTop: 2 },
   gateGroupLabel: { fontSize: 10, fontWeight: '600', color: Colors.muted, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: Spacing.xs },
-  gateTag:        { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
-  gateTagNum:     { fontSize: 12, fontWeight: '700', fontFamily: 'monospace' },
-  gateTagName:    { fontSize: 11, fontWeight: '400', maxWidth: 80 },
   actionSection:        { gap: Spacing.sm },
   actionBtn:            { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.lg, padding: 13, alignItems: 'center' },
   actionBtnPrimary:     { backgroundColor: Colors.accent, borderColor: Colors.accent },

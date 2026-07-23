@@ -123,7 +123,7 @@ export default function SelfMap({ chart, onCenterClick }: SelfMapProps) {
                 y1={pa.y}
                 x2={pb.x}
                 y2={pb.y}
-                stroke={defined ? '#a5b4fc' : '#e4e4e7'}
+                stroke={defined ? '#a5b4fc' : 'var(--ink-soft)'}
                 strokeWidth={defined ? 2 : 1}
                 strokeDasharray={defined ? undefined : '4 4'}
                 opacity={defined ? 0.6 : 0.4}
@@ -168,13 +168,13 @@ export default function SelfMap({ chart, onCenterClick }: SelfMapProps) {
                 width={cfg.w}
                 height={cfg.h}
                 rx={cfg.rx}
-                fill={isDefined ? '#eef2ff' : 'white'}
+                fill={isDefined ? 'var(--paper-deep)' : 'var(--paper)'}
                 stroke={
                   isHovered
                     ? '#6366f1'
                     : isDefined
                     ? '#a5b4fc'
-                    : '#e4e4e7'
+                    : 'var(--ink-soft)'
                 }
                 strokeWidth={isHovered ? 2 : 1.5}
                 opacity={isDefined ? 1 : 0.65}
@@ -199,7 +199,7 @@ export default function SelfMap({ chart, onCenterClick }: SelfMapProps) {
                 textAnchor="middle"
                 fontSize={11}
                 fontWeight={600}
-                fill={isDefined ? '#4338ca' : '#a1a1aa'}
+                fill={isDefined ? '#4338ca' : 'var(--ink-soft)'}
                 fontFamily="var(--font-mono)"
               >
                 {CENTER_LABELS[cfg.id]}
@@ -209,7 +209,7 @@ export default function SelfMap({ chart, onCenterClick }: SelfMapProps) {
                 y={mid.y + 10}
                 textAnchor="middle"
                 fontSize={9}
-                fill={isDefined ? '#6366f1' : '#d4d4d8'}
+                fill={isDefined ? '#6366f1' : 'var(--ink-soft)'}
                 fontFamily="var(--font-mono)"
               >
                 {isDefined ? '已定義' : '未定義'}

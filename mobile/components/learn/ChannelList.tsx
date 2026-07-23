@@ -1,14 +1,19 @@
 import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { HD_CHANNELS, type ChartChannel } from '@shared/humanDesign/hd-chart-data'
-import { Colors } from '@/constants/tokens'
-import { ls } from './learnStyles'
+import { type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
+import { createLs } from './learnStyles'
 
 export function ChannelList() {
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const toggle = (id: string) =>
     setExpanded(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+
+  const Colors = useThemeColors()
+  const ls = useMemo(() => createLs(Colors), [Colors])
+  const s = useMemo(() => createStyles(Colors), [Colors])
 
   const sorted = useMemo(
     () => [...HD_CHANNELS].sort((a, b) => Math.min(a.from, a.to) - Math.min(b.from, b.to)),
@@ -39,13 +44,19 @@ export function ChannelList() {
       />
       <Text style={ls.countLabel}>{filtered.length} / {HD_CHANNELS.length} 條通道</Text>
       {filtered.map(ch => (
-        <ChannelCard key={ch.id} ch={ch} open={expanded.has(ch.id)} onToggle={() => toggle(ch.id)} />
+        <ChannelCard key={ch.id} s={s} ls={ls} ch={ch} open={expanded.has(ch.id)} onToggle={() => toggle(ch.id)} />
       ))}
     </ScrollView>
   )
 }
 
-function ChannelCard({ ch, open, onToggle }: { ch: ChartChannel; open: boolean; onToggle: () => void }) {
+function ChannelCard({ s, ls, ch, open, onToggle }: {
+  s: ReturnType<typeof createStyles>
+  ls: ReturnType<typeof createLs>
+  ch: ChartChannel
+  open: boolean
+  onToggle: () => void
+}) {
   return (
     <View style={ls.accordionCard}>
       <Pressable style={ls.accordionHeader} onPress={onToggle} accessibilityRole="button">
@@ -69,7 +80,7 @@ function ChannelCard({ ch, open, onToggle }: { ch: ChartChannel; open: boolean; 
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   channelNum:     { minWidth: 50, alignItems: 'center', justifyContent: 'center' },
   channelNumText: { color: Colors.accent, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
   channelGates:   { fontSize: 14, color: Colors.sub, fontWeight: '600' },

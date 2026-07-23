@@ -10,7 +10,8 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { filterTimezones } from '@shared/humanDesign/timezones'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 type Props = {
   visible: boolean
@@ -20,6 +21,9 @@ type Props = {
 
 export default function TimezonePickerModal({ visible, onSelect, onClose }: Props) {
   const [query, setQuery] = useState('')
+
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
 
   const filtered = useMemo(() => filterTimezones(query), [query])
 
@@ -67,7 +71,7 @@ export default function TimezonePickerModal({ visible, onSelect, onClose }: Prop
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   header: {
     alignItems: 'center',

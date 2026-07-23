@@ -92,7 +92,7 @@ export default function CompositeTab() {
     <>
       <CompositePersonForm
         label="人物 A — 人物 A"
-        accentColor="#c8553d"
+        accentColor="var(--crimson)"
         inputs={inputsA}
         onInputsChange={inputs => { setInputsA(inputs); setCompositeResultA(null); setCompositeResultB(null) }}
         profiles={profiles}

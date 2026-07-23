@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/expo'
 import { useFocusEffect, useRouter } from 'expo-router'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
   FlatList,
@@ -15,7 +15,8 @@ import { type Chart, deleteChart, getCharts, renameChart, isCompositeChart } fro
 import { SubTabBar } from '@/components/SubTabBar'
 import { InputModal } from '@/components/InputModal'
 import { LoadingView, ErrorView } from '@/components/StateViews'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 type ChartTab = 'personal' | 'composite' | 'transit'
 const CHART_TABS = [
@@ -24,11 +25,11 @@ const CHART_TABS = [
   { id: 'transit',   label: '流日' },
 ] as const satisfies readonly { id: ChartTab; label: string }[]
 
-const KIND_CFG: Record<string, { label: string; color: string; bg: string }> = {
+const createKindCfg = (Colors: ThemeColors): Record<string, { label: string; color: string; bg: string }> => ({
   personal:  { label: '個人', color: Colors.accent,  bg: Colors.accentD },
   composite: { label: '合圖', color: Colors.comp,    bg: Colors.compDimBg },
   transit:   { label: '流日', color: Colors.transit, bg: Colors.transitDimBg },
-}
+})
 
 function kindOf(c: Chart): string {
   if (c.chartKind === 'transit') return 'transit'
@@ -46,7 +47,10 @@ function integrationThemeOf(definedCenterCount: number): string {
 }
 
 function KindBadge({ kind }: { kind: string }) {
-  const cfg = KIND_CFG[kind] ?? KIND_CFG.personal
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
+  const kindCfg = useMemo(() => createKindCfg(Colors), [Colors])
+  const cfg = kindCfg[kind] ?? kindCfg.personal
   return (
     <View style={[s.kindBadge, { backgroundColor: cfg.bg }]}>
       <Text style={[s.kindBadgeText, { color: cfg.color }]}>{cfg.label}</Text>
@@ -55,6 +59,8 @@ function KindBadge({ kind }: { kind: string }) {
 }
 
 function Badge({ label, dim }: { label: string; dim?: boolean }) {
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
   return (
     <View style={[s.badge, dim && s.badgeDim]}>
       <Text style={[s.badgeText, dim && s.badgeTextDim]}>{label}</Text>
@@ -82,6 +88,8 @@ function ChartFlatList({
   onDelete: (c: Chart) => void
 }) {
   const router = useRouter()
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
 
   if (loading) return <LoadingView />
   if (error) return <ErrorView message={error} onRetry={onRefresh} />
@@ -266,7 +274,7 @@ export default function ChartListView({ initialTab }: { initialTab?: ChartTab })
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   centered:  { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.md, padding: Spacing.xl },
   emptyText: { fontSize: 18, color: Colors.text, fontWeight: '600' },
   sub:       { fontSize: 13, color: Colors.sub },

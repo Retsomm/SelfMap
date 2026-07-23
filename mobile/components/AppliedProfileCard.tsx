@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { type BirthProfile, profileSummary } from '@/lib/birthProfiles'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 type Props = {
   profile: BirthProfile
@@ -8,6 +10,8 @@ type Props = {
 }
 
 export function AppliedProfileCard({ profile, onClear }: Props) {
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
   return (
     <View style={s.card}>
       <View style={s.row}>
@@ -21,7 +25,7 @@ export function AppliedProfileCard({ profile, onClear }: Props) {
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   card:   { backgroundColor: Colors.accentD, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.accent },
   row:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   label:  { color: Colors.accent, fontSize: 15, fontWeight: '700' },

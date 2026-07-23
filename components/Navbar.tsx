@@ -5,6 +5,7 @@ import { useUser, useClerk } from '@clerk/nextjs'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import SelfMapLogo from './SelfMapLogo'
+import ThemeToggle from './ThemeToggle'
 
 export default function Navbar() {
   const { isSignedIn } = useUser()
@@ -59,7 +60,12 @@ export default function Navbar() {
               <Link
                 key={href}
                 href={href}
-                className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) hover:text-(--ink) transition-colors duration-120 no-underline"
+                aria-current={pathname === href ? 'page' : undefined}
+                className={`font-mono text-[12px] md:text-base tracking-[0.14em] uppercase transition-colors duration-120 no-underline ${
+                  pathname === href
+                    ? 'text-(--crimson) font-semibold'
+                    : 'text-(--ink-soft) hover:text-(--ink)'
+                }`}
               >
                 {label}
               </Link>
@@ -71,7 +77,12 @@ export default function Navbar() {
             {isSignedIn ? (
               <Link
                 href="/account?section=profile"
-                className="font-mono text-[12px] md:text-base tracking-[0.14em] uppercase text-(--ink-soft) hover:text-(--ink) transition-colors duration-120 no-underline"
+                aria-current={pathname.startsWith('/account') ? 'page' : undefined}
+                className={`font-mono text-[12px] md:text-base tracking-[0.14em] uppercase transition-colors duration-120 no-underline ${
+                  pathname.startsWith('/account')
+                    ? 'text-(--crimson) font-semibold'
+                    : 'text-(--ink-soft) hover:text-(--ink)'
+                }`}
               >
                 帳號
               </Link>
@@ -84,6 +95,9 @@ export default function Navbar() {
               </button>
             )}
           </nav>
+
+          {/* 主題切換：桌機在導覽列最右側，手機因為工具列被隱藏，改成一律顯示 */}
+          <ThemeToggle className="ml-2 md:ml-6" />
         </div>
       </header>
 
@@ -126,7 +140,12 @@ export default function Navbar() {
             <Link
               key={href}
               href={href}
-              className="font-mono text-[12px] md:text-base tracking-[0.16em] uppercase text-(--ink-soft) hover:text-(--ink) transition-colors duration-120 no-underline py-2.5 border-b border-(--ink)/20"
+              aria-current={pathname === href ? 'page' : undefined}
+              className={`font-mono text-[12px] md:text-base tracking-[0.16em] uppercase transition-colors duration-120 no-underline py-2.5 border-b border-(--ink)/20 ${
+                pathname === href
+                  ? 'text-(--crimson) font-semibold'
+                  : 'text-(--ink-soft) hover:text-(--ink)'
+              }`}
             >
               {label}
             </Link>
@@ -134,7 +153,12 @@ export default function Navbar() {
           {isSignedIn ? (
             <Link
               href="/account?section=profile"
-              className="font-mono text-[12px] md:text-base tracking-[0.16em] uppercase text-(--ink-soft) hover:text-(--ink) transition-colors duration-120 no-underline py-2.5 border-b border-(--ink)/20"
+              aria-current={pathname.startsWith('/account') ? 'page' : undefined}
+              className={`font-mono text-[12px] md:text-base tracking-[0.16em] uppercase transition-colors duration-120 no-underline py-2.5 border-b border-(--ink)/20 ${
+                pathname.startsWith('/account')
+                  ? 'text-(--crimson) font-semibold'
+                  : 'text-(--ink-soft) hover:text-(--ink)'
+              }`}
             >
               帳號
             </Link>

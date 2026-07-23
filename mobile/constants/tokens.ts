@@ -1,6 +1,43 @@
 // ── Editorial warm palette ── mirror the web's --paper / --ink theme ──────────
+// 明色盤對應網頁版 :root，暗色盤對應網頁版 :root[data-theme="dark"]，
+// 兩邊色票需保持同步（見 app/globals.css）
 
-export const Colors = {
+export type ThemeColors = {
+  bg: string
+  surface: string
+  border: string
+  text: string
+  sub: string
+  muted: string
+  accent: string
+  accentD: string
+  red: string
+  transit: string
+  comp: string
+  em: string
+  compro: string
+  dom: string
+  gateBg: string
+  gateBorder: string
+  designRed: string
+  planetRedText: string
+  rowPressedBg: string
+  overlay: string
+  errorBg: string
+  errorBorder: string
+  transitDimBg: string
+  compDimBg: string
+  emDimBg: string
+  comproDimBg: string
+  domDimBg: string
+  transitChipBg: string
+  altRowBg: string
+  transitWarmText: string
+  successText: string
+  successBg: string
+}
+
+export const lightColors: ThemeColors = {
   // backgrounds
   bg:      '#efe5d0',    // --paper
   surface: '#faf7f0',    // slightly lighter warm white for cards
@@ -48,17 +85,68 @@ export const Colors = {
   // table / list
   altRowBg: '#f7f0e5',
 
-  // transit analysis highlight
-  transitHighlightBg:     '#fdf3e5',
-  transitHighlightBorder: '#b89968',
+  // mobile-only：web 版沒有對應的流日暖色文字/共同閘門徽章功能，這裡不用同步 app/globals.css
   transitWarmText:        '#8a6832',
 
-  // shared-gate badge
+  // shared-gate badge（mobile-only，同上，web 沒有對應元件）
   successText: '#5a8a3c',
   successBg:   '#eef3e4',
-} as const
+}
 
-export type ThemeColors = typeof Colors
+export const darkColors: ThemeColors = {
+  // backgrounds
+  bg:      '#1c1712',    // --paper (dark)
+  surface: '#241d16',    // card surface, one step up from bg
+  border:  '#4a3d2e',    // warm dark border
+
+  // text
+  text:    '#ede3cf',    // --ink (dark)
+  sub:     '#b7a688',    // --ink-soft (dark)
+  muted:   '#8a7a63',    // de-emphasised warm tone
+
+  // accent
+  accent:  '#e17761',    // --crimson (dark)
+  accentD: '#3a2420',    // dark crimson-tinted bg
+
+  // semantic colours
+  red:     '#e17761',
+  transit: '#cbb086',    // --tan (dark)
+  comp:    '#b9d17f',    // --olive (dark)
+  em:      '#e8cf72',    // --mustard (dark)
+  compro:  '#8a7a63',
+  dom:     '#b7a688',
+
+  // chart detail
+  gateBg:        '#14100c',   // --paper-deep (dark)
+  gateBorder:    '#4a3d2e',
+  designRed:     '#e17761',
+  planetRedText: '#ec8d78',   // --crimson-2 (dark)
+
+  // interactive
+  rowPressedBg: 'rgba(225,119,97,0.14)',
+  overlay:      'rgba(0,0,0,0.55)',   // 遮罩固定深色，不隨主題翻轉
+
+  // error / status
+  errorBg:     '#3a2420',
+  errorBorder: '#8a4a3a',
+
+  // badge dim backgrounds
+  transitDimBg:  '#2a2318',
+  compDimBg:     '#22281c',
+  emDimBg:       '#2c2718',
+  comproDimBg:   '#26221c',
+  domDimBg:      '#28231b',
+  transitChipBg: '#2a2318',
+
+  // table / list
+  altRowBg: '#221c15',
+
+  transitWarmText:        '#d4b483',
+
+  // shared-gate badge
+  successText: '#8fc26a',
+  successBg:   '#212a1a',
+}
 
 export const Radius = {
   sm:  8,

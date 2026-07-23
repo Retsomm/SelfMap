@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
+import { cookies } from 'next/headers'
 import { Cormorant_Garamond, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { zhTW } from '@clerk/localizations'
@@ -7,6 +8,8 @@ import { Toaster } from 'react-hot-toast'
 import { clerkAppearance } from '@/lib/clerkAppearance'
 import Navbar from '@/components/Navbar'
 import QueryProvider from '@/components/QueryProvider'
+import { ThemeProvider } from '@/components/ThemeProvider'
+import { THEME_COOKIE_KEY } from '@/lib/theme'
 import './globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -106,17 +109,38 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // 主題偏好存在 cookie（不是 localStorage），伺服器端渲染時就能讀到，
+  // 一開始吐出來的 HTML 就是正確主題，不需要 client 端再校正、也不會閃爍。
+  // 沒有 cookie（第一次造訪）預設為深色。
+  const cookieStore = await cookies()
+  const theme = cookieStore.get(THEME_COOKIE_KEY)?.value === 'light' ? 'light' : 'dark'
+
   return (
-    <html lang="zh-TW" className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="zh-TW" data-theme={theme} className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full" suppressHydrationWarning>
         <Script defer src="https://cloud.umami.is/script.js" data-website-id="757127df-87af-47d5-a73b-9feb455d6867" />
-        <ClerkProvider appearance={clerkAppearance} localization={zhTW}>
-          <QueryProvider>
-            <Navbar />
-            {children}
-            <Toaster position="bottom-center" toastOptions={{ duration: 3500 }} />
-          </QueryProvider>
-        </ClerkProvider>
+        <ThemeProvider initialTheme={theme}>
+          <ClerkProvider appearance={clerkAppearance} localization={zhTW}>
+            <QueryProvider>
+              <Navbar />
+              {children}
+              <Toaster
+                position="bottom-center"
+                toastOptions={{
+                  duration: 3500,
+                  style: {
+                    background: 'var(--paper-deep)',
+                    color: 'var(--ink)',
+                    border: '1px solid var(--ink)',
+                    borderRadius: 0,
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '13px',
+                  },
+                }}
+              />
+            </QueryProvider>
+          </ClerkProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
 
-export const ls = StyleSheet.create({
+export const createLs = (Colors: ThemeColors) => StyleSheet.create({
   inner:      { padding: Spacing.lg, gap: Spacing.md, paddingBottom: 48 },
   countLabel: { fontSize: 12, color: Colors.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 },
 

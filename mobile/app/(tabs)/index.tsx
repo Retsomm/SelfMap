@@ -1,7 +1,8 @@
+import { useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { ScreenHeader } from '@/components/ScreenHeader'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 const FEATURES = [
   { icon: '◉', title: '本命盤計算', desc: '輸入出生資料，自動計算你的完整人類圖，包含類型、權威、人生角色與所有中心。' },
@@ -18,9 +19,10 @@ const HD_INTRO = [
 ]
 
 export default function AboutScreen() {
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
   return (
     <SafeAreaView style={s.container} edges={['top', 'left', 'right']}>
-      <ScreenHeader title="關於" />
       <ScrollView contentContainerStyle={s.inner} showsVerticalScrollIndicator={false}>
 
         {/* Hero */}
@@ -95,7 +97,7 @@ export default function AboutScreen() {
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   inner:     { padding: Spacing.xl, gap: Spacing.lg, paddingBottom: 48 },
 

@@ -1,8 +1,8 @@
-const paper = '#efe5d0'
-const paperDeep = '#e7d9bd'
-const ink = '#2b1f14'
-const inkSoft = '#6b5a44'
-const crimson = '#c8553d'
+const paper = 'var(--paper)'
+const paperDeep = 'var(--paper-deep)'
+const ink = 'var(--ink)'
+const inkSoft = 'var(--ink-soft)'
+const crimson = 'var(--crimson)'
 
 export const clerkAppearance = {
   variables: {
@@ -23,12 +23,12 @@ export const clerkAppearance = {
     card: {
       background: paper,
       border: `1px solid ${ink}`,
-      boxShadow: `6px 6px 0 rgba(43,31,20,0.07)`,
+      boxShadow: `6px 6px 0 rgba(var(--ink-rgb),0.07)`,
       borderRadius: 0,
     },
 
     // ── Modal overlay ──
-    modalBackdrop: { backdropFilter: 'blur(2px)', background: 'rgba(43,31,20,0.22)' },
+    modalBackdrop: { backdropFilter: 'blur(2px)', background: 'rgba(var(--ink-rgb),0.22)' },
     modalContent: { border: `1px solid ${ink}`, borderRadius: 0, boxShadow: 'none' },
 
     // ── Header ──
@@ -150,7 +150,7 @@ export const clerkAppearance = {
     userButtonPopoverCard: {
       background: paper,
       border: `1px solid ${ink}`,
-      boxShadow: `6px 6px 0 rgba(43,31,20,0.07)`,
+      boxShadow: `6px 6px 0 rgba(var(--ink-rgb),0.07)`,
       borderRadius: 0,
       padding: 0,
     },
@@ -168,7 +168,7 @@ export const clerkAppearance = {
     },
     userButtonPopoverActionButtonIcon: { color: inkSoft, width: '14px', height: '14px' },
     userButtonPopoverFooter: {
-      borderTop: `1px dotted rgba(43,31,20,0.3)`,
+      borderTop: `1px dotted rgba(var(--ink-rgb),0.3)`,
       background: paperDeep,
       padding: '8px 16px',
     },

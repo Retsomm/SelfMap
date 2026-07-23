@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { type BirthProfile, profileSummary } from '@/lib/birthProfiles'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 type Props = {
   visible: boolean
@@ -10,6 +12,8 @@ type Props = {
 }
 
 export function BirthProfilePickerModal({ visible, profiles, onSelect, onClose }: Props) {
+  const Colors = useThemeColors()
+  const s = useMemo(() => createStyles(Colors), [Colors])
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={s.container}>
@@ -35,7 +39,7 @@ export function BirthProfilePickerModal({ visible, profiles, onSelect, onClose }
   )
 }
 
-const s = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, justifyContent: 'flex-end' },
   backdrop:  { ...StyleSheet.absoluteFill, backgroundColor: Colors.overlay },
   sheet:    { backgroundColor: Colors.surface, borderTopLeftRadius: Radius.xl, borderTopRightRadius: Radius.xl, padding: Spacing.xl, paddingBottom: 48, maxHeight: '60%' },

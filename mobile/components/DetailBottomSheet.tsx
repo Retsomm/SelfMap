@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   Modal,
   Pressable,
@@ -17,7 +18,8 @@ import {
   buildDefinitionContent,
   buildIncarnationCrossContent,
 } from '@/lib/hd-sheet-builders'
-import { Colors, Radius, Spacing } from '@/constants/tokens'
+import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
+import { useThemeColors } from '@/contexts/ThemeContext'
 
 export type SheetTarget =
   | { kind: 'center';            id: string; defined?: boolean }
@@ -35,6 +37,9 @@ interface Props {
 }
 
 export default function DetailBottomSheet({ target, onClose }: Props) {
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
+
   if (!target) return null
 
   const content =
@@ -109,7 +114,7 @@ export default function DetailBottomSheet({ target, onClose }: Props) {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: Colors.overlay,

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { type SummaryContent } from '@shared/humanDesign/hd-summary-data'
-import { ls } from './learnStyles'
+import { useThemeColors } from '@/contexts/ThemeContext'
+import { createLs } from './learnStyles'
 
 interface Props {
   data: Record<string, SummaryContent>
@@ -10,6 +11,8 @@ interface Props {
 
 export function SummaryList({ data, categoryLabel }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const Colors = useThemeColors()
+  const ls = useMemo(() => createLs(Colors), [Colors])
 
   const toggle = (key: string) =>
     setExpanded(prev => {

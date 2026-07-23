@@ -183,7 +183,7 @@ const MiniChartPanel = ({ result, label, color, date, time, locationLabel }: Min
       </div>
 
       {/* Stats */}
-      <div className="mt-2 pt-2 border-t border-dotted border-[rgba(43,31,20,0.3)] grid grid-cols-3 gap-1">
+      <div className="mt-2 pt-2 border-t border-dotted border-[rgba(var(--ink-rgb),0.3)] grid grid-cols-3 gap-1">
         {[
           { label: '類型', value: typeLabel },
           { label: '配置', value: result.profile.profile + ' ' + profileLabel },
@@ -220,7 +220,7 @@ const ConnectionGroup = ({ title, desc, connections, colorClass, labelA, labelB 
       {connections.length === 0 ? (
         <div className="px-4 py-3 font-mono text-[12px] md:text-base text-[var(--ink-soft)]">目前尚無連結動態</div>
       ) : (
-        <div className="divide-y divide-dotted divide-[rgba(43,31,20,0.2)]">
+        <div className="divide-y divide-dotted divide-[rgba(var(--ink-rgb),0.2)]">
           {connections.map(conn => (
             <div key={conn.channelId} className="px-4 py-2 flex flex-col gap-1 text-[12px] md:text-base">
               <div className="font-mono font-bold text-[var(--ink)] flex items-baseline gap-2 whitespace-nowrap">
@@ -231,7 +231,7 @@ const ConnectionGroup = ({ title, desc, connections, colorClass, labelA, labelB 
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="font-mono text-[var(--ink-soft)]">
-                  <span className="font-semibold text-[#c8553d]">{labelA}</span>{' '}
+                  <span className="font-semibold text-(--crimson)">{labelA}</span>{' '}
                   {conn.aGates.length > 0 ? conn.aGates.join(', ') : '—'}
                 </div>
                 <div className="font-mono text-[var(--ink-soft)]">
@@ -385,7 +385,7 @@ export default function CompositeView({
       {/* Person info header row */}
       <div className="grid grid-cols-2 gap-4 border border-[var(--ink)] bg-[var(--paper-deep)] px-5 py-3 font-mono text-[12px] md:text-base tracking-[0.06em]">
         {[
-          { label: labelA, date: dateA, time: timeA, loc: locationA, color: '#c8553d' },
+          { label: labelA, date: dateA, time: timeA, loc: locationA, color: 'var(--crimson)' },
           { label: labelB, date: dateB, time: timeB, loc: locationB, color: 'var(--ink)' },
         ].map(p => (
           <div key={p.label} className="flex gap-2.5 items-start min-w-0">
@@ -454,7 +454,7 @@ export default function CompositeView({
                 {r.planets.map(p => (
                   <div key={p.planetName} className="composite-planets-mobile-row">
                     <PlanetIcon name={p.planetName} className="w-[10px] h-[10px] shrink-0 block" />
-                    <span style={{ color: '#c8553d' }}>{p.red.full}</span>
+                    <span style={{ color: 'var(--crimson)' }}>{p.red.full}</span>
                     <span style={{ opacity: 0.35 }}>/</span>
                     <span style={{ color: 'var(--ink)' }}>{p.black.full}</span>
                   </div>
@@ -469,7 +469,7 @@ export default function CompositeView({
       {chartMode === 'sideBySide' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
           <MiniChartPanel
-            result={resultA} label={labelA} color="#c8553d"
+            result={resultA} label={labelA} color="var(--crimson)"
             date={dateA} time={timeA} locationLabel={locationA}
           />
           <MiniChartPanel
@@ -554,7 +554,7 @@ export default function CompositeView({
               title="主導與掌控"
               desc="誰更容易主導節奏與方向"
               connections={analysis.dominance}
-              colorClass="bg-[rgba(43,31,20,0.05)]"
+              colorClass="bg-[rgba(var(--ink-rgb),0.05)]"
               labelA={labelA} labelB={labelB}
             />
           </div>
@@ -567,7 +567,7 @@ export default function CompositeView({
           </div>
           <div className="border border-[var(--ink)] px-5 py-4">
             <div className="flex items-baseline gap-4 mb-3">
-              <span className="font-serif italic text-[16px] text-[#c8553d]">{labelA} {resultA.profile.profile}</span>
+              <span className="font-serif italic text-[16px] text-(--crimson)">{labelA} {resultA.profile.profile}</span>
               <span className="font-serif italic text-[16px] text-[var(--ink)]">{labelB} {resultB.profile.profile}</span>
             </div>
             {analysis.profileResonance.length === 0 ? (
@@ -604,7 +604,7 @@ export default function CompositeView({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
-              { label: 'A 的權威', result: resultA, accentColor: '#c8553d' },
+              { label: 'A 的權威', result: resultA, accentColor: 'var(--crimson)' },
               { label: 'B 的權威', result: resultB, accentColor: 'var(--ink)' },
             ].map(({ label, result: r, accentColor }) => (
               <div key={label} className="border border-[var(--ink)] border-l-4 px-4 py-3" style={{ borderLeftColor: accentColor }}>
