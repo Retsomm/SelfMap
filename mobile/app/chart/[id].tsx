@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react'
 import {
   Alert,
   Clipboard,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -25,7 +24,7 @@ import {
 } from '@/lib/chartPdf'
 import BodyGraph from '@/components/BodyGraph'
 import DetailBottomSheet, { type SheetTarget } from '@/components/DetailBottomSheet'
-import { SectionCard, Row } from '@/components/chart/ChartPrimitives'
+import { SectionCard, Row, ActionButton, type ActionState } from '@/components/chart/ChartPrimitives'
 import PersonalChartDetails from '@/components/chart/PersonalChartDetails'
 import TransitAnalysis from '@/components/chart/TransitAnalysis'
 import CompositeInfo from '@/components/chart/CompositeInfo'
@@ -34,8 +33,6 @@ import { NavBackHeader } from '@/components/NavBackHeader'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
 import { useThemeColors, useThemeMode } from '@/contexts/ThemeContext'
-
-type ActionState = 'idle' | 'loading'
 
 /** 圖例用的黑紅相間條紋色點，對應 BodyGraph「個人+流日共有」的條紋填色 */
 function StripeLegendDot() {
@@ -49,37 +46,6 @@ function StripeLegendDot() {
       </Defs>
       <Circle cx={5} cy={5} r={5} fill="url(#legend-rb-stripes)" />
     </Svg>
-  )
-}
-
-function ActionButton({
-  label,
-  onPress,
-  state,
-  variant,
-}: {
-  label: string
-  onPress: () => void
-  state?: ActionState
-  variant?: 'primary' | 'outline'
-}) {
-  const isPrimary = variant === 'primary'
-  const Colors = useThemeColors()
-  const styles = useMemo(() => createStyles(Colors), [Colors])
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.actionBtn,
-        isPrimary ? styles.actionBtnPrimary : styles.actionBtnOutline,
-        (state === 'loading' || pressed) && styles.actionBtnDisabled,
-      ]}
-      onPress={onPress}
-      disabled={state === 'loading'}
-    >
-      <Text style={[styles.actionBtnText, isPrimary ? styles.actionBtnTextPrimary : styles.actionBtnTextOutline]}>
-        {state === 'loading' ? '處理中…' : label}
-      </Text>
-    </Pressable>
   )
 }
 
@@ -439,11 +405,4 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   transitRebuiltNote: { fontSize: 12, color: Colors.sub, marginTop: 4 },
 
   actionSection: { gap: Spacing.sm, marginTop: Spacing.sm },
-  actionBtn:         { paddingVertical: 14, borderRadius: Radius.lg, alignItems: 'center' },
-  actionBtnPrimary:  { backgroundColor: Colors.accent },
-  actionBtnOutline:  { borderWidth: 1.5, borderColor: Colors.accent, backgroundColor: Colors.accentD },
-  actionBtnDisabled: { opacity: 0.5 },
-  actionBtnText:        { fontSize: 15, fontWeight: '600' },
-  actionBtnTextPrimary: { color: Colors.bg },
-  actionBtnTextOutline: { color: Colors.accent },
 })

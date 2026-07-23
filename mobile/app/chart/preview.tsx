@@ -19,50 +19,11 @@ import { normalizeCenterId, normalizeChannelId, findChannelById } from '@/lib/hd
 import { getTypeMeta, getTypeLabel } from '@/lib/hd-type-meta'
 import BodyGraph from '@/components/BodyGraph'
 import DetailBottomSheet, { type SheetTarget } from '@/components/DetailBottomSheet'
-import { SectionCard, Row, Tag } from '@/components/chart/ChartPrimitives'
+import { SectionCard, Row, Tag, ActionButton, type ActionState } from '@/components/chart/ChartPrimitives'
 import { NavBackHeader } from '@/components/NavBackHeader'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Radius, Spacing, type ThemeColors } from '@/constants/tokens'
 import { useThemeColors, useThemeMode } from '@/contexts/ThemeContext'
-
-// ─── Action buttons ───────────────────────────────────────────────────────────
-
-type ActionState = 'idle' | 'loading'
-
-function ActionButton({
-  label,
-  notLoggedInLabel,
-  isLoggedIn,
-  onPress,
-  state,
-  variant,
-}: {
-  label: string
-  notLoggedInLabel: string
-  isLoggedIn: boolean
-  onPress: () => void
-  state?: ActionState
-  variant?: 'primary' | 'outline'
-}) {
-  const isPrimary = variant === 'primary'
-  const Colors = useThemeColors()
-  const styles = useMemo(() => createStyles(Colors), [Colors])
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.actionBtn,
-        isPrimary ? styles.actionBtnPrimary : styles.actionBtnOutline,
-        (state === 'loading' || pressed) && styles.actionBtnDisabled,
-      ]}
-      onPress={onPress}
-      disabled={state === 'loading'}
-    >
-      <Text style={[styles.actionBtnText, isPrimary ? styles.actionBtnTextPrimary : styles.actionBtnTextOutline]}>
-        {state === 'loading' ? '處理中…' : isLoggedIn ? label : `登入後開始${label}`}
-      </Text>
-    </Pressable>
-  )
-}
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
@@ -359,7 +320,6 @@ function ChartPreviewScreenContent() {
         <View style={styles.actionSection}>
           <ActionButton
             label="下載 PDF"
-            notLoggedInLabel="下載 PDF"
             isLoggedIn={!!isSignedIn}
             onPress={handleDownload}
             state={pdfState}
@@ -367,14 +327,12 @@ function ChartPreviewScreenContent() {
           />
           <ActionButton
             label="複製提示詞"
-            notLoggedInLabel="複製提示詞"
             isLoggedIn={!!isSignedIn}
             onPress={handleCopyPrompt}
             variant="outline"
           />
           <ActionButton
             label="儲存圖表"
-            notLoggedInLabel="儲存圖表"
             isLoggedIn={!!isSignedIn}
             onPress={handleSave}
             state={saveState}
@@ -441,13 +399,6 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   arrowDesc:     { fontSize: 13, color: Colors.sub, lineHeight: 18 },
 
   actionSection: { gap: Spacing.sm, marginTop: Spacing.sm },
-  actionBtn:         { paddingVertical: 14, borderRadius: Radius.lg, alignItems: 'center' },
-  actionBtnPrimary:  { backgroundColor: Colors.accent },
-  actionBtnOutline:  { borderWidth: 1.5, borderColor: Colors.accent, backgroundColor: Colors.accentD },
-  actionBtnDisabled: { opacity: 0.5 },
-  actionBtnText:        { fontSize: 15, fontWeight: '600' },
-  actionBtnTextPrimary: { color: Colors.bg },
-  actionBtnTextOutline: { color: Colors.accent },
 
   loginHint: { textAlign: 'center', fontSize: 12, color: Colors.muted, marginTop: Spacing.xs },
 

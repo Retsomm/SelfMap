@@ -50,6 +50,41 @@ export function Row({
   )
 }
 
+export type ActionState = 'idle' | 'loading'
+
+export function ActionButton({
+  label,
+  isLoggedIn = true,
+  onPress,
+  state,
+  variant,
+}: {
+  label: string
+  isLoggedIn?: boolean
+  onPress: () => void
+  state?: ActionState
+  variant?: 'primary' | 'outline'
+}) {
+  const isPrimary = variant === 'primary'
+  const Colors = useThemeColors()
+  const styles = useMemo(() => createStyles(Colors), [Colors])
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.actionBtn,
+        isPrimary ? styles.actionBtnPrimary : styles.actionBtnOutline,
+        (state === 'loading' || pressed) && styles.actionBtnDisabled,
+      ]}
+      onPress={onPress}
+      disabled={state === 'loading'}
+    >
+      <Text style={[styles.actionBtnText, isPrimary ? styles.actionBtnTextPrimary : styles.actionBtnTextOutline]}>
+        {state === 'loading' ? '處理中…' : isLoggedIn ? label : `登入後開始${label}`}
+      </Text>
+    </Pressable>
+  )
+}
+
 export function Tag({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) {
   const Colors = useThemeColors()
   const styles = useMemo(() => createStyles(Colors), [Colors])
@@ -111,4 +146,12 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   tagTappable:  { borderColor: Colors.sub },
   tagText:      { color: Colors.muted, fontSize: 13 },
   tagTextActive:{ color: Colors.accent, fontWeight: '600' },
+
+  actionBtn:         { paddingVertical: 14, borderRadius: Radius.lg, alignItems: 'center' },
+  actionBtnPrimary:  { backgroundColor: Colors.accent },
+  actionBtnOutline:  { borderWidth: 1.5, borderColor: Colors.accent, backgroundColor: Colors.accentD },
+  actionBtnDisabled: { opacity: 0.5 },
+  actionBtnText:        { fontSize: 15, fontWeight: '600' },
+  actionBtnTextPrimary: { color: Colors.bg },
+  actionBtnTextOutline: { color: Colors.accent },
 })

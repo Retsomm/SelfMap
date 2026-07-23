@@ -251,7 +251,7 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
 
   planetGroupRow:   { flexDirection: 'row', padding: 14, paddingBottom: 2 },
   planetPlanetCol:  { flex: 1.2, fontSize: 12, color: Colors.sub },
-  planetGroupLabel: { flex: 1, fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  planetGroupLabel: { flex: 2, fontSize: 11, fontWeight: '700', textAlign: 'center' },
   planetHeaderRow:  { paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: Colors.border, marginBottom: 2 },
   planetHeaderText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, color: Colors.sub },
   planetRow:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 5 },

@@ -2,6 +2,8 @@
 
 import { useTheme } from './ThemeProvider'
 
+// 依 theme 狀態切換顯示的圖示（暗色主題顯示太陽、亮色主題顯示月亮，代表點擊後會切換成的樣子）、
+// aria-label 文案與 aria-pressed 值，三者都跟著同一個 isDark 走。
 export default function ThemeToggle({ className = '' }: { className?: string }) {
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'

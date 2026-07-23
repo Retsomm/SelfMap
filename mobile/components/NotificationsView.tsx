@@ -6,9 +6,9 @@ import { type AppNotification, type NotificationType, getNotifications } from '@
 import { LoadingView, ErrorView } from '@/components/StateViews'
 
 const createTypeCfg = (Colors: ThemeColors): Record<NotificationType, { label: string; color: string; bg: string }> => ({
-  feature:      { label: '新功能', color: Colors.comp,   bg: Colors.compDimBg },
-  bugfix:       { label: '問題修正', color: Colors.accent, bg: Colors.accentD },
-  announcement: { label: '公告',    color: Colors.transit, bg: Colors.transitDimBg },
+  feature:      { label: '新功能', color: Colors.successText,     bg: Colors.compDimBg },
+  bugfix:       { label: '問題修正', color: Colors.accent,          bg: Colors.accentD },
+  announcement: { label: '公告',    color: Colors.transitWarmText, bg: Colors.transitDimBg },
 })
 
 function formatDate(iso: string) {
@@ -16,15 +16,14 @@ function formatDate(iso: string) {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
-function NotificationCard({ item }: { item: AppNotification }) {
-  const Colors = useThemeColors()
-  const s = useMemo(() => createStyles(Colors), [Colors])
-  const typeCfg = useMemo(() => createTypeCfg(Colors), [Colors])
+type TypeCfg = Record<NotificationType, { label: string; color: string; bg: string }>
+
+function NotificationCard({ item, s, typeCfg }: { item: AppNotification; s: ReturnType<typeof createStyles>; typeCfg: TypeCfg }) {
   const cfg = typeCfg[item.type] ?? typeCfg.announcement
   return (
     <View style={s.card}>
       <View style={s.cardHeader}>
-        <View style={[s.badge, { backgroundColor: cfg.bg }]}>
+        <View style={[s.badge, { backgroundColor: cfg.bg, borderColor: cfg.color }]}>
           <Text style={[s.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
         </View>
         <Text style={s.date}>{formatDate(item.publishedAt)}</Text>
@@ -38,6 +37,7 @@ function NotificationCard({ item }: { item: AppNotification }) {
 export default function NotificationsView() {
   const Colors = useThemeColors()
   const s = useMemo(() => createStyles(Colors), [Colors])
+  const typeCfg = useMemo(() => createTypeCfg(Colors), [Colors])
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -73,7 +73,7 @@ export default function NotificationsView() {
     <FlatList
       data={notifications}
       keyExtractor={item => item.id}
-      renderItem={({ item }) => <NotificationCard item={item} />}
+      renderItem={({ item }) => <NotificationCard item={item} s={s} typeCfg={typeCfg} />}
       contentContainerStyle={s.list}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.accent} />}
       ListEmptyComponent={
@@ -89,7 +89,7 @@ const createStyles = (Colors: ThemeColors) => StyleSheet.create({
   list:       { padding: Spacing.xl, gap: Spacing.md, flexGrow: 1 },
   card:       { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, gap: Spacing.xs },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  badge:      { borderRadius: Radius.sm, paddingHorizontal: Spacing.sm, paddingVertical: 3 },
+  badge:      { borderRadius: Radius.sm, paddingHorizontal: Spacing.sm, paddingVertical: 3, borderWidth: 1 },
   badgeText:  { fontSize: 11, fontWeight: '700' },
   date:       { fontSize: 12, color: Colors.muted },
   title:      { fontSize: 15, fontWeight: '600', color: Colors.text, marginTop: 2 },

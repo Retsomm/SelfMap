@@ -21,6 +21,10 @@
   --crimson: #c8553d;
   --crimson-2: #d96a52;
   --transit: #d04830;
+  /* --olive/--tan 本身偏淺，疊在淺色 --paper 上當文字/邊框用時對比不足，
+     這兩個是專供文字/邊框使用的加深版本，暗色主題下維持跟 --olive/--tan 相近的淺色（已對深底夠亮） */
+  --olive-text: #5a8a3c;
+  --tan-text:   #8a6832;
 
   /* rgb 分量版本，供 rgba(var(--ink-rgb), alpha) 這類半透明疊層使用 */
   --ink-rgb: 43, 31, 20;
@@ -30,9 +34,13 @@
   /* --tan-2 等強調色在兩個主題下都維持偏淺，疊在上面的文字固定用深色，不隨主題翻轉，避免暗色主題下淺底配淺字 */
   --ink-on-tan: #2b1f14;
 
-  --font-serif: var(--font-serif, "Georgia", serif);
-  --font-sans:  var(--font-sans, system-ui, sans-serif);
-  --font-mono:  var(--font-mono, ui-monospace, monospace);
+  --next-font-serif: "Georgia", serif;
+  --next-font-sans:  system-ui, sans-serif;
+  --next-font-mono:  ui-monospace, monospace;
+
+  --font-serif: var(--next-font-serif);
+  --font-sans:  var(--next-font-sans);
+  --font-mono:  var(--next-font-mono);
 
   color-scheme: light;
 }
@@ -52,6 +60,8 @@
   --crimson: #e17761;
   --crimson-2: #ec8d78;
   --transit: #e08061;
+  --olive-text: #8fc26a;
+  --tan-text:   #d4b483;
 
   --ink-rgb: 237, 227, 207;
   --paper-rgb: 28, 23, 18;

@@ -40,7 +40,7 @@ function pdfPalette(mode: PdfThemeMode) {
     sub:     c.sub,
     cardBg:  c.surface,
     border:  c.border,
-    dimBg:      mode === 'dark' ? darkColors.altRowBg : lightColors.gateBg,
+    dimBg:      c.gateBg,
     altRow:     c.altRowBg,
     paperDeep:  c.gateBg, // 對應網頁版 --paper-deep，用於頁尾商標色帶
     accentBg:   c.accentD,       // 對應畫面 Tag active 的底色

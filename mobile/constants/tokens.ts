@@ -85,9 +85,10 @@ export const lightColors: ThemeColors = {
   // table / list
   altRowBg: '#f7f0e5',
 
+  // mobile-only：web 版沒有對應的流日暖色文字/共同閘門徽章功能，這裡不用同步 app/globals.css
   transitWarmText:        '#8a6832',
 
-  // shared-gate badge
+  // shared-gate badge（mobile-only，同上，web 沒有對應元件）
   successText: '#5a8a3c',
   successBg:   '#eef3e4',
 }

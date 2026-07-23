@@ -14,6 +14,8 @@ export function ThemeProvider({ children, initialTheme }: { children: React.Reac
   // 不會有 hydration mismatch，也不需要事後用 useEffect 校正、不會閃爍。
   const [theme, setTheme] = useState<Theme>(initialTheme)
 
+  // 切換 light/dark、同步寫入 <html data-theme>（給 CSS 選擇器讀）與 cookie（一年後過期，
+  // 讓 layout.tsx 下次 SSR 能讀到上次選的主題，避免每次重整都跳回預設值）。
   const toggleTheme = useCallback(() => {
     setTheme(prev => {
       const next: Theme = prev === 'dark' ? 'light' : 'dark'
