@@ -52,6 +52,11 @@ export function Row({
 
 export type ActionState = 'idle' | 'loading'
 
+/**
+ * Reusable action button. `state: 'loading'` disables the button and shows "處理中…".
+ * `isLoggedIn: false` swaps the label for a "登入後開始…" prompt. `variant` picks
+ * primary (filled) vs outline styling. Pressed state applies the same disabled styling as loading.
+ */
 export function ActionButton({
   label,
   isLoggedIn = true,
