@@ -1,18 +1,12 @@
-export const STRATEGY_MAP: Record<string, string> = {
-  'Manifestor':            '告知後行動',
-  'Generator':             '等待回應',
-  'Manifesting Generator': '等待回應後告知',
-  'Projector':             '等待邀請',
-  'Reflector':             '等待月亮週期（28天）',
-}
+import { HD_TYPE_META } from '@shared/humanDesign/hd-type-meta'
 
-export const SIGNATURE_MAP: Record<string, { positive: string; negative: string }> = {
-  'Manifestor':            { positive: '平靜',  negative: '憤怒' },
-  'Generator':             { positive: '滿足',  negative: '挫折' },
-  'Manifesting Generator': { positive: '滿足',  negative: '挫折與憤怒' },
-  'Projector':             { positive: '成功',  negative: '苦澀' },
-  'Reflector':             { positive: '驚喜',  negative: '失望' },
-}
+export const STRATEGY_MAP: Record<string, string> = Object.fromEntries(
+  Object.entries(HD_TYPE_META).map(([type, meta]) => [type, meta.strategy])
+)
+
+export const SIGNATURE_MAP: Record<string, { positive: string; negative: string }> = Object.fromEntries(
+  Object.entries(HD_TYPE_META).map(([type, meta]) => [type, { positive: meta.signature, negative: meta.notSelf }])
+)
 
 export const AUTHORITY_TIP: Record<string, string> = {
   '情緒權威':     '等待情緒波浪完整走完，清晰出現後再決定',

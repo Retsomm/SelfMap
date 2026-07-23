@@ -1,5 +1,6 @@
 import type { Authority, AuthorityInfo, CenterName, ChannelDef, HumanDesignType, CrossType } from './types'
 import type { Center } from './types'
+import { HD_TYPE_META } from '@/shared/humanDesign/hd-type-meta'
 
 // 人類圖閘門輪從水瓶座 2°（黃道 302°）開始，Gate 41 為起點，每個閘門佔 5.625°
 export const HD_WHEEL_OFFSET = 302
@@ -26,13 +27,9 @@ export const PROFILE_LABELS: Record<string, string> = {
   '6/3': '角色模範／殉道者',
 }
 
-export const TYPE_LABELS: Record<HumanDesignType, string> = {
-  'Manifestor': '顯示者',
-  'Generator': '生產者',
-  'Manifesting Generator': '顯示生產者',
-  'Projector': '投射者',
-  'Reflector': '反映者',
-}
+export const TYPE_LABELS: Record<HumanDesignType, string> = Object.fromEntries(
+  Object.entries(HD_TYPE_META).map(([type, meta]) => [type, meta.label])
+) as Record<HumanDesignType, string>
 
 export const AUTHORITY_INFO: Record<Authority, AuthorityInfo> = {
   'Emotional':       { name: '情緒權威', tip: '等待情緒波浪完整走完，清晰出現後再決定' },
@@ -214,21 +211,13 @@ export const CROSS_TYPE_LABELS: Record<CrossType, string> = {
   LAC: '左角度交叉',
 }
 
-export const STRATEGY_MAP: Record<string, string> = {
-  'Manifestor':           '告知後行動',
-  'Generator':            '等待回應',
-  'Manifesting Generator':'等待回應後告知',
-  'Projector':            '等待邀請',
-  'Reflector':            '等待月亮週期（28天）',
-}
+export const STRATEGY_MAP: Record<string, string> = Object.fromEntries(
+  Object.entries(HD_TYPE_META).map(([type, meta]) => [type, meta.strategy])
+)
 
-export const SIGNATURE_MAP: Record<string, { positive: string; negative: string }> = {
-  'Manifestor':           { positive: '平靜', negative: '憤怒' },
-  'Generator':            { positive: '滿足', negative: '挫折' },
-  'Manifesting Generator':{ positive: '滿足', negative: '挫折與憤怒' },
-  'Projector':            { positive: '成功', negative: '苦澀' },
-  'Reflector':            { positive: '驚喜', negative: '失望' },
-}
+export const SIGNATURE_MAP: Record<string, { positive: string; negative: string }> = Object.fromEntries(
+  Object.entries(HD_TYPE_META).map(([type, meta]) => [type, { positive: meta.signature, negative: meta.notSelf }])
+)
 
 export const DIGESTION_MAP: Record<number, { label: string; description: string }> = {
   1: { label: 'Appetite（食慾型）',  description: '跟隨本能食慾，想吃什麼就吃什麼，不需遵循固定飲食規律' },
