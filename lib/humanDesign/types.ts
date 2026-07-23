@@ -1,3 +1,5 @@
+import type { HumanDesignTypeKey } from '@/shared/humanDesign/hd-type-meta'
+
 export type CenterName =
   | 'head'
   | 'ajna'
@@ -9,12 +11,7 @@ export type CenterName =
   | 'spleen'
   | 'root'
 
-export type HumanDesignType =
-  | 'Manifestor'
-  | 'Generator'
-  | 'Manifesting Generator'
-  | 'Projector'
-  | 'Reflector'
+export type HumanDesignType = HumanDesignTypeKey
 
 export type Authority =
   | 'Emotional'

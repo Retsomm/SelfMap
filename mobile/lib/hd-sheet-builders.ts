@@ -11,6 +11,7 @@ import {
   HD_DEFINITION_CONTENT,
 } from '@shared/humanDesign/hd-summary-data'
 import { HD_CROSS_CONTENT } from '@shared/humanDesign/hd-cross-data'
+import { HD_AUTHORITY_ZH_TO_KEY } from '@shared/humanDesign/hd-authority-meta'
 import { centerZh } from '@/lib/hd-normalizers'
 
 export interface SheetContent {
@@ -19,16 +20,6 @@ export interface SheetContent {
   sections: Array<{ label?: string; body: string; dim?: boolean }>
   highlights?: Array<{ label: string; text: string }>
   keywords: string[]
-}
-
-const AUTHORITY_ZH_TO_KEY: Record<string, string> = {
-  '情緒權威':     'Emotional',
-  '薦骨權威':     'Sacral',
-  '脾中心權威':  'Splenic',
-  '意志力權威':  'Ego',
-  '自我投射權威': 'Self-Projected',
-  '邏輯權威':     'Mental',
-  '月亮週期權威': 'Lunar',
 }
 
 const DEFINITION_ZH_TO_KEY: Record<string, string> = {
@@ -135,12 +126,12 @@ export function buildTypeContent(typeKey: string): SheetContent {
 
 /**
  * @param authorityKey - Chinese authority label or English key;
- *   Chinese labels are mapped via AUTHORITY_ZH_TO_KEY before lookup.
+ *   Chinese labels are mapped via HD_AUTHORITY_ZH_TO_KEY before lookup.
  * @returns SheetContent with intro, paragraphs, and highlights;
  *   falls back to a "not found" message when no matching entry is found.
  */
 export function buildAuthorityContent(authorityKey: string): SheetContent {
-  const key = AUTHORITY_ZH_TO_KEY[authorityKey] ?? authorityKey
+  const key = HD_AUTHORITY_ZH_TO_KEY[authorityKey] ?? authorityKey
   const d = HD_AUTHORITY_CONTENT[key]
   if (!d) return NOT_FOUND
   return {
